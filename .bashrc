@@ -4,22 +4,31 @@
 # \___ \| | |  _| |\/| | / _ \| |   | |_| | / _ \ | | | | #
 #  ___) | | |_| | |  | |/ ___ \ |___|  _  |/ ___ \| |_| | #
 # |____/___\____|_|  |_/_/   \_\____|_| |_/_/   \_\____/  #
-#                                            Chet Manley  #
+#                                                         #
+#    ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗     #
+#    ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔════╝     #
+#    ██████╔╝███████║███████╗███████║██████╔╝██║          #
+#    ██╔══██╗██╔══██║╚════██║██╔══██║██╔══██╗██║          #
+#    ██████╔╝██║  ██║███████║██║  ██║██║  ██║╚██████╗     #
+#    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     #
 #                            http://github.com/adstanley  #
 #                                    http://sigmachad.io  #
+#                                            Chet Manley  #
 ###########################################################
 #
 # Bashrc
 # Shellcheck Directvies
 # shellcheck shell=bash
+# shellcheck source=/dev/null
 # shellcheck disable=SC1090
 # shellcheck disable=SC1091
+# shellcheck disable=SC2034
 #
 # 1. Environmental Variables / Bash Options
 # 2. Aliases
 # 3. Functions
 #
-
+#
 #################################################################################
 # Options                                                                       #
 #################################################################################
@@ -50,6 +59,10 @@ fi
 
 if [ -d "$HOME/.local/bin" ]; then
     PATH="$HOME/.local/bin:$PATH"
+fi
+
+if [ -f "$HOME/.bash_directory" ]; then
+    source "$HOME/.bash_directory"
 fi
 
 ## TrueNAS Specific
@@ -95,9 +108,9 @@ fi
 if [ -z "$XDG_DATA_HOME" ]; then
     export XDG_DATA_HOME="$HOME/.local/share"
 fi
-if [ -z "$XDG_CACHE_HOME" ]; then
-    export XDG_CACHE_HOME="$HOME/.cache"
-fi
+# if [ -z "$XDG_CACHE_HOME" ]; then
+#     export XDG_CACHE_HOME="$HOME/.cache"
+# fi
 
 ## Prompt
 # PS1    The  value  of  this parameter is expanded (see PROMPTING below)
@@ -114,10 +127,19 @@ fi
 #        rection.  The default is ``+ ''.
 
 # Set Colors
-GREEN="\[\033[38;5;2m\]"
-YELLOW="\[\033[38;5;11m\]"
-BLUE="\[\033[38;5;6m\]"
-RESET="\[$(tput sgr0)\]"
+BLACK='\[\033[01;30m\]'     # Black
+RED='\[\033[01;31m\]'       # Red
+GREEN='\[\033[01;32m\]'     # Green
+YELLOW='\[\033[01;33m\]'    # Yellow
+BLUE='\[\033[01;34m\]'      # Blue
+PURPLE='\[\033[01;35m\]'    # Purple
+CYAN='\[\033[01;36m\]'      # Cyan
+WHITE='\[\033[01;37m\]'     # White      
+GREEN="\[\033[38;5;2m\]"    # Green
+YELLOW="\[\033[38;5;11m\]"  # Yellow
+BLUE="\[\033[38;5;6m\]"     # Blue
+RESET="\[$(tput sgr0)\]"    # Reset
+
 # Set Prompt
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"
 
@@ -157,6 +179,7 @@ alias dupebyname='find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
 alias nanobash='nano ~/.bashrc'
+alias rc='nvim ~/.bashrc && exec $SHELL -l'
 
 # Some more alias to avoid making mistakes:
 alias rm='rm -vI'
@@ -174,11 +197,9 @@ alias exa='exa -lahg --color=always --icons --group-directories-first'
 alias ls='exa -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
 
 # Directory Shortcuts
-if [ -f ~/.bash_directory ]; then
-    . ~/.bash_directory
-fi
 alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
 alias getfiles="tree -ifF | grep -v /$ | sed 's/.$//' | sed 's/^[^\/]*\///'"
+alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' # Find all file extensions in the current directory"
 
 # Chown Shortcuts
 alias ownroot='chown -R -v root:root ./' # chown root recursively
@@ -188,7 +209,6 @@ alias mod770='chmod -R -v 755 ./'        # chmod 755 recursively
 alias pods='k3s kubectl get pods --all-namespaces'
 alias showfailed='systemctl list-units --state failed'
 alias namespaces='k3s kubectl get namespaces'
-alias rename='mv'
 
 # Rclone / Rsync progress
 alias cpv='rsync -ah --info=progress2'
@@ -245,7 +265,7 @@ alias nvim='~/nvim.appimage'
 #################################################################################
 
 ## Git
-git() {
+function git() {
     if [ "$1" = "clone" ]; then
         shift 1
         command git clone --depth=1 "$@"
@@ -255,7 +275,7 @@ git() {
 }
 
 # Move Check
-mv_check() {
+function mv_check() {
 
     # Function for checking syntax of mv command
     # sort of verbose dry run
@@ -283,7 +303,8 @@ mv_check() {
     fi
 }
 
-rclonemove() {
+# Move Function
+function rclonemove() {
     # check if input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -312,7 +333,8 @@ rclonemove() {
     rclone move -P "$1" "$2"
 }
 
-rclonecopy() {
+# Copy Function
+function rclonecopy() {
     # check if input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -340,49 +362,55 @@ rclonecopy() {
     rclone copy -P "$1" "$2"
 }
 
+# Function to find largest files in the current directory
+function find_largest_files() {
+    du -h -x -s -- * | sort -r -h | head -20;
+}
+
 # Function to backup file by appending .bk to the end of the file name
-bk() {
+function bk() {
     cp "$1" "$1_$(date +"%Y-%m-%d_%H-%M-%S")".bk
 }
 
 # Function to convert hex to Asciic
-hexToAscii() {
+function hexToAscii() {
     printf "\x%s" "$1"
 }
 
 #
-c2f() {
+function c2f() {
     fc -lrn | head -1 >>"${1?}"
 }
 
-#
-hist() {
+# Get history
+function hist() {
     history | grep "$1"
 }
 
-# Function to extract rar files from incomplete or broken NZB downloads
-packs() {
+function findd() {
+    printf "Searching for *%s*. \n" "$1"
+    find -- * -iname "*$1*" -type d
+}
 
+function findf() {
+    printf "Searching for *%s*. \n" "$1"
+    find -- * -iname "*$1*" -type f
+}
+
+function findoutside() {
+    find -- * -not -path "./{$1} {$2}/*" -not -path "./_{$1}.{$2}" -not -path "./Lexi Luna "-type d -iname "*{$1}*{$2}*"
+}
+
+# Function to extract rar files from incomplete or broken NZB downloads
+function packs() {
     printf "extracting rar volumes with out leading zeros.\n"
     { unrar e '*part1.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
     printf "extracting rar volumes with leading zeros.\n"
     { unrar e '*part01.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
 }
 
-findd() {
-
-    printf "Searching for *%s*. \n" "$1"
-    find -- * -iname "*$1*" -type d
-}
-
-findf() {
-
-    printf "Searching for *%s*. \n" "$1"
-    find -- * -iname "*$1*" -type f
-}
-
 # Simple function to identify the type of compression used on a file and extract accordingly
-extract() {
+function extract() {
     if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
         echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -421,7 +449,7 @@ extract() {
 
 ### ARCHIVE EXTRACTION
 # usage: ex <file>
-ex() {
+function ex() {
     if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
         echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -439,7 +467,8 @@ ex() {
         *.tgz) tar xzf "$1" ;;
         *.zip) unzip "$1" ;;
         *.Z) uncompress "$1" ;;
-        *.7z) 7z x "$1" ;;
+        *.7z) 7zz x "$1" ;;
+        #*.7z) 7zz x "$1" ;;
         *.deb) ar x "$1" ;;
         *.tar.xz) tar xf "$1" ;;
         *.tar.zst) unzstd "$1" ;;
@@ -449,7 +478,7 @@ ex() {
 }
 
 # navigation
-up() {
+function up() {
     local d=""
     local limit="$1"
 
@@ -468,13 +497,13 @@ up() {
     fi
 }
 
-printargs() {
+function printargs() {
     for ((i = 1; i <= $#; i++)); do
         printf "Arg %d: %s\n" "$i" "${!i}"
     done
 }
 
-deleteSnapshots() {
+function deleteSnapshots() {
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -497,7 +526,29 @@ deleteSnapshots() {
     fi
 }
 
-getSnapshots() {
+function takesnapshot() {
+    # Check if the input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1 # Exit with error
+    fi
+
+    # Check if the zfs command is available
+    if ! command -v zfs &>/dev/null; then
+        printf "Error: zfs command not found or not installed\n" >&2
+        return 1 # Exit with error
+    fi
+
+    # Create a snapshot for the given dataset
+    if output=$(zfs snapshot "$1@manual-$(date +"%Y-%m-%d_%H-%M-%S")" 2>&1); then
+        printf "%s\n" "$output"
+    else
+        printf "Error: %s\n" "$output" >&2
+        return 3 # Exit with error
+    fi
+}
+
+function getSnapshots() {
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -516,5 +567,158 @@ getSnapshots() {
     else
         printf "Error: %s\n" "$output" >&2
         return 3
+    fi
+}
+
+function getspace() {
+
+    # Check if the input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1
+    fi
+
+    # Check if the zfs command is available
+    if ! command -v zfs &>/dev/null; then
+        printf "Error: zfs command not found or not installed\n" >&2
+        return 1
+    fi
+
+    # Retrieve the list of snapshots for the given dataset
+    #if output=$(zfs list -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
+    if output=$(zfs list -H -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
+        printf "%s\n" "$output"
+    else
+        printf "Error: %s\n" "$output" >&2
+        return 3
+    fi
+
+}
+
+# Function to find all file extensions in the current directory
+function extensions() {
+    # Check if the directory is empty
+    if [ -d "$PWD" ]; then
+        printf "Directory is empty\n" >&2
+        return 1
+    fi
+
+    find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
+}
+
+# Takes a alias name and gets the last command from the history. Makes it an
+# alias and puts it in .bash_aliases. Be sure to source .bash_aliases in .bashrc
+# or this wont work.
+function makeAlias() {
+    if [ $# -eq 0 ]; then
+        echo "No arguments supplied. You need to pass an alias name"
+    else
+        newAlias=$(history | tail -n 2 | cut -c 8- | sed -e '$ d')
+        escapedNewAlias=${newAlias//\'/\'\\\'\'}
+        echo "alias $1='${escapedNewAlias}'" >>~/.bash_aliases
+        . ~/.bashrc
+    fi
+}
+
+function moveTemplate() {
+    local -a local="$1"
+    for ((i = 0; i < "${#local[@]}"; i++)); do
+        if [ -e "${local[$i]}" ]; then
+            cp -pvi "${local[$i]}" ./incomplete/
+            rm "${local[$i]}"
+        else
+            echo "Source file '${local[$i]}' does not exist."
+        fi
+    done
+}
+
+function insertDirectory() {
+
+    local filename insert
+    filename="$(readlink "$1")"
+    insert="$2"
+
+    if [ ! -d "$PWD"/"$insert" ]; then
+        read -rp "Directory '$insert' does not exist. Create Directory? (Y\N) " answer
+        if [[ $answer =~ ^[Yy] ]]; then
+            mkdir -pv "$insert"
+        else
+            printf "Aborting...\n"
+            return 1
+        fi
+    fi
+
+    mv -iv "$filename" "$(dirname "$1")/$insert/$(basename "$1")"
+}
+
+function insertDirectory2() {
+
+    if [ ! -d "$PWD"/"$insert" ]; then
+        read -rp "Directory '$insert' does not exist. Create Directory? (Y\N) " answer
+        if [[ $answer =~ ^[Yy] ]]; then
+            mkdir -pv "$insert"
+        else
+            printf "Aborting...\n"
+            return 1
+        fi
+    fi
+
+    mv -nv "$(realpath "$1")" "$(dirname "$1")/$insert/$(basename "$1")"
+}
+
+function flatten() {
+    local -a flatten
+    readarray -t flatten < <(find . -type f)
+    if [ "${#flatten[@]}" -eq 0 ]; then
+        printf "No files found in subdirectories.\n" >&2
+        return 1
+    else
+        printf "%s\n" "${flatten[@]}"
+        printf "\nFound %s files in %s subdirectories.\n" "${#flatten[@]}" "$(find . -type d | wc -l)"
+    fi
+
+    read -rp "This will move all files in subdirectories to the current directory. Continue? (Y\N) : " answer
+    if [[ ! $answer =~ ^[Yy] ]]; then
+        printf "Aborting...\n" >&2
+        return 1
+    fi
+    for ((i = 0; i < "${#flatten[@]}"; i++)); do
+        mv --no-clobber --verbose "${flatten[$i]}" ./
+    done
+}
+
+abc() {
+    local n=$1
+    local m=$2
+    shift 2
+    # It's good to log or echo the command for debugging; ensure to quote "$@" to handle spaces correctly.
+    args_string="$n $m $*"
+    echo "xyz -n '$n' -m '$m' $args_string"
+    # Properly quote "$@" to ensure all arguments are passed correctly to the xyz command.
+    xyz -n "$n" -m "$m" "$@"
+}
+
+function nested() {
+    find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
+}
+
+function nested2() {
+    find -- * -type d |
+        awk -F '/' '{print $NF}' |
+        sort |
+        uniq -cd |
+        while read -r count name; do
+            printf "Duplicate directory name found: \n%s (%s times)\n" "$name" "$count"
+            find -- * -type d -name "$name"
+        done
+
+}
+
+function Zlist() { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
+
+function Zlist2() {
+    if [ -n "$1" ]; then
+        zfs list "$1"
+        zfs list -t snapshot "$1"
     fi
 }
