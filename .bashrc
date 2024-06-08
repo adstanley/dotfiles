@@ -52,7 +52,7 @@ export MANPAGER="less"
 # colored GCC warnings and errors
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-## Path
+## Add to PATH
 if [ -d "$HOME/.bin" ]; then
     PATH="$HOME/.bin:$PATH"
 fi
@@ -61,35 +61,42 @@ if [ -d "$HOME/.local/bin" ]; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
+# if using multiple files for bashrc
 if [ -f "$HOME/.bash_directory" ]; then
     source "$HOME/.bash_directory"
 fi
 
-## TrueNAS Specific
-# Export path to Heavyscript, default configuration using heavyscript deploy.sh
-if [ -d "$HOME/bin" ]; then
-    export PATH=/root/bin:${PATH}
+# Enable precompiled binary bash completion for immutable distros
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
 fi
+# Source custom completion scripts
+for bcfile in ~/.bash_completion.d/* ; do
+    . "$bcfile"
+done
 
-## Set Bash Options
-# Set No Clobber
-set -o noclobber
+# Source all completion scripts in ~/.bash_completion.d
+# if [ -d "$HOME/.bash_completion.d" ]; then
+#     for file in "$HOME/.bash_completion.d"/*; do
+#         [ -r "$file" ] && . "$file"
+#     done
+#     unset file
+# fi
 
 ## Bash history
-# don't put duplicate lines in the history.
-HISTCONTROL=ignoredups:erasedups
-# set history length, non integer values set history to infinite
-HISTSIZE='INFINITY'
-# set file size, non integer values set history to infinite
-HISTFILESIZE='ANDBEYOND'
-# set history time format, %F = full date, %T = time
-HISTTIMEFORMAT="%F %T "
-# append to the history file, don't overwrite it
-shopt -s histappend
-# try to save all lines of a multiple-line command in the same history entry
-shopt -s cmdhist
+HISTCONTROL=ignoredups:erasedups    # don't put duplicate lines in the history.
+HISTSIZE='INFINITE'                 # set history length, non integer values set history to infinite
+HISTFILESIZE='STONKS'               # set file size, non integer values set history to infinite
+HISTTIMEFORMAT="%F %T "             # set history time format, %F = full date, %T = time
+shopt -s histappend                 # append to the history file, don't overwrite it
+shopt -s cmdhist                    # try to save all lines of a multiple-line command in the same history entry
 
 ## Shell Options
+# Set options
+set -o noclobber        # Prevent overwriting files
+# set -o vi             # Set vi mode, Allows for vi keybindings in the terminal
+
+# Shopt Options
 shopt -s autocd         # change to named directory
 shopt -s cdspell        # autocorrects cd misspellings
 shopt -s cmdhist        # save multi-line commands in history as single line
@@ -98,8 +105,8 @@ shopt -s histappend     # do not overwrite history
 shopt -s expand_aliases # expand aliases
 shopt -s checkwinsize   # checks term size when bash regains control
 shopt -s extglob        # extended pattern matching
-#shopt -s globstar # recursive globbing
-# set -o vi # set vi mode
+shopt -s globstar       # recursive globbing
+shopt -s histverify     # show command with history expansion to allow editing
 
 ## Environmental Variables
 if [ -z "$XDG_CONFIG_HOME" ]; then
@@ -108,9 +115,9 @@ fi
 if [ -z "$XDG_DATA_HOME" ]; then
     export XDG_DATA_HOME="$HOME/.local/share"
 fi
-# if [ -z "$XDG_CACHE_HOME" ]; then
-#     export XDG_CACHE_HOME="$HOME/.cache"
-# fi
+if [ -z "$XDG_CACHE_HOME" ]; then
+    export XDG_CACHE_HOME="$HOME/.cache"
+fi
 
 ## Prompt
 # PS1    The  value  of  this parameter is expanded (see PROMPTING below)
@@ -503,7 +510,7 @@ function printargs() {
     done
 }
 
-function deleteSnapshots() {
+function deletesnapshot() {
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -548,7 +555,7 @@ function takesnapshot() {
     fi
 }
 
-function getSnapshots() {
+function getsnapshot() {
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
