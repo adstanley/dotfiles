@@ -107,6 +107,7 @@ shopt -s checkwinsize   # checks term size when bash regains control
 shopt -s extglob        # extended pattern matching
 shopt -s globstar       # recursive globbing
 shopt -s histverify     # show command with history expansion to allow editing
+shopt -s nullglob       # null globbing, no match returns null
 
 ## Environmental Variables
 if [ -z "$XDG_CONFIG_HOME" ]; then
