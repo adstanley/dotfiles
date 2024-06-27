@@ -36,21 +36,13 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-## "less" as manpager
-export MANPAGER="less"
-
-## "nvim" as manpager
-# export MANPAGER="nvim -c 'set ft=man' -"
-
 ## "bat" as manpager
-# export MANPAGER="bat"
-
-## Prompt
-# This is commented out if using starship prompt
-# PS1='[\u@\h \W]\$ '
-
-# colored GCC warnings and errors
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+if command -v bat >/dev/null 2>&1; then
+    export MANPAGER="bat"
+    # export MANPAGER="nvim -c 'set ft=man' -"
+else
+    export MANPAGER="less"
+fi
 
 ## Add to PATH
 if [ -d "$HOME/.bin" ]; then
@@ -66,22 +58,12 @@ if [ -f "$HOME/.bash_directory" ]; then
     source "$HOME/.bash_directory"
 fi
 
-# Enable precompiled binary bash completion for immutable distros
-if [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-fi
 # Source custom completion scripts
-for bcfile in ~/.bash_completion.d/* ; do
-    . "$bcfile"
-done
-
-# Source all completion scripts in ~/.bash_completion.d
-# if [ -d "$HOME/.bash_completion.d" ]; then
-#     for file in "$HOME/.bash_completion.d"/*; do
-#         [ -r "$file" ] && . "$file"
-#     done
-#     unset file
-# fi
+if [ -d "${HOME}"/.bash_completion.d ]; then
+    for file in "${HOME}"/.bash_completion.d/* ; do
+        source "$file"
+    done
+fi
 
 ## Bash history
 HISTCONTROL=ignoredups:erasedups    # don't put duplicate lines in the history.
@@ -134,7 +116,8 @@ fi
 #        tiple times, as necessary, to indicate multiple levels of  indi‐
 #        rection.  The default is ``+ ''.
 
-# Set Colors
+## ANSI Escape Codes
+# Colors
 BLACK='\[\033[01;30m\]'     # Black
 RED='\[\033[01;31m\]'       # Red
 GREEN='\[\033[01;32m\]'     # Green
@@ -147,6 +130,20 @@ GREEN="\[\033[38;5;2m\]"    # Green
 YELLOW="\[\033[38;5;11m\]"  # Yellow
 BLUE="\[\033[38;5;6m\]"     # Blue
 RESET="\[$(tput sgr0)\]"    # Reset
+
+# Text Attributes
+BOLD='\033[01m'             # Bold ANSI escape code
+
+# Colored GCC warnings and errors
+# Errors will be displayed in bold red
+# Warnings will be displayed in bold purple
+# Notes will be displayed in bold cyan
+# Carets will be displayed in bold green
+# Locus will be displayed in bold white
+# Quotes will be displayed in bold yellow
+# export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+# export GCC_COLORS="error=${RED//\\\[/}:warning=${PURPLE//\\\[/}:note=${CYAN//\\\[/}:caret=${GREEN//\\\[/}:locus=${WHITE//\\\[/}:quote=${YELLOW//\\\[/}"
+export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
 # Set Prompt
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"
@@ -206,8 +203,8 @@ alias ls='exa -lahg --color=always --icons --group-directories-first' # list all
 
 # Directory Shortcuts
 alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
-alias getfiles="tree -ifF | grep -v /$ | sed 's/.$//' | sed 's/^[^\/]*\///'"
-alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' # Find all file extensions in the current directory"
+alias getfiles="find -- * -type f"                # Find all files in the current directory
+alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
 
 # Chown Shortcuts
 alias ownroot='chown -R -v root:root ./' # chown root recursively
@@ -231,7 +228,7 @@ alias iostat='zpool iostat -vly 5 1'
 alias zdb='zdb -U /data/zfs/zpool.cache'
 
 # get held snapshots
-alias holds="zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds"
+# alias holds="zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds"
 alias snapshot='zfs list -t snapshot'
 alias snapshot1='zfs list -H -o name -t snapshot'
 
@@ -476,11 +473,13 @@ function ex() {
         *.zip) unzip "$1" ;;
         *.Z) uncompress "$1" ;;
         *.7z) 7zz x "$1" ;;
-        #*.7z) 7zz x "$1" ;;
         *.deb) ar x "$1" ;;
         *.tar.xz) tar xf "$1" ;;
         *.tar.zst) unzstd "$1" ;;
-        *) echo "'$1' cannot be extracted via ex()" ;;
+        *)
+            echo "extract: '$1' - unknown archive method"
+            return 1
+            ;;
         esac
     fi
 }
@@ -509,6 +508,11 @@ function printargs() {
     for ((i = 1; i <= $#; i++)); do
         printf "Arg %d: %s\n" "$i" "${!i}"
     done
+}
+
+# Define the function to show ZFS holds
+function holds() {
+    zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
 
 function deletesnapshot() {
@@ -695,7 +699,7 @@ function flatten() {
     done
 }
 
-abc() {
+function abc() {
     local n=$1
     local m=$2
     shift 2
