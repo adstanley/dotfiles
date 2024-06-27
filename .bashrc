@@ -206,10 +206,6 @@ alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
 alias getfiles="find -- * -type f"                # Find all files in the current directory
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
 
-# Chown Shortcuts
-alias ownroot='chown -R -v root:root ./' # chown root recursively
-alias mod770='chmod -R -v 755 ./'        # chmod 755 recursively
-
 # k3s Shortcuts
 alias pods='k3s kubectl get pods --all-namespaces'
 alias showfailed='systemctl list-units --state failed'
@@ -269,8 +265,37 @@ alias nvim='~/nvim.appimage'
 ################################### Functions ###################################
 #################################################################################
 
-## Git
-function git() {
+# Function to chown root recursively
+function ownroot() {
+    # "${1:-.}" = if $1 is empty, use "."
+    local target_dir="${1:-.}"
+
+    # Check if the target directory exists
+    if [ ! -d "$target_dir" ]; then
+        printf "Error: %s is not a directory.\n" "$target_dir" >&2
+        return 1
+    fi
+
+    # Change ownership recursively
+    chown -R -v root:root "$target_dir"
+}
+
+function mod775() {
+    # "${1:-.}" = if $1 is empty, use "."
+    local target_dir="${1:-.}"
+
+    # Check if the target directory exists
+    if [ ! -d "$target_dir" ]; then
+        printf "Error: %s is not a directory.\n" "$target_dir" >&2
+        return 1
+    fi
+
+    # Change ownership recursively
+    chmod -R -v 775 "$target_dir"
+}
+
+# Git
+function git_shallow() {
     if [ "$1" = "clone" ]; then
         shift 1
         command git clone --depth=1 "$@"
@@ -284,29 +309,56 @@ function mv_check() {
 
     # Function for checking syntax of mv command
     # sort of verbose dry run
-    # NOTE !!! this doesn't support the -t flag
-    # maybe it will in future (?)
+    # Now supports the -t flag
 
-    # check number of arguments
-    if [ $# -ne 2 ]; then
-        echo "<<< ERROR: must have 2 arguments , but $# given " >&2
-        return 1
-    fi
+    # check if -t flag is present
+    if [ "$1" = "-t" ]; then
+        if [ $# -lt 3 ]; then
+            printf "<<< ERROR: with -t flag, must have at least 3 arguments, but %s given " "$#" >&2
+            return 1
+        fi
 
-    # check if source item exist
-    if ! readlink -e "$1" >/dev/null; then
-        echo "<<< ERROR: " "$1" " doesn't exist" >&2
-        return 1
-    fi
+        target_dir="$2"
+        shift 2
 
-    # check where file goes
+        # check if target directory exists
+        if [ ! -d "$target_dir" ]; then
+            printf "<<< ERROR: target directory %s doesn't exist" "$target_dir" >&2
+            return 1
+        fi
 
-    if [ -d "$2" ]; then
-        echo "Moving " "$1" " into " "$2" " directory"
+        for src in "$@"; do
+            if ! readlink -e "$src" >/dev/null; then
+                printf "<<< ERROR: %s doesn't exist" "$src" >&2
+                return 1
+            fi
+            printf "Moving %s into %s directory" "$src" "$target_dir"
+        done
     else
-        echo "Renaming " "$1" " to " "$2"
+        # check number of arguments
+        if [ $# -ne 2 ]; then
+            printf "<<< ERROR: must have 2 arguments, but %d given " "$#" >&2
+            return 1
+        fi
+
+        src="$1"
+        dest="$2"
+
+        # check if source item exists
+        if ! readlink -e "$src" >/dev/null; then
+            printf "<<< ERROR: %s doesn't exist" "$src" >&2
+            return 1
+        fi
+
+        # check where file goes
+        if [ -d "$dest" ]; then
+            printf "Moving %s into %s directory" "$src" "$dest"
+        else
+            printf "Renaming %s to %s" "$src" "$dest"
+        fi
     fi
 }
+
 
 # Move Function
 function rclonemove() {
@@ -335,7 +387,7 @@ function rclonemove() {
         printf "Destination \"%s\" doesn't exist, creating directory \"%s\".\n" "$2" "$2"
     fi
 
-    rclone move -P "$1" "$2"
+    rclone move -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$1" "$2"
 }
 
 # Copy Function
@@ -364,7 +416,7 @@ function rclonecopy() {
         printf "Destination \"%s\" doesn't exist, creating directory \"%s\".\n" "$2" "$2"
     fi
 
-    rclone copy -P "$1" "$2"
+    rclone copy -P -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$1" "$2"
 }
 
 # Function to find largest files in the current directory
