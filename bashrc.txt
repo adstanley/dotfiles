@@ -44,13 +44,6 @@ else
     export MANPAGER="less"
 fi
 
-## if nvim is installed, set as default editor
-if command -v nvim >/dev/null 2>&1; then
-    export EDITOR="nvim"
-else
-    export EDITOR="nano"
-fi
-
 ## Add to PATH
 if [ -d "$HOME/.bin" ]; then
     PATH="$HOME/.bin:$PATH"
@@ -149,6 +142,7 @@ BOLD='\033[01m'             # Bold ANSI escape code
 # Locus will be displayed in bold white
 # Quotes will be displayed in bold yellow
 # export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+# export GCC_COLORS="error=${RED//\\\[/}:warning=${PURPLE//\\\[/}:note=${CYAN//\\\[/}:caret=${GREEN//\\\[/}:locus=${WHITE//\\\[/}:quote=${YELLOW//\\\[/}"
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
 # Set Prompt
@@ -164,7 +158,7 @@ screen*)
     ;;
 esac
 
-# if using debian, set variable identifying the chroot you work in (used in the prompt below)
+# set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
@@ -183,6 +177,9 @@ fi
 #################################################################################
 #################################### Aliases ####################################
 #################################################################################
+
+# Find Aliases
+alias dupebyname='find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c' # Find duplicate directories by name
 
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
@@ -208,6 +205,10 @@ alias ls='exa -lahg --color=always --icons --group-directories-first' # list all
 alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
 alias getfiles="find -- * -type f"                # Find all files in the current directory
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
+
+# Chown Shortcuts
+alias ownroot='chown -R -v root:root ./' # chown root recursively
+alias mod770='chmod -R -v 755 ./'        # chmod 755 recursively
 
 # k3s Shortcuts
 alias pods='k3s kubectl get pods --all-namespaces'
@@ -268,47 +269,8 @@ alias nvim='~/nvim.appimage'
 ################################### Functions ###################################
 #################################################################################
 
-# Count Fields
-function countfields() {
-    find -- * -maxdepth 0 -type d | awk -F"." '{print NF, $0}' | sort -nr | uniq -c
-}
-
-# Function to find duplicate files by name
-function dupebyname() {
-    find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
-}
-
-# Function to chown root recursively
-function ownroot() {
-    # "${1:-.}" = if $1 is empty, use "."
-    local target_dir="${1:-.}"
-
-    # Check if the target directory exists
-    if [ ! -d "$target_dir" ]; then
-        printf "Error: %s is not a directory.\n" "$target_dir" >&2
-        return 1
-    fi
-
-    # Change ownership recursively
-    chown -R -v root:root "$target_dir"
-}
-
-function mod775() {
-    # "${1:-.}" = if $1 is empty, use "."
-    local target_dir="${1:-.}"
-
-    # Check if the target directory exists
-    if [ ! -d "$target_dir" ]; then
-        printf "Error: %s is not a directory.\n" "$target_dir" >&2
-        return 1
-    fi
-
-    # Change ownership recursively
-    chmod -R -v 775 "$target_dir"
-}
-
-# Git
-function git_shallow() {
+## Git
+function git() {
     if [ "$1" = "clone" ]; then
         shift 1
         command git clone --depth=1 "$@"
@@ -322,127 +284,87 @@ function mv_check() {
 
     # Function for checking syntax of mv command
     # sort of verbose dry run
-    # Now supports the -t flag
+    # NOTE !!! this doesn't support the -t flag
+    # maybe it will in future (?)
 
-    # check if -t flag is present
-    if [ "$1" = "-t" ]; then
-        if [ $# -lt 3 ]; then
-            printf "<<< ERROR: with -t flag, must have at least 3 arguments, but %s given " "$#" >&2
-            return 1
-        fi
+    # check number of arguments
+    if [ $# -ne 2 ]; then
+        echo "<<< ERROR: must have 2 arguments , but $# given " >&2
+        return 1
+    fi
 
-        target_dir="$2"
-        shift 2
+    # check if source item exist
+    if ! readlink -e "$1" >/dev/null; then
+        echo "<<< ERROR: " "$1" " doesn't exist" >&2
+        return 1
+    fi
 
-        # check if target directory exists
-        if [ ! -d "$target_dir" ]; then
-            printf "<<< ERROR: target directory %s doesn't exist" "$target_dir" >&2
-            return 1
-        fi
+    # check where file goes
 
-        for src in "$@"; do
-            if ! readlink -e "$src" >/dev/null; then
-                printf "<<< ERROR: %s doesn't exist" "$src" >&2
-                return 1
-            fi
-            printf "Moving %s into %s directory" "$src" "$target_dir"
-        done
+    if [ -d "$2" ]; then
+        echo "Moving " "$1" " into " "$2" " directory"
     else
-        # check number of arguments
-        if [ $# -ne 2 ]; then
-            printf "<<< ERROR: must have 2 arguments, but %d given " "$#" >&2
-            return 1
-        fi
-
-        src="$1"
-        dest="$2"
-
-        # check if source item exists
-        if ! readlink -e "$src" >/dev/null; then
-            printf "<<< ERROR: %s doesn't exist" "$src" >&2
-            return 1
-        fi
-
-        # check where file goes
-        if [ -d "$dest" ]; then
-            printf "Moving %s into %s directory" "$src" "$dest"
-        else
-            printf "Renaming %s to %s" "$src" "$dest"
-        fi
+        echo "Renaming " "$1" " to " "$2"
     fi
 }
 
-
 # Move Function
 function rclonemove() {
-    # Check number of arguments
+    # check if input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1
+    fi
+
+    # check number of arguments
     if [ $# -ne 2 ]; then
-        printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
+        printf "<<< ERROR: must have 2 arguments , but %s given.\n" "$#" >&2
         return 1
     fi
 
-    # Check if source exists
-    local source
-    if ! source=$(readlink -e "$1"); then
-        printf "<<< ERROR: Source \"%s\" doesn't exist or is not accessible.\n" "$1" >&2
+    # check if source item exist
+    if ! readlink -e "$1" >/dev/null; then
+        printf "<<< ERROR: \"%s\" doesn't exist.\n" "$1" >&2
         return 1
     fi
 
-    local destination="$2"
-    local parent_dir
-    parent_dir=$(dirname "$destination")
-
-    # Check if parent directory of destination exists
-    if [ ! -d "$parent_dir" ]; then
-        printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
-        read -p "Do you want to create it? (y/n): " -n 1 -r
-        echo    # Move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            mkdir -p "$parent_dir"
-        else
-            printf "Operation cancelled.\n"
-            return 1
-        fi
+    # check destination
+    if [ -d "$2" ]; then
+        printf "Destination \"%s\" exists, moving \"%s\" into \"%s\".\n" "$2" "$1" "$2"
+    else
+        printf "Destination \"%s\" doesn't exist, creating directory \"%s\".\n" "$2" "$2"
     fi
 
-    printf "Moving \"%s\" to \"%s\".\n" "$source" "$destination"
-    rclone move -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
+    rclone move -P "$1" "$2"
 }
 
 # Copy Function
 function rclonecopy() {
-    # Check number of arguments
+    # check if input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1
+    fi
+    # check number of arguments
     if [ $# -ne 2 ]; then
-        printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
+        printf "<<< ERROR: must have 2 arguments , but %s given.\n" "$#" >&2
         return 1
     fi
 
-    # Check if source exists
-    local source
-    if ! source=$(readlink -e "$1"); then
-        printf "<<< ERROR: Source \"%s\" doesn't exist or is not accessible.\n" "$1" >&2
+    # check if source item exist
+    if ! readlink -e "$1" >/dev/null; then
+        printf "<<< ERROR: \"%s\" doesn't exist.\n" "$1" >&2
         return 1
     fi
 
-    local destination="$2"
-    local parent_dir
-    parent_dir=$(dirname "$destination")
-
-    # Check if parent directory of destination exists
-    if [ ! -d "$parent_dir" ]; then
-        printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
-        read -p "Do you want to create it? (y/n): " -n 1 -r
-        echo    # Move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            mkdir -p "$parent_dir"
-        else
-            printf "Operation cancelled.\n"
-            return 1
-        fi
+    # check destinatino
+    if [ -d "$2" ]; then
+        printf "Destination \"%s\" exists, moving \"%s\" into \"%s\".\n" "$2" "$1" "$2"
+    else
+        printf "Destination \"%s\" doesn't exist, creating directory \"%s\".\n" "$2" "$2"
     fi
 
-    printf "Copying \"%s\" to \"%s\".\n" "$source" "$destination"
-    rclone copy -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
+    rclone copy -P "$1" "$2"
 }
 
 # Function to find largest files in the current directory
@@ -460,19 +382,13 @@ function hexToAscii() {
     printf "\x%s" "$1"
 }
 
-# idk man
+#
 function c2f() {
     fc -lrn | head -1 >>"${1?}"
 }
 
 # Get history
 function hist() {
-
-    if [ -z "$1" ]; then
-        history
-        return 0
-    fi
-
     history | grep "$1"
 }
 
@@ -484,6 +400,10 @@ function findd() {
 function findf() {
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type f
+}
+
+function findoutside() {
+    find -- * -not -path "./{$1} {$2}/*" -not -path "./_{$1}.{$2}" -not -path "./Lexi Luna "-type d -iname "*{$1}*{$2}*"
 }
 
 # Function to extract rar files from incomplete or broken NZB downloads
@@ -553,13 +473,11 @@ function ex() {
         *.zip) unzip "$1" ;;
         *.Z) uncompress "$1" ;;
         *.7z) 7zz x "$1" ;;
+        #*.7z) 7zz x "$1" ;;
         *.deb) ar x "$1" ;;
         *.tar.xz) tar xf "$1" ;;
         *.tar.zst) unzstd "$1" ;;
-        *)
-            echo "extract: '$1' - unknown archive method"
-            return 1
-            ;;
+        *) echo "'$1' cannot be extracted via ex()" ;;
         esac
     fi
 }
@@ -779,7 +697,7 @@ function flatten() {
     done
 }
 
-function abc() {
+abc() {
     local n=$1
     local m=$2
     shift 2
@@ -812,20 +730,5 @@ function Zlist2() {
     if [ -n "$1" ]; then
         zfs list "$1"
         zfs list -t snapshot "$1"
-    fi
-}
-
-function command_exists() {
-    local cmd="$1"
-
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: command_exists <command>" >&2
-        return 2
-    fi
-
-    if command -v "$cmd" > /dev/null 2>&1; then
-        return 0
-    else
-        return 1
     fi
 }

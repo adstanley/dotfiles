@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
-#===============================================================================#
-#          ____ ___ ____ __  __    _    ____ _   _    _    ____                 #
-#         / ___|_ _/ ___|  \/  |  / \  / ___| | | |  / \  |  _ \                #
-#         \___ \| | |  _| |\/| | / _ \| |   | |_| | / _ \ | | | |               #
-#          ___) | | |_| | |  | |/ ___ \ |___|  _  |/ ___ \| |_| |               #
-#         |____/___\____|_|  |_/_/   \_\____|_| |_/_/   \_\____/                #
-#                                                   Chet Manley                 #
-#                                           http://sigmachad.io                 #
-#                                   http://github.com/adstanley                 #
-#===============================================================================#
-
-#===============================================================================#
-# Variables
-#===============================================================================#
+###########################################################
+#  ____ ___ ____ __  __    _    ____ _   _    _    ____   #
+# / ___|_ _/ ___|  \/  |  / \  / ___| | | |  / \  |  _ \  #
+# \___ \| | |  _| |\/| | / _ \| |   | |_| | / _ \ | | | | #
+#  ___) | | |_| | |  | |/ ___ \ |___|  _  |/ ___ \| |_| | #
+# |____/___\____|_|  |_/_/   \_\____|_| |_/_/   \_\____/  #
+#                                                         #
+#    ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗     #
+#    ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔════╝     #
+#    ██████╔╝███████║███████╗███████║██████╔╝██║          #
+#    ██╔══██╗██╔══██║╚════██║██╔══██║██╔══██╗██║          #
+#    ██████╔╝██║  ██║███████║██║  ██║██║  ██║╚██████╗     #
+#    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     #
+#                            http://github.com/adstanley  #
+#                                    http://sigmachad.io  #
+#                                            Chet Manley  #
+###########################################################
 
 dotfiles_dir=~/dotfiles
 log_file=~/install_progress_log.txt
@@ -26,8 +29,12 @@ fi
 # Move existing dot files and folders
 #===============================================================================#
 
+function command_exists() {
+    command -v "$1" > /dev/null 2>&1
+}
+
 # check if gnu stow is installed
-if ! command -v stow &> /dev/null; then
+if ! command_exists "stow"; then
     printf "GNU Stow is not installed. Please install it first.\n"
     exit 1
 fi
@@ -38,21 +45,28 @@ if [ ! -d ~/.dotfiles_old ]; then
     mkdir -p ~/.dotfiles_old
 fi
 
-movefiles() {
+move_dot_files() {
+    local dot_files=(
+        ".vim"
+        ".vimrc"
+        ".bashrc"
+        ".tmux"
+        ".tmux.conf"
+        ".zsh_prompt"
+        ".zshrc"
+        ".gitconfig"
+        ".antigen"
+        ".antigen.zsh"
+        ".psqlrc"
+        ".tigrc"
+        ".config"
+    )
+
     printf "\n====== Moving existing dot files ======\n"
-    sudo mv -rf ~/.vim > /dev/null 2>&1
-    sudo mv -rf ~/.vimrc > /dev/null 2>&1
-    sudo mv -rf ~/.bashrc > /dev/null 2>&1
-    sudo mv -rf ~/.tmux > /dev/null 2>&1
-    sudo mv -rf ~/.tmux.conf > /dev/null 2>&1
-    sudo mv -rf ~/.zsh_prompt > /dev/null 2>&1
-    sudo mv -rf ~/.zshrc > /dev/null 2>&1
-    sudo mv -rf ~/.gitconfig > /dev/null 2>&1
-    sudo mv -rf ~/.antigen > /dev/null 2>&1
-    sudo mv -rf ~/.antigen.zsh > /dev/null 2>&1
-    sudo mv -rf ~/.psqlrc > /dev/null 2>&1
-    sudo mv -rf ~/.tigrc > /dev/null 2>&1
-    sudo mv -rf ~/.config > /dev/null 2>&1
+
+    for ((i = 0; i < ${#dot_files[@]}; i++)); do
+        sudo mv -rf ~/"${dot_files[$i]}" > /dev/null 2>&1
+    done
 }
 
 ## move existing dotfiles to backup folder
@@ -73,13 +87,31 @@ done
 # Create symlinks in the home folder
 # Allow overriding with files of matching names in the custom-configs dir
 #===============================================================================#
+link_dotfiles() {
+    local dot_files=(
+        ".vim"
+        ".vimrc"
+        ".bashrc"
+        ".tmux"
+        ".tmux.conf"
+        ".zsh_prompt"
+        ".zshrc"
+        ".gitconfig"
+        ".antigen"
+        ".antigen.zsh"
+        ".psqlrc"
+        ".tigrc"
+        ".config"
+    )
 
-ln -sf $dotfiles_dir/vim ~/.vim
-ln -sf $dotfiles_dir/vimrc ~/.vimrc
-ln -sf $dotfiles_dir/bashrc ~/.bashrc
-ln -sf $dotfiles_dir/linux-tmux ~/.tmux
-ln -sf $dotfiles_dir/config ~/.config
+    printf "\n====== Creating symlinks ======\n"
 
+    for file in "${dot_files[@]}"; do
+        ln -sf $dotfiles_dir/"$file" ~/"$file"
+    done
+
+
+}
 
 if [ -n "$(find $dotfiles_dir/custom-configs -name gitconfig)" ]; then
     ln -s $dotfiles_dir/custom-configs/**/gitconfig ~/.gitconfig
@@ -109,6 +141,7 @@ fi
 #===============================================================================#
 # Give the user a summary of what has been installed                            #
 #===============================================================================#
+
 printf "\n====== Summary ======\n"
 cat $log_file
 printf
