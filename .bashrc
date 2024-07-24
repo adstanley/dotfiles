@@ -220,14 +220,15 @@ alias cpv='rsync -ah --info=progress2'
 # Truetool script Shortcut
 alias truetool='bash ~/truetool/truetool.sh'
 
-## ZFS Aliases
+# get diskspace
+alias diskspace="du -S | sort -n -r | less"
 
+## ZFS Aliases
 # iostat
 alias iostat='zpool iostat -vly 5 1'
 alias zdb='zdb -U /data/zfs/zpool.cache'
 
-# get held snapshots
-# alias holds="zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds"
+# get snapshots
 alias snapshot='zfs list -t snapshot'
 alias snapshot1='zfs list -H -o name -t snapshot'
 
@@ -758,7 +759,7 @@ function insertDirectory2() {
     mv -nv "$(realpath "$1")" "$(dirname "$1")/$insert/$(basename "$1")"
 }
 
-function flatten() {
+function flatten_old() {
     local -a flatten
     readarray -t flatten < <(find . -type f)
     if [ "${#flatten[@]}" -eq 0 ]; then
@@ -777,6 +778,38 @@ function flatten() {
     for ((i = 0; i < "${#flatten[@]}"; i++)); do
         mv --no-clobber --verbose "${flatten[$i]}" ./
     done
+}
+
+function flatten() {
+    local -a flatten
+    local -a duplicates
+    local current_dir
+    current_dir=$(pwd)
+    
+    readarray -t flatten < <(find "$current_dir" -type f)
+    if [ "${#flatten[@]}" -eq 0 ]; then
+        printf "No files found in subdirectories.\n" >&2
+        return 1
+    else
+        printf "%s\n" "${flatten[@]}"
+        printf "\nFound %s files in %s subdirectories.\n" "${#flatten[@]}" "$(find "$current_dir" -type d | wc -l)"
+    fi
+
+    read -rp "This will move all files in subdirectories to the current directory. Continue? (Y\N) : " answer
+    if [[ ! $answer =~ ^[Yy] ]]; then
+        printf "Aborting...\n" >&2
+        return 1
+    fi
+    for ((i = 0; i < "${#flatten[@]}"; i++)); do
+        if ! mv --no-clobber --verbose "${flatten[$i]}" "$current_dir" 2>/dev/null; then
+            duplicates+=("${flatten[$i]}")
+        fi
+    done
+
+    if [ "${#duplicates[@]}" -gt 0 ]; then
+        printf "\nThe following files were not moved due to duplicates:\n"
+        printf "%s\n" "${duplicates[@]}"
+    fi
 }
 
 function abc() {
@@ -806,13 +839,15 @@ function nested2() {
 
 }
 
-function Zlist() { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
-
-function Zlist2() {
+# List 
+function Zlist() {
     if [ -n "$1" ]; then
         zfs list "$1"
         zfs list -t snapshot "$1"
     fi
+
+    # one-liner
+    # { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
 }
 
 function command_exists() {
@@ -828,4 +863,14 @@ function command_exists() {
     else
         return 1
     fi
+}
+
+function getfiles() {
+    find -- * -type f
+}
+
+# Create a .7z compressed file with maximum compression
+# Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
+function 7zip() { 
+    7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
 }
