@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 ###########################################################
 #  ____ ___ ____ __  __    _    ____ _   _    _    ____   #
 # / ___|_ _/ ___|  \/  |  / \  / ___| | | |  / \  |  _ \  #
@@ -16,33 +15,55 @@
 #                                    http://sigmachad.io  #
 #                                            Chet Manley  #
 ###########################################################
+#
+# Bashrc
+# Shellcheck Directvies
+# shellcheck shell=bash
+# shellcheck source=/dev/null
+# shellcheck disable=SC1090
+# shellcheck disable=SC1091
+# shellcheck disable=SC2034
 
-dotfiles_dir=~/dotfiles
-log_file=~/install_progress_log.txt
+# dot_files=(
+#     ".vim"
+#     ".vimrc"
+#     ".bashrc"
+#     ".tmux"
+#     ".tmux.conf"
+#     ".zsh_prompt"
+#     ".zshrc"
+#     ".gitconfig"
+#     ".antigen"
+#     ".antigen.zsh"
+#     ".psqlrc"
+#     ".tigrc"
+#     ".config"
+# )
+
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}"
+data_dir="${XDG_DATA_HOME:-$HOME/.local/share}"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+# Then use these variables as needed
+dotfiles_dir="$config_dir/dotfiles"
 
 ## create logfile
-if [ ! -f $log_file ]; then
-    touch $log_file
+log_file="$config_dir/install_progress_log.txt"
+
+if [ ! -f "$log_file" ]; then
+    touch "$log_file"
 fi
-
-#===============================================================================#
-# Move existing dot files and folders
-#===============================================================================#
-
-function command_exists() {
-    command -v "$1" > /dev/null 2>&1
-}
-
-# check if gnu stow is installed
-if ! command_exists "stow"; then
-    printf "GNU Stow is not installed. Please install it first.\n"
-    exit 1
-fi
-
 
 ## create backup folder
-if [ ! -d ~/.dotfiles_old ]; then
-    mkdir -p ~/.dotfiles_old
+if [ ! -d ~/.dotfiles.bak ]; then
+    mkdir -p ~/.dotfiles.bak
+fi
+
+# check if gnu stow is installed
+if ! command -v "stow" > /dev/null 2>&1; then
+    printf "GNU Stow is not installed. Please install it first.\n"
+    exit 1
 fi
 
 move_dot_files() {
@@ -65,7 +86,7 @@ move_dot_files() {
     printf "\n====== Moving existing dot files ======\n"
 
     for ((i = 0; i < ${#dot_files[@]}; i++)); do
-        sudo mv -rf ~/"${dot_files[$i]}" > /dev/null 2>&1
+        sudo mv --no-clobber --verbose ~/"${dot_files[$i]}" ~/"${dot_files[$i]}"_"$(date +"%Y-%m-%d_%H-%M-%S")".bk
     done
 }
 
@@ -107,34 +128,34 @@ link_dotfiles() {
     printf "\n====== Creating symlinks ======\n"
 
     for file in "${dot_files[@]}"; do
-        ln -sf $dotfiles_dir/"$file" ~/"$file"
+        ln -sf "$dotfiles_dir"/"$file" ~/"$file"
     done
 
 
 }
 
-if [ -n "$(find $dotfiles_dir/custom-configs -name gitconfig)" ]; then
-    ln -s $dotfiles_dir/custom-configs/**/gitconfig ~/.gitconfig
+if [ -n "$(find "$dotfiles_dir"/custom-configs -name gitconfig)" ]; then
+    ln -s "$dotfiles_dir"/custom-configs/**/gitconfig ~/.gitconfig
 else
-    ln -s $dotfiles_dir/gitconfig ~/.gitconfig
+    ln -s "$dotfiles_dir"/gitconfig ~/.gitconfig
 fi
 
-if [ -n "$(find $dotfiles_dir/custom-configs -name tmux.conf)" ]; then
-    ln -s $dotfiles_dir/custom-configs/**/tmux.conf ~/.tmux.conf
+if [ -n "$(find "$dotfiles_dir"/custom-configs -name tmux.conf)" ]; then
+    ln -s "$dotfiles_dir"/custom-configs/**/tmux.conf ~/.tmux.conf
 else
-    ln -s $dotfiles_dir/linux-tmux/tmux.conf ~/.tmux.conf
+    ln -s "$dotfiles_dir"/linux-tmux/tmux.conf ~/.tmux.conf
 fi
 
-if [ -n "$(find $dotfiles_dir/custom-configs -name tigrc)" ]; then
-    ln -s $dotfiles_dir/custom-configs/**/tigrc ~/.tigrc
+if [ -n "$(find "$dotfiles_dir"/custom-configs -name tigrc)" ]; then
+    ln -s "$dotfiles_dir"/custom-configs/**/tigrc ~/.tigrc
 else
-    ln -s $dotfiles_dir/tigrc ~/.tigrc
+    ln -s "$dotfiles_dir"/tigrc ~/.tigrc
 fi
 
-if [ -n "$(find $dotfiles_dir/custom-configs -name psqlrc)" ]; then
-    ln -s $dotfiles_dir/custom-configs/**/psqlrc ~/.psqlrc
+if [ -n "$(find "$dotfiles_dir"/custom-configs -name psqlrc)" ]; then
+    ln -s "$dotfiles_dir"/custom-configs/**/psqlrc ~/.psqlrc
 else
-    ln -s $dotfiles_dir/psqlrc ~/.psqlrc
+    ln -s "$dotfiles_dir"/psqlrc ~/.psqlrc
 fi
 
 
@@ -143,7 +164,7 @@ fi
 #===============================================================================#
 
 printf "\n====== Summary ======\n"
-cat $log_file
+cat "$log_file"
 printf
 printf "DONE\n"
-rm $log_file
+rm "$log_file"
