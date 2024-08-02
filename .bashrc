@@ -201,8 +201,8 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
 # Exa alias settings
-alias exa='exa -lahg --color=always --icons --group-directories-first'
-alias ls='exa -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
+alias eza='eza -lahg --color=always --icons --group-directories-first'
+alias ls='eza -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
 
 # Directory Shortcuts
 alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
