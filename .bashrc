@@ -36,22 +36,7 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-## "bat" as manpager
-if command -v bat >/dev/null 2>&1; then
-    export MANPAGER="bat"
-    # export MANPAGER="nvim -c 'set ft=man' -"
-else
-    export MANPAGER="less"
-fi
-
-## if nvim is installed, set as default editor
-if command -v nvim >/dev/null 2>&1; then
-    export EDITOR="nvim"
-else
-    export EDITOR="nano"
-fi
-
-## Add to PATH
+## Add to PATH first 
 if [ -d "$HOME/.bin" ]; then
     PATH="$HOME/.bin:$PATH"
 fi
@@ -70,6 +55,21 @@ if [ -d "${HOME}"/.bash_completion.d ]; then
     for file in "${HOME}"/.bash_completion.d/* ; do
         source "$file"
     done
+fi
+
+## "bat" as manpager
+if command -v bat >/dev/null 2>&1; then
+    export MANPAGER="bat"
+    # export MANPAGER="nvim -c 'set ft=man' -"
+else
+    export MANPAGER="less"
+fi
+
+## if nvim is installed, set as default editor
+if command -v nvim >/dev/null 2>&1; then
+    export EDITOR="nvim"
+else
+    export EDITOR="nano"
 fi
 
 ## Bash history
