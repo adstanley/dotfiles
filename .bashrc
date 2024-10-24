@@ -123,20 +123,32 @@ fi
 #        tiple times, as necessary, to indicate multiple levels of  indi‐
 #        rection.  The default is ``+ ''.
 
+# TODO: Delete
 ## ANSI Escape Codes
 # Colors
-BLACK='\[\033[01;30m\]'     # Black
-RED='\[\033[01;31m\]'       # Red
-GREEN='\[\033[01;32m\]'     # Green
-YELLOW='\[\033[01;33m\]'    # Yellow
-BLUE='\[\033[01;34m\]'      # Blue
-PURPLE='\[\033[01;35m\]'    # Purple
-CYAN='\[\033[01;36m\]'      # Cyan
-WHITE='\[\033[01;37m\]'     # White      
-GREEN="\[\033[38;5;2m\]"    # Green
-YELLOW="\[\033[38;5;11m\]"  # Yellow
-BLUE="\[\033[38;5;6m\]"     # Blue
-RESET="\[$(tput sgr0)\]"    # Reset
+# BLACK='\[\033[01;30m\]'     # Black
+# RED='\[\033[01;31m\]'       # Red
+# GREEN='\[\033[01;32m\]'     # Green
+# YELLOW='\[\033[01;33m\]'    # Yellow
+# BLUE='\[\033[01;34m\]'      # Blue
+# PURPLE='\[\033[01;35m\]'    # Purple
+# CYAN='\[\033[01;36m\]'      # Cyan
+# WHITE='\[\033[01;37m\]'     # White
+# GREEN="\[\033[38;5;2m\]"    # Green
+# YELLOW="\[\033[38;5;11m\]"  # Yellow
+# BLUE="\[\033[38;5;6m\]"     # Blue      
+
+## ANSI Escape Codes
+# Colors
+BLACK=$(tput setaf 0)   # \033[1;30m - Black
+RED=$(tput setaf 1)     # \033[1;31m - Red
+GREEN=$(tput setaf 2)   # \033[1;32m - Green
+YELLOW=$(tput setaf 3)  # \033[1;33m - Yellow
+BLUE=$(tput setaf 4)    # \033[1;34m - Blue
+PURPLE=$(tput setaf 5)  # \033[1;35m - Purple (Magenta)
+CYAN=$(tput setaf 6)    # \033[1;36m - Cyan
+WHITE=$(tput setaf 7)   # \033[1;37m - White
+RESET=$(tput sgr0)      # \033[0m - Reset all attributes
 
 # Text Attributes
 BOLD='\033[01m'             # Bold ANSI escape code
@@ -205,7 +217,7 @@ alias eza='eza -lahg --color=always --icons --group-directories-first'
 alias ls='eza -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
 
 # Directory Shortcuts
-alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
+# alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
 alias getfiles="find -- * -type f"                # Find all files in the current directory
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
 
@@ -220,8 +232,6 @@ alias cpv='rsync -ah --info=progress2'
 # Truetool script Shortcut
 alias truetool='bash ~/truetool/truetool.sh'
 
-# get diskspace
-alias diskspace="du -S | sort -n -r | less"
 
 ## ZFS Aliases
 # iostat
@@ -238,7 +248,8 @@ alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
 alias psmem='ps auxf | sort -nr -k 4'
 alias pscpu='ps auxf | sort -nr -k 3'
 
-# adding flags
+# get diskspace
+alias diskspace="du -S | sort -n -r | less"
 alias df='df -h'     # human-readable sizes
 alias free='free -m' # show sizes in MB
 
@@ -487,6 +498,12 @@ function findf() {
     find -- * -iname "*$1*" -type f
 }
 
+# Create a .7z compressed file with maximum compression
+# Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
+function 7zip() { 
+    7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
+}
+
 # Function to extract rar files from incomplete or broken NZB downloads
 function packs() {
     printf "extracting rar volumes with out leading zeros.\n"
@@ -678,7 +695,7 @@ function getspace() {
     fi
 
     # Retrieve the list of snapshots for the given dataset
-    #if output=$(zfs list -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
+    # if output=$(zfs list -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
     if output=$(zfs list -H -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
         printf "%s\n" "$output"
     else
@@ -863,14 +880,4 @@ function command_exists() {
     else
         return 1
     fi
-}
-
-function getfiles() {
-    find -- * -type f
-}
-
-# Create a .7z compressed file with maximum compression
-# Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
-function 7zip() { 
-    7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
 }
