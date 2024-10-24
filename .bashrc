@@ -37,21 +37,21 @@
 [[ $- != *i* ]] && return
 
 ## Add to PATH first 
-if [ -d "$HOME/.bin" ]; then
-    PATH="$HOME/.bin:$PATH"
+if [ -d "${HOME}/.bin" ]; then
+    PATH="${HOME}/.bin:$PATH"
 fi
 
-if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin:$PATH"
+if [ -d "${HOME}/.local/bin" ]; then
+    PATH="${HOME}/.local/bin:$PATH"
 fi
 
 # if using multiple files for bashrc
-if [ -f "$HOME/.bash_directory" ]; then
-    source "$HOME/.bash_directory"
+if [ -f "${HOME}/.bash_directory" ]; then
+    source "${HOME}/.bash_directory"
 fi
 
 # Source custom completion scripts
-if [ -d "${HOME}"/.bash_completion.d ]; then
+if [ -d "${HOME}/.bash_completion.d" ]; then
     for file in "${HOME}"/.bash_completion.d/* ; do
         source "$file"
     done
@@ -100,13 +100,13 @@ shopt -s nullglob       # null globbing, no match returns null
 
 ## Environmental Variables
 if [ -z "$XDG_CONFIG_HOME" ]; then
-    export XDG_CONFIG_HOME="$HOME/.config"
+    export XDG_CONFIG_HOME="${HOME}/.config"
 fi
 if [ -z "$XDG_DATA_HOME" ]; then
-    export XDG_DATA_HOME="$HOME/.local/share"
+    export XDG_DATA_HOME="${HOME}/.local/share"
 fi
 if [ -z "$XDG_CACHE_HOME" ]; then
-    export XDG_CACHE_HOME="$HOME/.cache"
+    export XDG_CACHE_HOME="${HOME}/.cache"
 fi
 
 ## Prompt
