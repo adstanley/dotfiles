@@ -77,6 +77,7 @@ HISTCONTROL=ignoredups:erasedups    # don't put duplicate lines in the history.
 HISTSIZE='INFINITE'                 # set history length, non integer values set history to infinite
 HISTFILESIZE='STONKS'               # set file size, non integer values set history to infinite
 HISTTIMEFORMAT="%F %T "             # set history time format, %F = full date, %T = time
+HISTIGNORE="&:ls:[bf]g:exit"        # ignore these commands in history
 shopt -s histappend                 # append to the history file, don't overwrite it
 shopt -s cmdhist                    # try to save all lines of a multiple-line command in the same history entry
 
@@ -123,32 +124,32 @@ fi
 #        tiple times, as necessary, to indicate multiple levels of  indi‐
 #        rection.  The default is ``+ ''.
 
-# TODO: Delete
+# TODO: Breaks line feed
 ## ANSI Escape Codes
 # Colors
-# BLACK='\[\033[01;30m\]'     # Black
-# RED='\[\033[01;31m\]'       # Red
-# GREEN='\[\033[01;32m\]'     # Green
-# YELLOW='\[\033[01;33m\]'    # Yellow
-# BLUE='\[\033[01;34m\]'      # Blue
-# PURPLE='\[\033[01;35m\]'    # Purple
-# CYAN='\[\033[01;36m\]'      # Cyan
-# WHITE='\[\033[01;37m\]'     # White
-# GREEN="\[\033[38;5;2m\]"    # Green
-# YELLOW="\[\033[38;5;11m\]"  # Yellow
-# BLUE="\[\033[38;5;6m\]"     # Blue      
+# BLACK=$(tput setaf 0)   # \033[1;30m - Black
+# RED=$(tput setaf 1)     # \033[1;31m - Red
+# GREEN=$(tput setaf 2)   # \033[1;32m - Green
+# YELLOW=$(tput setaf 3)  # \033[1;33m - Yellow
+# BLUE=$(tput setaf 4)    # \033[1;34m - Blue
+# PURPLE=$(tput setaf 5)  # \033[1;35m - Purple (Magenta)
+# CYAN=$(tput setaf 6)    # \033[1;36m - Cyan
+# WHITE=$(tput setaf 7)   # \033[1;37m - White
+# RESET=$(tput sgr0)      # \033[0m - Reset all attributes
 
 ## ANSI Escape Codes
 # Colors
-BLACK=$(tput setaf 0)   # \033[1;30m - Black
-RED=$(tput setaf 1)     # \033[1;31m - Red
-GREEN=$(tput setaf 2)   # \033[1;32m - Green
-YELLOW=$(tput setaf 3)  # \033[1;33m - Yellow
-BLUE=$(tput setaf 4)    # \033[1;34m - Blue
-PURPLE=$(tput setaf 5)  # \033[1;35m - Purple (Magenta)
-CYAN=$(tput setaf 6)    # \033[1;36m - Cyan
-WHITE=$(tput setaf 7)   # \033[1;37m - White
-RESET=$(tput sgr0)      # \033[0m - Reset all attributes
+BLACK='\[\033[01;30m\]'     # Black
+RED='\[\033[01;31m\]'       # Red
+GREEN='\[\033[01;32m\]'     # Green
+YELLOW='\[\033[01;33m\]'    # Yellow
+BLUE='\[\033[01;34m\]'      # Blue
+PURPLE='\[\033[01;35m\]'    # Purple
+CYAN='\[\033[01;36m\]'      # Cyan
+WHITE='\[\033[01;37m\]'     # White
+GREEN="\[\033[38;5;2m\]"    # Green
+YELLOW="\[\033[38;5;11m\]"  # Yellow
+BLUE="\[\033[38;5;6m\]"     # Blue     
 
 # Text Attributes
 BOLD='\033[01m'             # Bold ANSI escape code
@@ -280,17 +281,34 @@ alias nvim='~/nvim.appimage'
 ################################### Functions ###################################
 #################################################################################
 
-# Count Fields
-function countfields() {
-    find -- * -maxdepth 0 -type d | awk -F"." '{print NF, $0}' | sort -nr | uniq -c
-}
 
-# Function to find duplicate files by name
+#@begin_function countfields
+# Name: countfields
+# Description: Count the number of fields in a directory name
+# Arguments: [directory]
+# Usage: countfields [directory] 
+function countfields() {
+    # if $1 is empty, use "*"
+    local target_dir="${1:-*}"
+
+    find -- "$target_dir" -maxdepth 0 -type d | awk -F"." '{print NF, $0}' | sort -nr | uniq -c
+}
+#@end_function
+
+
+#@begin_function dupebyname
+# Name: example
+# Description: This is an example function
+# Usage: example [argument]
 function dupebyname() {
     find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
+#@end_function
 
-# Function to chown root recursively
+#@begin_function ownroot
+# Name: example
+# Description: This is an example function
+# Usage: example [argument]
 function ownroot() {
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
@@ -304,7 +322,12 @@ function ownroot() {
     # Change ownership recursively
     chown -R -v root:root "$target_dir"
 }
+#@end_function
 
+#@begin_function mod775
+# Name: mod775
+# Description: modify permissions to 775, will default to current directory
+# Usage: mod775 ./
 function mod775() {
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
@@ -318,8 +341,10 @@ function mod775() {
     # Change ownership recursively
     chmod -R -v 775 "$target_dir"
 }
+#@end_function
 
 # Git
+#@begin_function git_shallow
 function git_shallow() {
     if [ "$1" = "clone" ]; then
         shift 1
@@ -328,8 +353,19 @@ function git_shallow() {
         command git "$@"
     fi
 }
+#@end_function
+
+#@begin_function
+# Name: git_branch
+# Description: Shows current git branch
+# Usage: git_branch
+function git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+#@end_function
 
 # Move Check
+#@begin_function mv_check
 function mv_check() {
 
     # Function for checking syntax of mv command
@@ -383,9 +419,11 @@ function mv_check() {
         fi
     fi
 }
+#@end_function
 
 
 # Move Function
+#@begin_function rclonemove
 function rclonemove() {
     # Check number of arguments
     if [ $# -ne 2 ]; then
@@ -420,8 +458,10 @@ function rclonemove() {
     printf "Moving \"%s\" to \"%s\".\n" "$source" "$destination"
     rclone move -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
 }
+#@end_function
 
 # Copy Function
+#@begin_function rclonecopy
 function rclonecopy() {
     # Check number of arguments
     if [ $# -ne 2 ]; then
@@ -456,28 +496,38 @@ function rclonecopy() {
     printf "Copying \"%s\" to \"%s\".\n" "$source" "$destination"
     rclone copy -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
 }
+#@end_function
 
 # Function to find largest files in the current directory
+#@begin_function find_largest_files
 function find_largest_files() {
     du -h -x -s -- * | sort -r -h | head -20;
 }
+#@end_function
 
 # Function to backup file by appending .bk to the end of the file name
+#@begin_function bk
 function bk() {
     cp "$1" "$1_$(date +"%Y-%m-%d_%H-%M-%S")".bk
 }
+#@end_function
 
 # Function to convert hex to Asciic
+#@begin_function hexToAscii
 function hexToAscii() {
     printf "\x%s" "$1"
 }
+#@end_function
 
 # idk man
+#@begin_function c2f
 function c2f() {
     fc -lrn | head -1 >>"${1?}"
 }
+#@end_function
 
 # Get history
+#@begin_function hist
 function hist() {
 
     if [ -z "$1" ]; then
@@ -487,32 +537,42 @@ function hist() {
 
     history | grep "$1"
 }
+#@end_function
 
+#@begin_function findd
 function findd() {
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type d
 }
+#@end_function
 
+#@begin_function findf
 function findf() {
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type f
 }
+#@end_function
 
 # Create a .7z compressed file with maximum compression
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
+#@begin_function 7zip
 function 7zip() { 
     7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
 }
+#@end_function
 
 # Function to extract rar files from incomplete or broken NZB downloads
+#@begin_function packs
 function packs() {
     printf "extracting rar volumes with out leading zeros.\n"
     { unrar e '*part1.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
     printf "extracting rar volumes with leading zeros.\n"
     { unrar e '*part01.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
 }
+#@end_function
 
 # Simple function to identify the type of compression used on a file and extract accordingly
+#@begin_function extract
 function extract() {
     if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
@@ -549,9 +609,11 @@ function extract() {
         done
     fi
 }
+#@end_function
 
 ### ARCHIVE EXTRACTION
 # usage: ex <file>
+#@begin_function ex
 function ex() {
     if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
@@ -581,8 +643,10 @@ function ex() {
         esac
     fi
 }
+#@end_function
 
 # navigation
+#@begin_function up
 function up() {
     local d=""
     local limit="$1"
@@ -601,18 +665,24 @@ function up() {
         echo "Couldn't go up $limit dirs."
     fi
 }
+#@end_function
 
+#@begin_function printargs
 function printargs() {
     for ((i = 1; i <= $#; i++)); do
         printf "Arg %d: %s\n" "$i" "${!i}"
     done
 }
+#@end_function
 
 # Define the function to show ZFS holds
+#@begin_function holds
 function holds() {
     zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
+#@end_function
 
+#@begin_function deletesnapshot
 function deletesnapshot() {
     # Check if the input is empty
     if [ -z "$1" ]; then
@@ -635,7 +705,9 @@ function deletesnapshot() {
         printf "Aborting...\n"
     fi
 }
+#@end_function
 
+#@begin_function takesnapshot
 function takesnapshot() {
     # Check if the input is empty
     if [ -z "$1" ]; then
@@ -657,7 +729,9 @@ function takesnapshot() {
         return 3 # Exit with error
     fi
 }
+#@end_function
 
+#@begin_function getsnapshot
 function getsnapshot() {
     # Check if the input is empty
     if [ -z "$1" ]; then
@@ -679,7 +753,9 @@ function getsnapshot() {
         return 3
     fi
 }
+#@end_function
 
+#@begin_function getspace
 function getspace() {
 
     # Check if the input is empty
@@ -704,8 +780,10 @@ function getspace() {
     fi
 
 }
+#@end_function
 
 # Function to find all file extensions in the current directory
+#@begin_function extensions
 function extensions() {
     # Check if the directory is empty
     if [ -d "$PWD" ]; then
@@ -715,10 +793,12 @@ function extensions() {
 
     find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
 }
+#@end_function
 
 # Takes a alias name and gets the last command from the history. Makes it an
 # alias and puts it in .bash_aliases. Be sure to source .bash_aliases in .bashrc
 # or this wont work.
+#@begin_function makeAlias
 function makeAlias() {
     if [ $# -eq 0 ]; then
         echo "No arguments supplied. You need to pass an alias name"
@@ -729,7 +809,9 @@ function makeAlias() {
         . ~/.bashrc
     fi
 }
+#@end_function
 
+#@begin_function moveTemplate
 function moveTemplate() {
     local -a local="$1"
     for ((i = 0; i < "${#local[@]}"; i++)); do
@@ -741,7 +823,9 @@ function moveTemplate() {
         fi
     done
 }
+#@end_function
 
+#@begin_function insertDirectory
 function insertDirectory() {
 
     local filename insert
@@ -760,7 +844,9 @@ function insertDirectory() {
 
     mv -iv "$filename" "$(dirname "$1")/$insert/$(basename "$1")"
 }
+#@end_function
 
+#@begin_function insertDirectory2
 function insertDirectory2() {
 
     if [ ! -d "$PWD"/"$insert" ]; then
@@ -775,7 +861,9 @@ function insertDirectory2() {
 
     mv -nv "$(realpath "$1")" "$(dirname "$1")/$insert/$(basename "$1")"
 }
+#@end_function
 
+#@begin_function flatten_old
 function flatten_old() {
     local -a flatten
     readarray -t flatten < <(find . -type f)
@@ -796,7 +884,9 @@ function flatten_old() {
         mv --no-clobber --verbose "${flatten[$i]}" ./
     done
 }
+#@end_function
 
+#@begin_function flatten
 function flatten() {
     local -a flatten
     local -a duplicates
@@ -828,7 +918,9 @@ function flatten() {
         printf "%s\n" "${duplicates[@]}"
     fi
 }
+#@end_function
 
+#@begin_function abc
 function abc() {
     local n=$1
     local m=$2
@@ -839,11 +931,15 @@ function abc() {
     # Properly quote "$@" to ensure all arguments are passed correctly to the xyz command.
     xyz -n "$n" -m "$m" "$@"
 }
+#@end_function
 
+#@begin_function nested
 function nested() {
     find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
 }
+#@end_function
 
+#@begin_function nested2
 function nested2() {
     find -- * -type d |
         awk -F '/' '{print $NF}' |
@@ -855,8 +951,9 @@ function nested2() {
         done
 
 }
+#@end_function
 
-# List 
+#@begin_function Zlist
 function Zlist() {
     if [ -n "$1" ]; then
         zfs list "$1"
@@ -866,7 +963,9 @@ function Zlist() {
     # one-liner
     # { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
 }
+#@end_function
 
+#@begin_function command_exists
 function command_exists() {
     local cmd="$1"
 
@@ -881,3 +980,4 @@ function command_exists() {
         return 1
     fi
 }
+#@end_function
