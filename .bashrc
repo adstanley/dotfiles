@@ -282,11 +282,11 @@ alias nvim='~/nvim.appimage'
 #################################################################################
 
 
-#@begin_function countfields
 # Name: countfields
 # Description: Count the number of fields in a directory name
 # Arguments: [directory]
 # Usage: countfields [directory] 
+#@begin_function countfields
 function countfields() {
     # if $1 is empty, use "*"
     local target_dir="${1:-*}"
@@ -296,19 +296,19 @@ function countfields() {
 #@end_function
 
 
-#@begin_function dupebyname
 # Name: example
 # Description: This is an example function
 # Usage: example [argument]
+#@begin_function dupebyname
 function dupebyname() {
     find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
 #@end_function
 
-#@begin_function ownroot
 # Name: example
 # Description: This is an example function
 # Usage: example [argument]
+#@begin_function ownroot
 function ownroot() {
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
@@ -324,10 +324,10 @@ function ownroot() {
 }
 #@end_function
 
-#@begin_function mod775
 # Name: mod775
 # Description: modify permissions to 775, will default to current directory
 # Usage: mod775 ./
+#@begin_function mod775
 function mod775() {
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
@@ -355,10 +355,10 @@ function git_shallow() {
 }
 #@end_function
 
-#@begin_function
 # Name: git_branch
 # Description: Shows current git branch
 # Usage: git_branch
+#@begin_function
 function git_branch() {
     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
 }
@@ -979,5 +979,17 @@ function command_exists() {
     else
         return 1
     fi
+}
+#@end_function
+
+#@begin_function list_bashrc_functions
+function list_bashrc_functions() {
+    local bashrc_file="$HOME/.bashrc"  # Adjust the path if necessary
+    awk '
+        BEGIN { inside_function = 0; }
+        /^#@begin_function/ { inside_function = 1; func_name = $2; next }
+        /^#@end_function/ { inside_function = 0; print func_name; next }
+        inside_function { next }
+    ' "$bashrc_file"
 }
 #@end_function
