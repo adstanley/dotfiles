@@ -30,10 +30,10 @@
 #
 #
 #################################################################################
-# Options                                                                       #
+#                       Environmental Variables                                 #
 #################################################################################
 
-# If not running interactively, don't do anything
+## If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
 ## Add to PATH first 
@@ -45,7 +45,7 @@ if [ -d "${HOME}/.local/bin" ]; then
     PATH="${HOME}/.local/bin:$PATH"
 fi
 
-# if using multiple files for bashrc
+# If using multiple files for bashrc
 if [ -f "${HOME}/.bash_directory" ]; then
     source "${HOME}/.bash_directory"
 fi
@@ -65,19 +65,38 @@ else
     export MANPAGER="less"
 fi
 
-## if nvim is installed, set as default editor
+## If nvim is installed, set as default editor
 if command -v nvim >/dev/null 2>&1; then
     export EDITOR="nvim"
 else
     export EDITOR="nano"
 fi
 
+## Set XDG Base Directories
+if [ -z "$XDG_CONFIG_HOME" ]; then
+    export XDG_CONFIG_HOME="${HOME}/.config"
+fi
+
+if [ -z "$XDG_DATA_HOME" ]; then
+    export XDG_DATA_HOME="${HOME}/.local/share"
+fi
+
+if [ -z "$XDG_CACHE_HOME" ]; then
+    export XDG_CACHE_HOME="${HOME}/.cache"
+fi
+
+#################################################################################
+#                            Options                                            #
+#################################################################################
+
 ## Bash history
-HISTCONTROL=ignoredups:erasedups    # don't put duplicate lines in the history.
-HISTSIZE='INFINITE'                 # set history length, non integer values set history to infinite
-HISTFILESIZE='STONKS'               # set file size, non integer values set history to infinite
-HISTTIMEFORMAT="%F %T "             # set history time format, %F = full date, %T = time
-HISTIGNORE="&:ls:[bf]g:exit"        # ignore these commands in history
+HISTCONTROL=ignoredups:erasedups            # don't put duplicate lines in the history.
+HISTSIZE='INFINITE'                         # set history length, non integer values set history to infinite
+HISTFILESIZE='STONKS'                       # set file size, non integer values set history to infinite
+HISTTIMEFORMAT="%F %T "                     # set history time format, %F = full date, %T = time
+HISTFILE="${XDG_DATA_HOME}/bash_history"    # set history file location
+HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these commands in history
+
 shopt -s histappend                 # append to the history file, don't overwrite it
 shopt -s cmdhist                    # try to save all lines of a multiple-line command in the same history entry
 
@@ -99,16 +118,7 @@ shopt -s globstar       # recursive globbing
 shopt -s histverify     # show command with history expansion to allow editing
 shopt -s nullglob       # null globbing, no match returns null
 
-## Environmental Variables
-if [ -z "$XDG_CONFIG_HOME" ]; then
-    export XDG_CONFIG_HOME="${HOME}/.config"
-fi
-if [ -z "$XDG_DATA_HOME" ]; then
-    export XDG_DATA_HOME="${HOME}/.local/share"
-fi
-if [ -z "$XDG_CACHE_HOME" ]; then
-    export XDG_CACHE_HOME="${HOME}/.cache"
-fi
+
 
 ## Prompt
 # PS1    The  value  of  this parameter is expanded (see PROMPTING below)
@@ -150,9 +160,11 @@ WHITE='\[\033[01;37m\]'     # White
 GREEN="\[\033[38;5;2m\]"    # Green
 YELLOW="\[\033[38;5;11m\]"  # Yellow
 BLUE="\[\033[38;5;6m\]"     # Blue     
+RESET='\[\033[0m\]'         # Reset
 
 # Text Attributes
 BOLD='\033[01m'             # Bold ANSI escape code
+UNDERLINE='\033[04m'        # Underline ANSI escape code
 
 # Colored GCC warnings and errors
 # Errors will be displayed in bold red
@@ -177,12 +189,12 @@ screen*)
     ;;
 esac
 
-# if using debian, set variable identifying the chroot you work in (used in the prompt below)
+# If using debian, set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# enable programmable completion features (you don't need to enable
+# Enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
@@ -194,7 +206,7 @@ if ! shopt -oq posix; then
 fi
 
 #################################################################################
-#################################### Aliases ####################################
+#                                    Aliases                                    #
 #################################################################################
 
 # Alias to edit/reload bashrc
@@ -278,7 +290,7 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 alias nvim='~/nvim.appimage'
 
 #################################################################################
-################################### Functions ###################################
+#                                   Functions                                   #
 #################################################################################
 
 
@@ -420,7 +432,6 @@ function mv_check() {
     fi
 }
 #@end_function
-
 
 # Move Function
 #@begin_function rclonemove
