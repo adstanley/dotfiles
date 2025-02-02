@@ -1,9 +1,4 @@
 ###########################################################
-#  ____ ___ ____ __  __    _    ____ _   _    _    ____   #
-# / ___|_ _/ ___|  \/  |  / \  / ___| | | |  / \  |  _ \  #
-# \___ \| | |  _| |\/| | / _ \| |   | |_| | / _ \ | | | | #
-#  ___) | | |_| | |  | |/ ___ \ |___|  _  |/ ___ \| |_| | #
-# |____/___\____|_|  |_/_/   \_\____|_| |_/_/   \_\____/  #
 #                                                         #
 #    ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗     #
 #    ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔════╝     #
@@ -58,18 +53,12 @@ if [ -d "${HOME}/.bash_completion.d" ]; then
 fi
 
 ## "bat" as manpager
-if command -v bat >/dev/null 2>&1; then
-    export MANPAGER="bat"
+if command -v batcat >/dev/null 2>&1; then
+    export MANPAGER="batcat"
     # export MANPAGER="nvim -c 'set ft=man' -"
 else
-    export MANPAGER="less"
-fi
-
-## If nvim is installed, set as default editor
-if command -v nvim >/dev/null 2>&1; then
     export EDITOR="nvim"
-else
-    export EDITOR="nano"
+    export MANPAGER="less"
 fi
 
 ## Set XDG Base Directories
@@ -90,11 +79,11 @@ fi
 #################################################################################
 
 ## Bash history
-HISTCONTROL=ignoredups:erasedups            # don't put duplicate lines in the history.
-HISTSIZE='INFINITE'                         # set history length, non integer values set history to infinite
-HISTFILESIZE='STONKS'                       # set file size, non integer values set history to infinite
-HISTTIMEFORMAT="%F %T "                     # set history time format, %F = full date, %T = time
-HISTFILE="${XDG_DATA_HOME}/bash_history"    # set history file location
+HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in the history.
+HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
+HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
+HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
+HISTFILE="${XDG_DATA_HOME}/bash_history"         # set history file location
 HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these commands in history
 
 shopt -s histappend                 # append to the history file, don't overwrite it
@@ -108,9 +97,7 @@ set -o noclobber        # Prevent overwriting files
 # Shopt Options
 shopt -s autocd         # change to named directory
 shopt -s cdspell        # autocorrects cd misspellings
-shopt -s cmdhist        # save multi-line commands in history as single line
 shopt -s dotglob        # include hidden files in globbing
-shopt -s histappend     # do not overwrite history
 shopt -s expand_aliases # expand aliases
 shopt -s checkwinsize   # checks term size when bash regains control
 shopt -s extglob        # extended pattern matching
@@ -286,13 +273,58 @@ alias config='/usr/bin/git --git-dir=$HOME/dotfiles --work-tree=$HOME'
 # bash linter
 alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 
-# AppImage Aliases
-alias nvim='~/nvim.appimage'
+# Find nvim
+# if directory .appimage exists, set alias to nvim.appimage
+# else, set alias to nvim
+if [ -d ~/nvim.appimage ]; then 
+    if [ -f ~/nvim.appimage/nvim.appimage ]; then
+        alias nvim='~/nvim.appimage/nvim.appimage'
+    else
+        alias nvim='nvim'
+    fi
+fi
 
-#################################################################################
-#                                   Functions                                   #
-#################################################################################
+#@name eza
+#@description Determine if exa or eza should be used in place of ls
+#@usage eza
+#@example eza
+#@begin_function
 
+function eza() {
+    if (command -v "exa" > /dev/null 2>&1); then
+        exa --long --header --git --icons --group-directories-first --color=always "$@"
+    else
+        ls -lahg --color=always --group-directories-first "$@"
+    fi
+
+    exa --long --header --git --icons --group-directories-first --color=always "$@"
+}
+
+#@name ls
+#@description Determine if exa or eza should be used in place of ls
+#@usage ls
+#@example ls
+#@begin_function
+function ls() {
+    
+    if (command -v "exa" > /dev/null 2>&1); then
+        exa --long --header --git --icons --group-directories-first --color=always "$@"
+    elif (command -v "eza" > /dev/null 2>&1); then
+        eza --long --header --git --icons --group-directories-first --color=always "$@"
+    else
+        command ls -lahg --color=always --group-directories-first "$@"
+    fi
+    
+}
+
+#@name cdir
+#@description cd into the last files directory
+#@usage cdir
+#@example cdir
+#@begin_function
+function cdir() {
+    cd "${_%/*}" || return
+}
 
 # Name: countfields
 # Description: Count the number of fields in a directory name
@@ -990,17 +1022,5 @@ function command_exists() {
     else
         return 1
     fi
-}
-#@end_function
-
-#@begin_function list_bashrc_functions
-function list_bashrc_functions() {
-    local bashrc_file="$HOME/.bashrc"  # Adjust the path if necessary
-    awk '
-        BEGIN { inside_function = 0; }
-        /^#@begin_function/ { inside_function = 1; func_name = $2; next }
-        /^#@end_function/ { inside_function = 0; print func_name; next }
-        inside_function { next }
-    ' "$bashrc_file"
 }
 #@end_function
