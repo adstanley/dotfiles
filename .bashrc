@@ -40,21 +40,23 @@ if [ -d "${HOME}/.local/bin" ]; then
     PATH="${HOME}/.local/bin:$PATH"
 fi
 
+# add appimage directory to path
+if [ -d "$HOME/.appimage" ]; then
+    PATH="$HOME/.appimage:$PATH"
+fi
+
 # If using multiple files for bashrc
+# and .bash_directory exists, source it
 if [ -f "${HOME}/.bash_directory" ]; then
     source "${HOME}/.bash_directory"
 fi
 
-# Source custom completion scripts
-if [ -d "${HOME}/.bash_completion.d" ]; then
-    for file in "${HOME}"/.bash_completion.d/* ; do
-        source "$file"
-    done
-fi
+## Completions are sourced after standard completions are loaded
 
 ## "bat" as manpager
 if command -v batcat >/dev/null 2>&1; then
     export MANPAGER="batcat"
+    # 'set filetype to man, - to read from stdin'
     # export MANPAGER="nvim -c 'set ft=man' -"
 else
     export EDITOR="nvim"
@@ -192,9 +194,26 @@ if ! shopt -oq posix; then
     fi
 fi
 
+# Source custom completion scripts from .bash_completion.d
+# if .bash_completion.d exists
+if [ -d "${HOME}/.bash_completion.d" ]; then
+    for file in "${HOME}"/.bash_completion.d/* ; do
+        source "$file"
+    done
+fi
+
+# Check if ssh agent is running, if not start ssh agent and add .ssh keys
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)"
+    find ~/.ssh -type f -iname "*.pub" -exec ssh-add {} \;
+fi
+
 #################################################################################
 #                                    Aliases                                    #
 #################################################################################
+
+# Some aliases are functions
+# nvim is an alias to nvim.appimage if it exists
 
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
@@ -232,7 +251,6 @@ alias cpv='rsync -ah --info=progress2'
 # Truetool script Shortcut
 alias truetool='bash ~/truetool/truetool.sh'
 
-
 ## ZFS Aliases
 # iostat
 alias iostat='zpool iostat -vly 5 1'
@@ -249,7 +267,7 @@ alias psmem='ps auxf | sort -nr -k 4'
 alias pscpu='ps auxf | sort -nr -k 3'
 
 # get diskspace
-alias diskspace="du -S | sort -n -r | less"
+alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
 alias df='df -h'     # human-readable sizes
 alias free='free -m' # show sizes in MB
 
@@ -273,23 +291,53 @@ alias config='/usr/bin/git --git-dir=$HOME/dotfiles --work-tree=$HOME'
 # bash linter
 alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 
+
+#################################################################################
+#                                    Functions                                  #
+#################################################################################
+
 # Find nvim
 # if directory .appimage exists, set alias to nvim.appimage
 # else, set alias to nvim
-if [ -d ~/nvim.appimage ]; then 
-    if [ -f ~/nvim.appimage/nvim.appimage ]; then
-        alias nvim='~/nvim.appimage/nvim.appimage'
+if [ -d ~/.appimage ]; then 
+    if [ -f ~/.appimage/nvim.appimage ]; then
+        alias nvim='~/.appimage/nvim.appimage'
     else
         alias nvim='nvim'
     fi
 fi
+
+# Name: nvim
+# Description: Determine if Neovim AppImage exists and is executable
+# Arguments: None
+# Usage: nvim
+#@begin_function
+nvim() {    
+    # local nvim_path="$HOME/.appimage/nvim.appimage"
+    
+    local nvim_path
+    nvim_path="$(find ~/ -type f -name "nvim.appimage" -print -quit)"
+    
+    if [ -x "$nvim_path" ]; then
+        "$nvim_path" "$@"
+    else
+        command nvim "$@"
+    fi
+
+    if [[ ! -x "nvim_path" ]]; then
+        printf "Error: Neovim AppImage not found or not executable at %s" "$nvim_path" >&2
+        return 1
+    fi
+    
+    "nvim_path" "$@"
+}
+#@end_function
 
 #@name eza
 #@description Determine if exa or eza should be used in place of ls
 #@usage eza
 #@example eza
 #@begin_function
-
 function eza() {
     if (command -v "exa" > /dev/null 2>&1); then
         exa --long --header --git --icons --group-directories-first --color=always "$@"
@@ -305,8 +353,7 @@ function eza() {
 #@usage ls
 #@example ls
 #@begin_function
-function ls() {
-    
+function ls() {    
     if (command -v "exa" > /dev/null 2>&1); then
         exa --long --header --git --icons --group-directories-first --color=always "$@"
     elif (command -v "eza" > /dev/null 2>&1); then
@@ -314,7 +361,6 @@ function ls() {
     else
         command ls -lahg --color=always --group-directories-first "$@"
     fi
-    
 }
 
 #@name cdir
@@ -370,6 +416,7 @@ function ownroot() {
 
 # Name: mod775
 # Description: modify permissions to 775, will default to current directory
+# Arguments: [directory]
 # Usage: mod775 ./
 #@begin_function mod775
 function mod775() {
@@ -387,7 +434,10 @@ function mod775() {
 }
 #@end_function
 
-# Git
+# Name: git_shallow
+# Description: Shallow clone a git repository
+# Arguments: [clone] [url]
+# Usage: git_shallow clone [url]
 #@begin_function git_shallow
 function git_shallow() {
     if [ "$1" = "clone" ]; then
@@ -401,6 +451,7 @@ function git_shallow() {
 
 # Name: git_branch
 # Description: Shows current git branch
+# Arguments: None
 # Usage: git_branch
 #@begin_function
 function git_branch() {
@@ -408,18 +459,18 @@ function git_branch() {
 }
 #@end_function
 
-# Move Check
+
+# Name: mv_check
+# Description: Function for checking syntax of mv command
+# Arguments: [source] [destination]
+# Usage: mv_check [source] [destination]
 #@begin_function mv_check
 function mv_check() {
 
-    # Function for checking syntax of mv command
-    # sort of verbose dry run
-    # Now supports the -t flag
-
-    # check if -t flag is present
+    # check if -t flag is present as this modifies the number of arguments we expect
     if [ "$1" = "-t" ]; then
         if [ $# -lt 3 ]; then
-            printf "<<< ERROR: with -t flag, must have at least 3 arguments, but %s given " "$#" >&2
+            printf "<<< ERROR: with -t flag, must have at least 3 arguments, but %s given\n" "$#" >&2
             return 1
         fi
 
@@ -428,44 +479,55 @@ function mv_check() {
 
         # check if target directory exists
         if [ ! -d "$target_dir" ]; then
-            printf "<<< ERROR: target directory %s doesn't exist" "$target_dir" >&2
+            printf "<<< ERROR: target directory %s doesn't exist\n" "$target_dir" >&2
             return 1
         fi
 
         for src in "$@"; do
             if ! readlink -e "$src" >/dev/null; then
-                printf "<<< ERROR: %s doesn't exist" "$src" >&2
+                printf "<<< ERROR: %s doesn't exist\n" "$src" >&2
                 return 1
             fi
-            printf "Moving %s into %s directory" "$src" "$target_dir"
+            printf "Moving %s into %s directory\n" "$src" "$target_dir"
         done
+        
+        # Execute the move command with -t flag
+        mv -t "$target_dir" "$@"
+        return $?
+
     else
         # check number of arguments
         if [ $# -ne 2 ]; then
-            printf "<<< ERROR: must have 2 arguments, but %d given " "$#" >&2
+            printf "<<< ERROR: must have 2 arguments, but %d given\n" "$#" >&2
             return 1
         fi
 
         src="$1"
         dest="$2"
 
-        # check if source item exists
+        # check source
         if ! readlink -e "$src" >/dev/null; then
-            printf "<<< ERROR: %s doesn't exist" "$src" >&2
+            printf "<<< ERROR: %s doesn't exist\n" "$src" >&2
             return 1
         fi
 
-        # check where file goes
+        # check destination
         if [ -d "$dest" ]; then
-            printf "Moving %s into %s directory" "$src" "$dest"
+            printf "Moving %s into %s directory\n" "$src" "$dest"
         else
-            printf "Renaming %s to %s" "$src" "$dest"
+            printf "Renaming %s to %s\n" "$src" "$dest"
         fi
+        
+        # Execute the move command
+        mv "$src" "$dest"
+        return $?
     fi
 }
-#@end_function
 
-# Move Function
+# Name: rclonemove
+# Description: Move files using rclone
+# Arguments: [source] [destination]
+# Usage: rclonemove [source] [destination]
 #@begin_function rclonemove
 function rclonemove() {
     # Check number of arguments
@@ -489,7 +551,9 @@ function rclonemove() {
     if [ ! -d "$parent_dir" ]; then
         printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
         read -p "Do you want to create it? (y/n): " -n 1 -r
-        echo    # Move to a new line
+        
+        # Move to a new line
+        echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             mkdir -p "$parent_dir"
         else
