@@ -86,7 +86,7 @@ HISTSIZE='INFINITE'                              # set history length, non integ
 HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
 HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
 HISTFILE="${XDG_DATA_HOME}/bash_history"         # set history file location
-HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these commands in history
+HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
 
 shopt -s histappend                 # append to the history file, don't overwrite it
 shopt -s cmdhist                    # try to save all lines of a multiple-line command in the same history entry
@@ -106,8 +106,6 @@ shopt -s extglob        # extended pattern matching
 shopt -s globstar       # recursive globbing
 shopt -s histverify     # show command with history expansion to allow editing
 shopt -s nullglob       # null globbing, no match returns null
-
-
 
 ## Prompt
 # PS1    The  value  of  this parameter is expanded (see PROMPTING below)
@@ -164,6 +162,57 @@ UNDERLINE='\033[04m'        # Underline ANSI escape code
 # Quotes will be displayed in bold yellow
 # export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
+
+
+function git_prompt() {
+
+    local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
+    local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
+    local COLOR_GIT_MODIFIED=$'\033[0;31m'  # Red for unstaged/untracked changes
+    local COLOR_RESET=$'\033[0m'            # Reset color
+
+    # Check if git is installed
+    if ! command -v git &> /dev/null; then
+        return
+    fi
+
+    # Check if in a git repository
+    if [ -e ".git" ] || git rev-parse --git-dir > /dev/null 2>&1; then
+        # Try to get tag name first
+        local ref
+        ref=$(git describe --tags --exact-match 2> /dev/null)
+        
+        # If no tag, get branch name
+        if [ -z "$ref" ]; then
+            ref=$(git symbolic-ref -q HEAD)
+            ref=${ref##refs/heads/}
+            ref=${ref:-HEAD}
+        fi
+
+        # If no branch, get commit hash
+        if [ -z "$ref" ]; then
+            ref=$(git rev-parse --short HEAD 2> /dev/null)
+        fi
+        # If no commit hash, set ref to "unknown"
+        if [ -z "$ref" ]; then
+            ref="unknown"
+        fi
+
+        # If status is clean, show dark gray
+        if [[ $(git status 2> /dev/null | tail -n1) = *"nothing to commit"* ]]; then
+            printf " %s[%s]%s" "${COLOR_GIT_CLEAN}" "${ref}" "${COLOR_RESET}"
+        # If there are staged changes, show cyan
+        elif [[ $(git status 2> /dev/null | head -n5) = *"Changes to be committed"* ]]; then
+            printf " %s[%s*]%s" "${COLOR_GIT_STAGED}" "${ref}" "${COLOR_RESET}"
+        # If there are unstaged changes, show yellow
+        elif [[ $(git status 2> /dev/null | head -n5) = *"Changes not staged for commit"* ]]; then
+            printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
+        # If there are untracked files or other git statuses, show yellow
+        else
+            printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
+        fi
+    fi
+}
 
 # Set Prompt
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"
@@ -295,6 +344,19 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 #################################################################################
 #                                    Functions                                  #
 #################################################################################
+
+# Midnight Commander Fallback Skin
+if [ "$TERM" = "linux" ]; then
+    if [ "$USER" = "root" ]; then
+        myMCFallbackSkin="modarcon16root-defbg"
+    else
+        myMCFallbackSkin="modarcon16-defbg"
+    fi
+    alias mc="mc --skin $myMCFallbackSkin"
+    alias mcedit="mcedit --skin $myMCFallbackSkin"
+    alias mcview="mcview --skin $myMCFallbackSkin"
+    alias mcdiff="mcdiff --skin $myMCFallbackSkin"
+fi
 
 # Find nvim
 # if directory .appimage exists, set alias to nvim.appimage
@@ -786,6 +848,34 @@ function printargs() {
 #@begin_function holds
 function holds() {
     zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
+}
+#@end_function
+
+# Function to create multiple ZFS datasets at once
+#@begin_function create_datasets
+create_datasets() {
+  local pool_name="$1"
+  shift  # Remove the first argument (pool name)
+  
+  # Check if pool name was provided
+  if [ -z "$pool_name" ]; then
+    printf "Error: Pool name is required\n"
+    printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
+    return 1
+  fi
+  
+  # Check if at least one dataset name was provided
+  if [ $# -eq 0 ]; then
+    printf "Error: At least one dataset name is required\n"
+    printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
+    return 1
+  fi
+  
+  # Create each dataset
+  for ds in "$@"; do
+    printf "Creating dataset: %s\n" "$pool_name/$ds"
+    zfs create "$pool_name/$ds" && printf "Success\n" || printf "Failed with exit code %s\n" "$?"
+  done
 }
 #@end_function
 
