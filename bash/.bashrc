@@ -76,6 +76,20 @@ if [ -z "$XDG_CACHE_HOME" ]; then
     export XDG_CACHE_HOME="${HOME}/.cache"
 fi
 
+if [ -z "$XDG_STATE_HOME" ]; then
+    export XDG_STATE_HOME="${HOME}/.local/state"
+fi
+
+# Flags
+# Check if eza is installed
+if command -v "eza" > /dev/null 2>&1; then
+    LS_COMMAND="eza"
+else
+    LS_COMMAND="command ls"
+fi
+
+declare -A FUNCTION_HELP
+
 #################################################################################
 #                            Options                                            #
 #################################################################################
@@ -287,8 +301,7 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
 # Exa alias settings (Moved to function)
-# alias eza='eza -lahg --color=always --icons --group-directories-first'
-# alias ls='eza -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
+alias eza='--all --long --header --git --icons --group-directories-first --color=always'
 
 # Directory Shortcuts
 # alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
@@ -364,6 +377,25 @@ if [ "$TERM" = "linux" ]; then
     alias mcdiff="mcdiff --skin $myMCFallbackSkin"
 fi
 
+function show_function_help() {
+    local func_name="$1"
+    local script_file="$HOME/.bashrc"  # or wherever your functions are defined
+    
+    # Use awk to extract documentation for the specified function
+    awk -v func="$func_name" '
+        /^#@name '"$func_name"'$/ {
+            in_func_doc = 1;
+        }
+        in_func_doc && /^function '"$func_name"'\(\)/ {
+            in_func_doc = 0;
+        }
+        in_func_doc && /^#@/ {
+            sub(/^#@/, "");
+            print;
+        }
+    ' "$script_file"
+}
+
 # Find nvim
 # if directory .appimage exists, set alias to nvim.appimage
 # else, set alias to nvim
@@ -401,33 +433,44 @@ nvim() {
 }
 #@end_function
 
-#@name eza
-#@description Determine if exa or eza should be used in place of ls
-#@usage eza
-#@example eza
-#@begin_function
-#function eza() {
-#    if (command -v "exa" > /dev/null 2>&1); then
-#        exa --long --header --git --icons --group-directories-first --color=always "$@"
-#    else
-#        ls -lahg --color=always --group-directories-first "$@"
-#    fi
-#
-#    exa --long --header --git --icons --group-directories-first --color=always "$@"
-#}
-
 #@name ls
-#@description Determine if exa or eza should be used in place of ls
+#@description Determine if eza or ls should be used
 #@usage ls
 #@example ls
+#@define help information
+FUNCTION_HELP[ls]=$(cat << 'EOF'
+NAME
+    ls - list directory contents
+
+DESCRIPTION
+    List information about files and directories, using eza if available.
+
+USAGE
+    ls [OPTIONS] [FILE]...
+
+OPTIONS
+    Same options as eza or ls depending on which is available.
+    Add --help or -h to see this help message.
+
+EXAMPLES
+    ls -la ~/Documents
+EOF
+)
 #@begin_function
-function ls() {    
-    if (command -v "eza" > /dev/null 2>&1); then
-        eza --long --header --git --icons --group-directories-first --color=always "$@"
+function ls() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[ls]}"
+        show_function_help "ls"
+        return 0
+    fi
+
+    if [ "$LS_COMMAND" = "eza" ]; then
+        eza --all --long --header --git --icons --group-directories-first --color=always "$@"
     else
         command ls -lahg --color=always --group-directories-first "$@"
     fi
 }
+#@end_function
 
 #@name cdir
 #@description cd into the last files directory
@@ -461,9 +504,9 @@ function dupebyname() {
 }
 #@end_function
 
-# Name: example
-# Description: This is an example function
-# Usage: example [argument]
+# Name: ownroot
+# Description: Change ownership to root
+# Usage: ownroot [directory]
 #@begin_function ownroot
 function ownroot() {
     # "${1:-.}" = if $1 is empty, use "."

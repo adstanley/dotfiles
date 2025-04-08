@@ -16,7 +16,7 @@
 #                                            Chet Manley  #
 ###########################################################
 #
-# Bashrc
+# This script is designed to manage dotfiles in a user's home directory.
 # Shellcheck Directvies
 # shellcheck shell=bash
 # shellcheck source=/dev/null
@@ -96,32 +96,8 @@ else
     printf "Backup directory already exists: %s\n" "$dotfiles_backup_dir"
 fi
 
-# Match and remove regex element from array
-#@begin_function
-function remove_element() {
-    local regexPattern=$1
-    local -a array
-
-    # make array a copy of the array whose name is passed as an arg
-    eval array=\( \"\$\{"$1"\[@\]\}\" \)
-
-    for ((i = 0; i < ${#array[@]}; i++)); do
-        if [[ ${array[$i]} =~ $regexPattern ]]; then
-            unset "${array[$i]}"
-        fi
-    done
-}
-#@end_function
 
 move_dot_files() {
-    local dot_files=(
-        ".vim"
-        ".vimrc"
-        ".bashrc"
-        ".tmux"
-        ".tmux.conf"
-    )
-
     printf "\n====== Moving existing dot files ======\n"
 
     for ((i = 0; i < ${#dot_files[@]}; i++)); do
@@ -131,70 +107,32 @@ move_dot_files() {
 
 ## move existing dotfiles to backup folder
 
-while true; do
-    read -pr "Do you want to move existing dotfiles to ~/dotfiles_old? (y/n) : " yn
-    case $yn in
-    [Yy]*)
-        movefiles
-        break
-        ;;
-    [Nn]*) exit ;;
-    *) printf "Please answer yes or no." ;;
-    esac
-done
+# while true; do
+#     read -pr "Do you want to move existing dotfiles to ~/dotfiles_old? (y/n) : " yn
+#     case $yn in
+#     [Yy]*)
+#         move_dot_files
+#         break
+#         ;;
+#     [Nn]*) exit ;;
+#     *) printf "Please answer yes or no." ;;
+#     esac
+# done
 
 #===============================================================================#
 # Create symlinks in the home folder
 # Allow overriding with files of matching names in the custom-configs dir
 #===============================================================================#
 link_dotfiles() {
-    local dot_files=(
-        ".vim"
-        ".vimrc"
-        ".bashrc"
-        ".tmux"
-        ".tmux.conf"
-    )
 
     printf "\n====== Creating symlinks ======\n"
 
-    for file in "${dot_files[@]}"; do
-        ln -sf "$dotfiles_dir"/"$file" ~/"$file"
+    for dotfile in "${dot_files[@]}"; do
+        if [ -n "$(find "$dotfiles_dir" -iname "$dotfile")" ]; then
+            ln -s "$dotfiles_dir"/"$dotfile" /"$dotfile"
+        fi
     done
-
-
 }
-
-if [ -n "$(find "$dotfiles_dir" -iname ".bashrc")" ]; then
-    ln -s "$dotfiles_dir"/.bashrc /.bashrc
-else
-    ln -s "$dotfiles_dir"/gitconfig ~/.gitconfig
-fi
-
-
-# if [ -n "$(find "$dotfiles_dir"/custom-configs -name gitconfig)" ]; then
-#     ln -s "$dotfiles_dir"/custom-configs/**/gitconfig ~/.gitconfig
-# else
-#     ln -s "$dotfiles_dir"/gitconfig ~/.gitconfig
-# fi
-
-# if [ -n "$(find "$dotfiles_dir"/custom-configs -name tmux.conf)" ]; then
-#     ln -s "$dotfiles_dir"/custom-configs/**/tmux.conf ~/.tmux.conf
-# else
-#     ln -s "$dotfiles_dir"/linux-tmux/tmux.conf ~/.tmux.conf
-# fi
-
-# if [ -n "$(find "$dotfiles_dir"/custom-configs -name tigrc)" ]; then
-#     ln -s "$dotfiles_dir"/custom-configs/**/tigrc ~/.tigrc
-# else
-#     ln -s "$dotfiles_dir"/tigrc ~/.tigrc
-# fi
-
-# if [ -n "$(find "$dotfiles_dir"/custom-configs -name psqlrc)" ]; then
-#     ln -s "$dotfiles_dir"/custom-configs/**/psqlrc ~/.psqlrc
-# else
-#     ln -s "$dotfiles_dir"/psqlrc ~/.psqlrc
-# fi
 
 
 #===============================================================================#
