@@ -414,7 +414,7 @@ nvim() {
 #    fi
 #
 #    exa --long --header --git --icons --group-directories-first --color=always "$@"
-}
+#}
 
 #@name ls
 #@description Determine if exa or eza should be used in place of ls
@@ -422,13 +422,11 @@ nvim() {
 #@example ls
 #@begin_function
 function ls() {    
-    # if (command -v "exa" > /dev/null 2>&1); then
-    "$HOME"/.cargo/bin/eza --long --header --git --icons --group-directories-first --color=always "$@"
-    # elif (command -v "eza" > /dev/null 2>&1); then
-    #     eza --long --header --git --icons --group-directories-first --color=always "$@"
-    # else
-    #     command ls -lahg --color=always --group-directories-first "$@"
-    # fi
+    if (command -v "eza" > /dev/null 2>&1); then
+        eza --long --header --git --icons --group-directories-first --color=always "$@"
+    else
+        command ls -lahg --color=always --group-directories-first "$@"
+    fi
 }
 
 #@name cdir
