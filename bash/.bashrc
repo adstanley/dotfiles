@@ -253,8 +253,14 @@ fi
 
 # Check if ssh agent is running, if not start ssh agent and add .ssh keys
 if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s)"
-    find ~/.ssh -type f -iname "*.pub" -exec ssh-add {} \;
+    eval "$(ssh-agent -s > /dev/null)"
+    # find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config" -exec sh -c 'ssh-add "$1" 2>/dev/null' sh {} \;
+
+    readarray -t ssh_keys < <(find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config")
+
+    for key in "${ssh_keys[@]}"; do
+        ssh-add "$key" 2>/dev/null
+    done
 fi
 
 #################################################################################
@@ -280,9 +286,9 @@ alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
-# Exa alias settings
-alias eza='eza -lahg --color=always --icons --group-directories-first'
-alias ls='eza -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
+# Exa alias settings (Moved to function)
+# alias eza='eza -lahg --color=always --icons --group-directories-first'
+# alias ls='eza -lahg --color=always --icons --group-directories-first' # list all files colorized in long format
 
 # Directory Shortcuts
 # alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure

@@ -1,7 +1,6 @@
 [user]
-	email = sigmachad69@gmail.com
-	name = Chet Manley
-	signingkey = 
+	email = xander515@tampabay.rr.com
+	name = sigmachad
 [alias]
 	b = branch
 	c = checkout
@@ -11,6 +10,9 @@
 	s = status
 	snip = "!git ls-files -o | xargs -n 1 rm"
 	su = submodule update .
+[credential "https://github.com"]
+	helper =
+	helper = !/usr/bin/gh auth git-credential
 [commit]
 	gpgsign = true
 [help]
