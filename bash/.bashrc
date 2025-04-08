@@ -406,14 +406,14 @@ nvim() {
 #@usage eza
 #@example eza
 #@begin_function
-function eza() {
-    if (command -v "exa" > /dev/null 2>&1); then
-        exa --long --header --git --icons --group-directories-first --color=always "$@"
-    else
-        ls -lahg --color=always --group-directories-first "$@"
-    fi
-
-    exa --long --header --git --icons --group-directories-first --color=always "$@"
+#function eza() {
+#    if (command -v "exa" > /dev/null 2>&1); then
+#        exa --long --header --git --icons --group-directories-first --color=always "$@"
+#    else
+#        ls -lahg --color=always --group-directories-first "$@"
+#    fi
+#
+#    exa --long --header --git --icons --group-directories-first --color=always "$@"
 }
 
 #@name ls
@@ -423,7 +423,7 @@ function eza() {
 #@begin_function
 function ls() {    
     # if (command -v "exa" > /dev/null 2>&1); then
-    exa --long --header --git --icons --group-directories-first --color=always "$@"
+    "$HOME"/.cargo/bin/eza --long --header --git --icons --group-directories-first --color=always "$@"
     # elif (command -v "eza" > /dev/null 2>&1); then
     #     eza --long --header --git --icons --group-directories-first --color=always "$@"
     # else
