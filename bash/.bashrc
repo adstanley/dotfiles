@@ -382,7 +382,7 @@ function show_function_help() {
     local script_file="$HOME/.bashrc"  # or wherever your functions are defined
     
     # Use awk to extract documentation for the specified function
-    awk -v func="$func_name" '
+    awk -v func_name="$func_name" '
         /^#@name '"$func_name"'$/ {
             in_func_doc = 1;
         }
