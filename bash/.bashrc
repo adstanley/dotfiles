@@ -195,7 +195,7 @@ function git_prompt() {
         # Try to get tag name first
         local ref
         ref=$(git describe --tags --exact-match 2> /dev/null)
-        
+
         # If no tag, get branch name
         if [ -z "$ref" ]; then
             ref=$(git symbolic-ref -q HEAD)
@@ -229,7 +229,7 @@ function git_prompt() {
 }
 
 # Set Prompt
-PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"
+PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
 
 ## Change title of terminals
 case ${TERM} in
