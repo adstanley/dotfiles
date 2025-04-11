@@ -186,7 +186,7 @@ function git_prompt() {
     local COLOR_RESET=$'\033[0m'            # Reset color
 
     # Check if git is installed
-    if ! command -v git &> /dev/null; then
+    if ! command -v git > /dev/null 2>&1; then
         return
     fi
 
@@ -364,17 +364,32 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 #                                    Functions                                  #
 #################################################################################
 
-# Midnight Commander Fallback Skin
-if [ "$TERM" = "linux" ]; then
-    if [ "$USER" = "root" ]; then
-        myMCFallbackSkin="modarcon16root-defbg"
-    else
-        myMCFallbackSkin="modarcon16-defbg"
+zfs_alias() {
+  # Create a temporary file using shell builtins
+  local tmp_file="/tmp/zfs_alias_$$.tmp"  # $$ is the process ID
+  
+  # Get list of pools
+  mapfile -t pools < <(zpool list -H -o name)
+  
+  # Write function definitions to the temporary file
+  for pool in "${pools[@]}"; do
+    mountpoint=$(zfs get -H mountpoint "$pool" | awk '{print $3}')
+    if [[ "$mountpoint" != "none" ]]; then
+      echo "cd.$pool() { cd \"$mountpoint\" || exit; }" >> "$tmp_file"
     fi
-    alias mc="mc --skin $myMCFallbackSkin"
-    alias mcedit="mcedit --skin $myMCFallbackSkin"
-    alias mcview="mcview --skin $myMCFallbackSkin"
-    alias mcdiff="mcdiff --skin $myMCFallbackSkin"
+  done
+  
+  # Source the file to define the functions
+  source "$tmp_file"
+  
+  # Clean up
+  rm "$tmp_file"
+}
+
+
+# Only call the function if ZFS is fully available
+if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
+  zfs_alias
 fi
 
 function show_function_help() {
@@ -407,15 +422,14 @@ if [ -d ~/.appimage ]; then
     fi
 fi
 
-# Name: nvim
-# Description: Determine if Neovim AppImage exists and is executable
-# Arguments: None
-# Usage: nvim
+#@Name: nvim
+#@Description: Determine if Neovim AppImage exists and is executable
+#@Arguments: None
+#@Usage: nvim
 #@begin_function
-nvim() {    
-    # local nvim_path="$HOME/.appimage/nvim.appimage"
-    
+nvim() {   
     local nvim_path
+    #nvim_path="$HOME/.appimage/nvim.appimage"
     nvim_path="$(find ~/ -type f -name "nvim.appimage" -print -quit)"
     
     if [ -x "$nvim_path" ]; then
@@ -476,17 +490,50 @@ function ls() {
 #@description cd into the last files directory
 #@usage cdir
 #@example cdir
+#@define help information
+FUNCTION_HELP[cdir]=$(cat << 'EOF'
+NAME
+    cdir - change directory to the last file's directory
+DESCRIPTION
+    Change the current directory to the directory of the last file used in the command line.
+USAGE
+    cdir
+EXAMPLES
+    cdir
+EOF
+)
 #@begin_function
 function cdir() {
     cd "${_%/*}" || return
 }
 
-# Name: countfields
-# Description: Count the number of fields in a directory name
-# Arguments: [directory]
-# Usage: countfields [directory] 
+#@Name: countfields
+#@Description: Count the number of fields in a directory name
+#@Arguments: [directory]
+#@Usage: countfields [directory] 
+#@define help information
+FUNCTION_HELP[countfields]=$(cat << 'EOF'
+NAME
+    countfields - Count the number of fields in a directory name
+DESCRIPTION
+    Count the number of fields in a directory name, separated by dots.
+    This is useful for identifying the number of fields in a directory name.
+USAGE
+    countfields [DIRECTORY]
+EXAMPLES
+    countfields /path/to/directory
+    countfields .
+    countfields *
+EOF
+)
 #@begin_function countfields
 function countfields() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[countfields]}"
+        show_function_help "countfields"
+        return 0
+    fi
+
     # if $1 is empty, use "*"
     local target_dir="${1:-*}"
 
@@ -495,9 +542,9 @@ function countfields() {
 #@end_function
 
 
-# Name: example
-# Description: This is an example function
-# Usage: example [argument]
+#@Name: example
+#@Description: This is an example function
+#@Usage: example [argument]
 #@begin_function dupebyname
 function dupebyname() {
     find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
@@ -575,7 +622,6 @@ function git_branch() {
 # Usage: mv_check [source] [destination]
 #@begin_function mv_check
 function mv_check() {
-
     # check if -t flag is present as this modifies the number of arguments we expect
     if [ "$1" = "-t" ]; then
         if [ $# -lt 3 ]; then

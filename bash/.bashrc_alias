@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+midnight_commander() {
+    myMCFallbackSkin="modarcon16-defbg"
+    # Midnight Commander Fallback Skin
+    if [ "$TERM" = "linux" ]; then
+        if [ "$USER" = "root" ]; then
+            myMCFallbackSkin="modarcon16root-defbg"
+        else
+            myMCFallbackSkin="modarcon16-defbg"
+        fi
+        
+        # Replace aliases with functions
+        mc() {
+            command mc --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcedit() {
+            command mcedit --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcview() {
+            command mcview --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcdiff() {
+            command mcdiff --skin "$myMCFallbackSkin" "$@"
+        }
+    fi
+}
+
+midnight_commander
