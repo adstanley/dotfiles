@@ -31,7 +31,7 @@
 ## If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-## Add to PATH first 
+## Add to PATH first
 if [ -d "${HOME}/.bin" ]; then
     PATH="${HOME}/.bin:$PATH"
 fi
@@ -50,6 +50,10 @@ fi
 if [ -f "${HOME}/.bash_directory" ]; then
     source "${HOME}/.bash_directory"
 fi
+
+# OpenCV include path for gcc
+CPLUS_INCLUDE_PATH=/usr/local/include/opencv4
+export CPLUS_INCLUDE_PATH
 
 ## Completions are sourced after standard completions are loaded
 
@@ -160,7 +164,7 @@ CYAN='\[\033[01;36m\]'      # Cyan
 WHITE='\[\033[01;37m\]'     # White
 GREEN="\[\033[38;5;2m\]"    # Green
 YELLOW="\[\033[38;5;11m\]"  # Yellow
-BLUE="\[\033[38;5;6m\]"     # Blue     
+BLUE="\[\033[38;5;6m\]"     # Blue
 RESET='\[\033[0m\]'         # Reset
 
 # Text Attributes
@@ -301,7 +305,7 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
 # Exa alias settings (Moved to function)
-alias eza='--all --long --header --git --icons --group-directories-first --color=always'
+alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
 
 # Directory Shortcuts
 # alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
