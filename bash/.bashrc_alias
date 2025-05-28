@@ -1,32 +1,82 @@
 #!/usr/bin/env bash
 
-midnight_commander() {
-    myMCFallbackSkin="modarcon16-defbg"
-    # Midnight Commander Fallback Skin
-    if [ "$TERM" = "linux" ]; then
-        if [ "$USER" = "root" ]; then
-            myMCFallbackSkin="modarcon16root-defbg"
-        else
-            myMCFallbackSkin="modarcon16-defbg"
-        fi
-        
-        # Replace aliases with functions
-        mc() {
-            command mc --skin "$myMCFallbackSkin" "$@"
-        }
-        
-        mcedit() {
-            command mcedit --skin "$myMCFallbackSkin" "$@"
-        }
-        
-        mcview() {
-            command mcview --skin "$myMCFallbackSkin" "$@"
-        }
-        
-        mcdiff() {
-            command mcdiff --skin "$myMCFallbackSkin" "$@"
-        }
-    fi
-}
+#################################################################################
+#                                    Aliases                                    #
+#################################################################################
 
-midnight_commander
+# Some aliases are functions
+# nvim is an alias to nvim.appimage if it exists
+
+# Alias to edit/reload bashrc
+alias reload='source ~/.bashrc'
+alias nanobash='nano ~/.bashrc'
+alias rc='nvim ~/.bashrc && exec $SHELL -l'
+
+# Some more alias to avoid making mistakes:
+alias rm='rm -vI'
+alias cp='cp -vi'
+alias mv='mv -vi'
+alias mkdir='mkdir -pv'
+
+# Colorize grep output (good for log files)
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+# Exa alias settings (Moved to function)
+alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
+
+# Directory Shortcuts
+alias getfiles="find -- * -type f" # Find all files in the current directory
+alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
+
+# k3s Shortcuts
+alias pods='k3s kubectl get pods --all-namespaces'
+alias showfailed='systemctl list-units --state failed'
+alias namespaces='k3s kubectl get namespaces'
+
+# Rclone / Rsync progress
+alias cpv='rsync -ah --info=progress2'
+
+# Truetool script Shortcut
+alias truetool='bash ~/truetool/truetool.sh'
+
+## ZFS Aliases
+# iostat
+alias iostat='zpool iostat -vly 5 1'
+alias zdb='zdb -U /data/zfs/zpool.cache'
+
+# get snapshots
+alias snapshot='zfs list -t snapshot'
+alias snapshot1='zfs list -H -o name -t snapshot'
+
+# ps
+alias psa="ps auxf"
+alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
+alias psmem='ps auxf | sort -nr -k 4'
+alias pscpu='ps auxf | sort -nr -k 3'
+
+# get diskspace
+alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
+alias df='df -h'     # human-readable sizes
+alias free='free -m' # show sizes in MB
+
+# get error messages from journalctl
+alias jctl="journalctl -p 3 -xb"
+
+# yt-dlp
+alias yta-aac="yt-dlp --extract-audio --audio-format aac "
+alias yta-best="yt-dlp --extract-audio --audio-format best "
+alias yta-flac="yt-dlp --extract-audio --audio-format flac "
+alias yta-m4a="yt-dlp --extract-audio --audio-format m4a "
+alias yta-mp3="yt-dlp --extract-audio --audio-format mp3 "
+alias yta-opus="yt-dlp --extract-audio --audio-format opus "
+alias yta-vorbis="yt-dlp --extract-audio --audio-format vorbis "
+alias yta-wav="yt-dlp --extract-audio --audio-format wav "
+alias ytv-best="yt-dlp -f bestvideo+bestaudio "
+
+# bare git repo alias for dotfiles
+alias config='/usr/bin/git --git-dir=$HOME/dotfiles --work-tree=$HOME'
+
+# bash linter
+alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'

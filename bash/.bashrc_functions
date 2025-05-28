@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+#################################################################################
+#                                    Functions                                  #
+#################################################################################
+
+declare -A FUNCTION_HELP
+
+
+
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    
+DESCRIPTION
+
+USAGE
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
+function example() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[example]}"
+        show_function_help "example"
+        return 0
+    fi
+
+    # Example function code here
+    echo "This is an example function."
+}
+
+#@begin_function command_exists
+function command_exists() {
+    local cmd="$1"
+
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: command_exists <command>" >&2
+        return 2
+    fi
+
+    if command -v "$cmd" > /dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+#@end_function
+
+#@begin_function midnight_commander_skin
+midnight_commander_skin() {
+    # Midnight Commander Fallback Skin
+    myMCFallbackSkin="modarcon16-defbg"
+
+    if [ "$TERM" = "linux" ]; then
+        if [ "$USER" = "root" ]; then
+            myMCFallbackSkin="modarcon16root-defbg"
+        else
+            myMCFallbackSkin="modarcon16-defbg"
+        fi
+        
+        # Replace aliases with functions
+        mc() {
+            command mc --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcedit() {
+            command mcedit --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcview() {
+            command mcview --skin "$myMCFallbackSkin" "$@"
+        }
+        
+        mcdiff() {
+            command mcdiff --skin "$myMCFallbackSkin" "$@"
+        }
+    fi
+}
+
+if command_exists "mc"; then
+    
+    # replace the default skin with the fallback skin
+    midnight_commander_skin
+
+    # Set the fallback skin for Midnight Commander
+    export MC_FALLBACK_SKIN="$myMCFallbackSkin"
+fi

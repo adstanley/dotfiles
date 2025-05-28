@@ -88,14 +88,13 @@ fi
 # Check if eza is installed
 if command -v "eza" > /dev/null 2>&1; then
     LS_COMMAND="eza"
-else
-    LS_COMMAND="command ls"
 fi
 
+# Declare associative array for function help
 declare -A FUNCTION_HELP
 
 #################################################################################
-#                            Options                                            #
+#####                              OPTIONS                                  #####
 #################################################################################
 
 ## Bash history
@@ -106,8 +105,8 @@ HISTTIMEFORMAT="%F %T "                          # set history time format, %F =
 HISTFILE="${XDG_DATA_HOME}/bash_history"         # set history file location
 HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
 
-shopt -s histappend                 # append to the history file, don't overwrite it
-shopt -s cmdhist                    # try to save all lines of a multiple-line command in the same history entry
+shopt -s histappend # append to the history file, don't overwrite it
+shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
 
 ## Shell Options
 # Set options
@@ -269,11 +268,12 @@ if [ -d "${HOME}/.bash_completion.d" ]; then
     done
 fi
 
+# SSH Agent
 # Check if ssh agent is running, if not start ssh agent and add .ssh keys
 if [ -z "$SSH_AUTH_SOCK" ]; then
     eval "$(ssh-agent -s > /dev/null)"
-    # find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config" -exec sh -c 'ssh-add "$1" 2>/dev/null' sh {} \;
-
+    
+    # Add all keys in ~/.ssh except for known_hosts and config
     readarray -t ssh_keys < <(find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config")
 
     for key in "${ssh_keys[@]}"; do
@@ -299,7 +299,7 @@ alias cp='cp -vi'
 alias mv='mv -vi'
 alias mkdir='mkdir -pv'
 
-# Colorize grep output (good for log files)
+# Colorize grep output
 alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -308,8 +308,7 @@ alias fgrep='fgrep --color=auto'
 alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
 
 # Directory Shortcuts
-# alias flatten='find * -type f -exec mv '{}' . \;' # Flatten directory structure
-alias getfiles="find -- * -type f"                # Find all files in the current directory
+alias getfiles="find -- * -type f" # Find all files in the current directory
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
 
 # k3s Shortcuts
@@ -337,6 +336,7 @@ alias psa="ps auxf"
 alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
 alias psmem='ps auxf | sort -nr -k 4'
 alias pscpu='ps auxf | sort -nr -k 3'
+alias psuser='ps auxf | sort -nr -k 1'
 
 # get diskspace
 alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
@@ -368,7 +368,76 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 #                                    Functions                                  #
 #################################################################################
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
+function example() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[example]}"
+        show_function_help "example"
+        return 0
+    fi
+
+    # Example function code here
+    echo "This is an example function."
+}
+
+#@Name: zfs_alias
+#@Description: Create functions to change directory to ZFS mountpoints
+#@Arguments: None
+#@Usage: zfs_alias
+#@define help information
+FUNCTION_HELP[ls]=$(cat << 'EOF'
+NAME
+    zfs_alias - Create functions to change directory to ZFS mountpoints
+
+DESCRIPTION
+    Create functions to change directory to ZFS mountpoints.
+
+USAGE
+    zfs_alias [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+    zfs_alias
+        Create functions to change directory to ZFS mountpoints.
+    zfs_alias --help
+        Show this help message and exit.
+    
+EOF
+)
+#@begin_function
 zfs_alias() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[zfs_alias]}"
+        show_function_help "zfs_alias"
+        return 0
+    fi
+
   # Create a temporary file using shell builtins
   local tmp_file="/tmp/zfs_alias_$$.tmp"  # $$ is the process ID
   
@@ -393,43 +462,68 @@ zfs_alias() {
 
 # Only call the function if ZFS is fully available
 if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
-  zfs_alias
-fi
-
-function show_function_help() {
-    local func_name="$1"
-    local script_file="$HOME/.bashrc"  # or wherever your functions are defined
-    
-    # Use awk to extract documentation for the specified function
-    awk -v func_name="$func_name" '
-        /^#@name '"$func_name"'$/ {
-            in_func_doc = 1;
-        }
-        in_func_doc && /^function '"$func_name"'\(\)/ {
-            in_func_doc = 0;
-        }
-        in_func_doc && /^#@/ {
-            sub(/^#@/, "");
-            print;
-        }
-    ' "$script_file"
-}
-
-# Find nvim
-# if directory .appimage exists, set alias to nvim.appimage
-# else, set alias to nvim
-if [ -d ~/.appimage ]; then 
-    if [ -f ~/.appimage/nvim.appimage ]; then
-        alias nvim='~/.appimage/nvim.appimage'
-    else
-        alias nvim='nvim'
-    fi
+  zfs_alias "$@"
 fi
 
 #@Name: nvim
 #@Description: Determine if Neovim AppImage exists and is executable
 #@Arguments: None
 #@Usage: nvim
+#@define help information
+FUNCTION_HELP[find_nvim]=$(cat << 'EOF'
+NAME
+    nvim - Open Neovim AppImage if available, otherwise use system nvim
+DESCRIPTION
+    Open Neovim AppImage if available, otherwise use system nvim.
+USAGE
+    nvim [OPTIONS] [FILE]...
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+EXAMPLES
+    nvim file.txt
+        Open file.txt in Neovim.
+    nvim --version
+        Show Neovim version.
+EOF
+)
+#@begin_function
+function find_nvim() {
+    # Find nvim
+    # if directory .appimage exists, set alias to nvim.appimage
+    # else, set alias to nvim
+    if [ -d ~/.appimage ]; then 
+        if [ -f ~/.appimage/nvim.appimage ]; then
+            alias nvim='~/.appimage/nvim.appimage'
+        else
+            alias nvim='nvim'
+        fi
+    fi
+}
+
+
+#@Name: nvim
+#@Description: Determine if Neovim AppImage exists and is executable
+#@Arguments: None
+#@Usage: nvim
+#@define help information
+FUNCTION_HELP[find_nvim]=$(cat << 'EOF'
+NAME
+    nvim - Open Neovim AppImage if available, otherwise use system nvim
+DESCRIPTION
+    Open Neovim AppImage if available, otherwise use system nvim.
+USAGE
+    nvim [OPTIONS] [FILE]...
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+EXAMPLES
+    nvim file.txt
+        Open file.txt in Neovim.
+    nvim --version
+        Show Neovim version.
+EOF
+)
 #@begin_function
 nvim() {   
     local nvim_path
@@ -454,7 +548,6 @@ nvim() {
 #@name ls
 #@description Determine if eza or ls should be used
 #@usage ls
-#@example ls
 #@define help information
 FUNCTION_HELP[ls]=$(cat << 'EOF'
 NAME
@@ -546,18 +639,43 @@ function countfields() {
 #@end_function
 
 
-#@Name: example
+#@Name: dupebyname
 #@Description: This is an example function
-#@Usage: example [argument]
+#@Usage: dupebyname [argument]
+#@define help information
+FUNCTION_HELP[dupebyname]=$(cat << 'EOF'
+NAME
+    example - This is an example function
+USAGE
+    dupebyname [DIRECTORY]
+EXAMPLES
+    dupebyname /path/to/directory
+    dupebyname .
+    dupebyname *
+EOF
+)  
 #@begin_function dupebyname
 function dupebyname() {
     find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
 #@end_function
 
-# Name: ownroot
-# Description: Change ownership to root
-# Usage: ownroot [directory]
+
+#@Name: ownroot
+#@Description: Change ownership to root
+#@Usage: ownroot [directory]
+#@define help information
+FUNCTION_HELP[dupebyname]=$(cat << 'EOF'
+NAME
+    example - This is an example function
+USAGE
+    dupebyname [DIRECTORY]
+EXAMPLES
+    dupebyname /path/to/directory
+    dupebyname .
+    dupebyname *
+EOF
+)  
 #@begin_function ownroot
 function ownroot() {
     # "${1:-.}" = if $1 is empty, use "."
@@ -574,10 +692,23 @@ function ownroot() {
 }
 #@end_function
 
-# Name: mod775
-# Description: modify permissions to 775, will default to current directory
-# Arguments: [directory]
-# Usage: mod775 ./
+
+#@Name: mod775
+#@Description: modify permissions to 775, will default to current directory
+#@Arguments: [directory]
+#@Usage: mod775 ./
+#@define help information
+FUNCTION_HELP[dupebyname]=$(cat << 'EOF'
+NAME
+    example - This is an example function
+USAGE
+    dupebyname [DIRECTORY]
+EXAMPLES
+    dupebyname /path/to/directory
+    dupebyname .
+    dupebyname *
+EOF
+)  
 #@begin_function mod775
 function mod775() {
     # "${1:-.}" = if $1 is empty, use "."
@@ -594,6 +725,7 @@ function mod775() {
 }
 #@end_function
 
+
 # Name: git_shallow
 # Description: Shallow clone a git repository
 # Arguments: [clone] [url]
@@ -608,6 +740,7 @@ function git_shallow() {
     fi
 }
 #@end_function
+
 
 # Name: git_branch
 # Description: Shows current git branch
@@ -683,6 +816,7 @@ function mv_check() {
     fi
 }
 
+
 # Name: rclonemove
 # Description: Move files using rclone
 # Arguments: [source] [destination]
@@ -722,9 +856,10 @@ function rclonemove() {
     fi
 
     printf "Moving \"%s\" to \"%s\".\n" "$source" "$destination"
-    rclone move -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
+    rclone move -P --ignore-existing --checkers 4 --transfers 4 --order-by size,mixed,75 "$source" "$destination"
 }
 #@end_function
+
 
 # Copy Function
 #@begin_function rclonecopy
@@ -764,12 +899,14 @@ function rclonecopy() {
 }
 #@end_function
 
+
 # Function to find largest files in the current directory
 #@begin_function find_largest_files
 function find_largest_files() {
     du -h -x -s -- * | sort -r -h | head -20;
 }
 #@end_function
+
 
 # Function to backup file by appending .bk to the end of the file name
 #@begin_function bk
@@ -778,6 +915,7 @@ function bk() {
 }
 #@end_function
 
+
 # Function to convert hex to Asciic
 #@begin_function hexToAscii
 function hexToAscii() {
@@ -785,12 +923,14 @@ function hexToAscii() {
 }
 #@end_function
 
+
 # idk man
 #@begin_function c2f
 function c2f() {
     fc -lrn | head -1 >>"${1?}"
 }
 #@end_function
+
 
 # Get history
 #@begin_function hist
@@ -805,12 +945,14 @@ function hist() {
 }
 #@end_function
 
+
 #@begin_function findd
 function findd() {
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type d
 }
 #@end_function
+
 
 #@begin_function findf
 function findf() {
@@ -819,6 +961,7 @@ function findf() {
 }
 #@end_function
 
+
 # Create a .7z compressed file with maximum compression
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
 #@begin_function 7zip
@@ -826,6 +969,7 @@ function 7zip() {
     7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
 }
 #@end_function
+
 
 # Function to extract rar files from incomplete or broken NZB downloads
 #@begin_function packs
@@ -836,6 +980,7 @@ function packs() {
     { unrar e '*part01.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
 }
 #@end_function
+
 
 # Simple function to identify the type of compression used on a file and extract accordingly
 #@begin_function extract
@@ -941,12 +1086,14 @@ function printargs() {
 }
 #@end_function
 
+
 # Define the function to show ZFS holds
 #@begin_function holds
 function holds() {
     zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
 #@end_function
+
 
 # Function to create multiple ZFS datasets at once
 #@begin_function create_datasets
@@ -976,6 +1123,7 @@ create_datasets() {
 }
 #@end_function
 
+
 #@begin_function deletesnapshot
 function deletesnapshot() {
     # Check if the input is empty
@@ -1001,6 +1149,7 @@ function deletesnapshot() {
 }
 #@end_function
 
+
 #@begin_function takesnapshot
 function takesnapshot() {
     # Check if the input is empty
@@ -1025,6 +1174,7 @@ function takesnapshot() {
 }
 #@end_function
 
+
 #@begin_function getsnapshot
 function getsnapshot() {
     # Check if the input is empty
@@ -1048,6 +1198,7 @@ function getsnapshot() {
     fi
 }
 #@end_function
+
 
 #@begin_function getspace
 function getspace() {
@@ -1076,6 +1227,7 @@ function getspace() {
 }
 #@end_function
 
+
 # Function to find all file extensions in the current directory
 #@begin_function extensions
 function extensions() {
@@ -1088,6 +1240,7 @@ function extensions() {
     find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
 }
 #@end_function
+
 
 # Takes a alias name and gets the last command from the history. Makes it an
 # alias and puts it in .bash_aliases. Be sure to source .bash_aliases in .bashrc
@@ -1105,6 +1258,7 @@ function makeAlias() {
 }
 #@end_function
 
+
 #@begin_function moveTemplate
 function moveTemplate() {
     local -a local="$1"
@@ -1119,66 +1273,33 @@ function moveTemplate() {
 }
 #@end_function
 
+
 #@begin_function insertDirectory
 function insertDirectory() {
 
+    if [ $# -ne 2 ]; then
+        printf "Usage: %s <file> <directory>\n" "${FUNCNAME[0]}"
+        return 1
+    fi
+
     local filename insert
-    filename="$(readlink "$1")"
+    #filename="$(readlink "$1")"
+    filename="$(realpath "$1")" || return 1
     insert="$2"
 
-    if [ ! -d "$PWD"/"$insert" ]; then
+    if [ ! -d "$PWD/$insert" ]; then
         read -rp "Directory '$insert' does not exist. Create Directory? (Y\N) " answer
         if [[ $answer =~ ^[Yy] ]]; then
-            mkdir -pv "$insert"
+            mkdir -pv "$insert" || return 1
         else
             printf "Aborting...\n"
             return 1
         fi
     fi
-
     mv -iv "$filename" "$(dirname "$1")/$insert/$(basename "$1")"
 }
 #@end_function
 
-#@begin_function insertDirectory2
-function insertDirectory2() {
-
-    if [ ! -d "$PWD"/"$insert" ]; then
-        read -rp "Directory '$insert' does not exist. Create Directory? (Y\N) " answer
-        if [[ $answer =~ ^[Yy] ]]; then
-            mkdir -pv "$insert"
-        else
-            printf "Aborting...\n"
-            return 1
-        fi
-    fi
-
-    mv -nv "$(realpath "$1")" "$(dirname "$1")/$insert/$(basename "$1")"
-}
-#@end_function
-
-#@begin_function flatten_old
-function flatten_old() {
-    local -a flatten
-    readarray -t flatten < <(find . -type f)
-    if [ "${#flatten[@]}" -eq 0 ]; then
-        printf "No files found in subdirectories.\n" >&2
-        return 1
-    else
-        printf "%s\n" "${flatten[@]}"
-        printf "\nFound %s files in %s subdirectories.\n" "${#flatten[@]}" "$(find . -type d | wc -l)"
-    fi
-
-    read -rp "This will move all files in subdirectories to the current directory. Continue? (Y\N) : " answer
-    if [[ ! $answer =~ ^[Yy] ]]; then
-        printf "Aborting...\n" >&2
-        return 1
-    fi
-    for ((i = 0; i < "${#flatten[@]}"; i++)); do
-        mv --no-clobber --verbose "${flatten[$i]}" ./
-    done
-}
-#@end_function
 
 #@begin_function flatten
 function flatten() {
@@ -1214,6 +1335,7 @@ function flatten() {
 }
 #@end_function
 
+
 #@begin_function abc
 function abc() {
     local n=$1
@@ -1227,11 +1349,13 @@ function abc() {
 }
 #@end_function
 
+
 #@begin_function nested
 function nested() {
     find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
 }
 #@end_function
+
 
 #@begin_function nested2
 function nested2() {
@@ -1247,6 +1371,7 @@ function nested2() {
 }
 #@end_function
 
+
 #@begin_function Zlist
 function Zlist() {
     if [ -n "$1" ]; then
@@ -1258,6 +1383,7 @@ function Zlist() {
     # { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
 }
 #@end_function
+
 
 #@begin_function command_exists
 function command_exists() {
@@ -1272,6 +1398,62 @@ function command_exists() {
         return 0
     else
         return 1
+    fi
+}
+#@end_function
+
+#@begin_function
+function rclone_move() {
+    # Check if the input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1
+    fi
+
+    # Check if the input is less than 2 arguments
+    if [ $# -lt 2 ]; then
+        printf "Error: Must have at least 2 arguments, but %d given.\n" "$#" >&2
+        return 1
+    fi
+
+    # Check if the rclone command is available
+    if ! command -v rclone &>/dev/null; then
+        printf "Error: rclone command not found or not installed\n" >&2
+        return 1 # Exit with error
+    fi
+
+    local src="$1"
+    local dest="$2"
+    shift 2 # Remove the first two arguments
+
+    # Check if source exists
+    if ! src=$(readlink -e "$src"); then
+        printf "Error: Source \"%s\" doesn't exist or is not accessible.\n" "$1" >&2
+        return 1
+    fi
+    
+    local parent_dir
+    parent_dir=$(dirname "$dest")
+
+    # Check if parent directory of destination exists
+    if [ ! -d "$parent_dir" ]; then
+        printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
+        read -p "Do you want to create it? (y/n): " -n 1 -r
+        echo    # Move to a new line
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            mkdir -p "$parent_dir"
+        else
+            printf "Operation cancelled.\n"
+            return 1
+        fi
+    fi
+
+    # Execute the rclone command with the provided arguments
+    if output=$(rclone move -P --delete-empty-src-dirs --ignore-existing --checkers 4 --transfers 4 --order-by size,mixed,75 "$src" "$dest" 2>&1); then
+        printf "%s\n" "$output"
+    else
+        printf "Error: %s\n" "$output" >&2
+        return 3 # Exit with error
     fi
 }
 #@end_function
