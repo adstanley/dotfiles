@@ -395,13 +395,13 @@ EOF
 function example() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "${FUNCTION_HELP[example]}"
-        show_function_help "example"
         return 0
     fi
 
     # Example function code here
     echo "This is an example function."
 }
+#@end_function
 
 #@Name: zfs_alias
 #@Description: Create functions to change directory to ZFS mountpoints
@@ -434,7 +434,6 @@ EOF
 zfs_alias() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "${FUNCTION_HELP[zfs_alias]}"
-        show_function_help "zfs_alias"
         return 0
     fi
 
@@ -458,7 +457,7 @@ zfs_alias() {
   # Clean up
   rm "$tmp_file"
 }
-
+#@end_function
 
 # Only call the function if ZFS is fully available
 if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
@@ -500,7 +499,7 @@ function find_nvim() {
         fi
     fi
 }
-
+#@end_function
 
 #@Name: nvim
 #@Description: Determine if Neovim AppImage exists and is executable
@@ -571,7 +570,6 @@ EOF
 function ls() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "${FUNCTION_HELP[ls]}"
-        show_function_help "ls"
         return 0
     fi
 
@@ -627,7 +625,6 @@ EOF
 function countfields() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "${FUNCTION_HELP[countfields]}"
-        show_function_help "countfields"
         return 0
     fi
 
@@ -1301,7 +1298,30 @@ function insertDirectory() {
 #@end_function
 
 
-#@begin_function flatten
+#@Name: flatten
+#@Description: flatten subdirectories by moving all files to the current directory
+#@Arguments: None
+#@Usage: flatten
+#@define help information
+FUNCTION_HELP[flatten]=$(cat << 'EOF'
+NAME
+    flatten - Move all files from subdirectories to the current directory
+
+DESCRIPTION
+    Move all files from subdirectories to the current directory, avoiding duplicates.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
 function flatten() {
     local -a flatten
     local -a duplicates
@@ -1332,6 +1352,70 @@ function flatten() {
         printf "\nThe following files were not moved due to duplicates:\n"
         printf "%s\n" "${duplicates[@]}"
     fi
+}
+#@end_function
+
+#@Name: flatten
+#@Description: flatten subdirectories by moving all files to the current directory
+#@Arguments: None
+#@Usage: flatten
+#@define help information
+FUNCTION_HELP[flatten_improved]=$(cat << 'EOF'
+NAME
+    flatten - Move all files from subdirectories to the current directory
+
+DESCRIPTION
+    Move all files from subdirectories to the current directory, avoiding duplicates.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
+function flatten_improved() {
+    local current_dir
+    current_dir=$(pwd)
+    
+    target_dir="${1:-$current_dir}"
+
+    if [[ ! -d "$target_dir" ]]; then
+        echo "Error: '$target_dir' is not a directory or does not exist." >&2
+        exit 1
+    fi
+
+    target_dir=$(realpath "$target_dir")
+
+    case "$target_dir" in
+        /|/boot|/home|/root|/etc|/var|/usr|/bin|/sbin|/lib|/lib64|/dev|/proc|/sys|/tmp|/opt|/srv|/media|/mnt)
+            echo "Error: Refusing to operate in critical directory '$target_dir'." >&2
+            exit 1
+            ;;
+    esac
+
+    echo "Scanning for empty directories in: $target_dir"
+
+    find "$target_dir" -type d -empty -print0 | while IFS= read -r -d '' dir; do
+        echo "Found empty directory: $dir"
+        read -rp "Delete this directory? [y/N] " answer
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            if rmdir "$dir" 2>/dev/null; then
+                echo "Deleted: $dir"
+            else
+                echo "Failed to delete: $dir (possibly not empty or permission denied)" >&2
+            fi
+        else
+            echo "Skipped: $dir"
+        fi
+    done
+
+    printf "Done.\n"
 }
 #@end_function
 
@@ -1454,6 +1538,99 @@ function rclone_move() {
     else
         printf "Error: %s\n" "$output" >&2
         return 3 # Exit with error
+    fi
+}
+#@end_function
+
+
+function permissions() {
+
+    # Check if the input is less than 2 arguments
+    if [ $# -lt 1 ]; then
+        printf "Error: Must have at least 1 argument, but %d given.\n" "$#" >&2
+        return 1
+    fi
+
+    local target_dir="$1"
+    shift  # Remove the first argument
+
+    # Check if target directory exists
+    if [ ! -d "$target_dir" ]; then
+        printf "Target directory \"%s\" doesn't exist or is not accessible.\n" "$target_dir" >&2
+        return 1
+    fi
+
+    getfacl -p /mnt/spool/SABnzbd/ | setfacl -R --set-file=- "$target_dir"
+}
+
+
+#@Name: copyacl
+#@Description: Copy ACLs from source directory to destination directory
+#@Arguments: [source] [destination]
+#@Usage: copyacl [source] [destination]
+#@define help information
+FUNCTION_HELP[copyacl]=$(cat << 'EOF'
+NAME
+    copyacl - Copy ACLs from source directory to destination directory
+
+DESCRIPTION
+    This function copies the Access Control Lists (ACLs) from a source directory to a destination directory.
+    It ensures that the destination is not a critical system directory and that the source is readable.
+
+USAGE
+    copyacl [SOURCE] [DESTINATION]
+    If SOURCE is not provided, it defaults to /mnt/spool/SABnzbd/.
+    If DESTINATION is not provided, it defaults to the current working directory.
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
+copyacl() {
+
+    local source="${1:-/mnt/spool/SABnzbd/}"
+    local destination="${2:-$(pwd)}"
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[copyacl]}"
+        return 0
+    fi
+    
+    # Resolve destination to absolute path for accurate checking
+    destination=$(readlink -f "$destination")
+    
+    # Protection from operating in critical directories
+    case "$destination" in
+        /|/boot|/home|/root|/etc|/var|/var/log|/usr|/bin|/sbin|/lib|/lib64|/dev|/proc|/sys|/tmp|/opt|/srv|/media|/mnt)
+            echo "Error: Refusing to modify ACLs in critical directory '$destination'" >&2
+            return 1
+            ;;
+    esac
+    
+    # Check if source exists and is readable
+    if [[ ! -r "$source" ]]; then
+        echo "Error: Cannot read source '$source'" >&2
+        return 1
+    fi
+    
+    # Check if destination exists
+    if [[ ! -d "$destination" ]]; then
+        echo "Error: Destination '$destination' does not exist or is not a directory" >&2
+        return 1
+    fi
+    
+    echo "Copying ACLs from '$source' to '$destination'..."
+    
+    if getfacl -p "$source" | setfacl -R --set-file=- "$destination"; then
+        echo "ACLs copied successfully"
+    else
+        echo "Error copying ACLs" >&2
+        return 1
     fi
 }
 #@end_function
