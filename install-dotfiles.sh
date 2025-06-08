@@ -30,11 +30,12 @@ set -o pipefail  # Prevents errors in a pipeline from being masked
 
 # Configuration
 DOTFILES_DIR="$HOME/.github/dotfiles"
-REPO_URL="https://github.com/adstanley/dotfiles.git"
+REPO_URL="https://github.com/your-username/your-dotfiles-repo.git"
 BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
-# List of dotfiles to manage (expand this list for additional dotfiles)
-DOTFILES=".bashrc"
+# List of dotfiles to manage (format: target_file:source_subdir)
+# target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
+DOTFILES=".bashrc:bash"
 
 # Ensure the dotfiles directory exists
 if [ ! -d "$DOTFILES_DIR" ]; then
@@ -59,15 +60,19 @@ mkdir -p "$BACKUP_DIR" || {
 }
 
 # Process each dotfile
-for file in $DOTFILES; do
-    target="$HOME/$file"
-    source="$DOTFILES_DIR/$file"
+for entry in $DOTFILES; do
+    # Split entry into target_file and source_subdir
+    target_file=$(echo "$entry" | cut -d':' -f1)
+    source_subdir=$(echo "$entry" | cut -d':' -f2)
+
+    target="$HOME/$target_file"
+    source="$DOTFILES_DIR/$source_subdir/$target_file"
 
     # Backup existing file if it exists and is not a symlink
     if [ -f "$target" ] && [ ! -L "$target" ]; then
-        echo "Backing up existing $file to $BACKUP_DIR/"
+        echo "Backing up existing $target_file to $BACKUP_DIR/"
         mv "$target" "$BACKUP_DIR/" || {
-            echo "Error: Failed to backup $file."
+            echo "Error: Failed to backup $target_file."
             exit 1
         }
     fi
@@ -75,29 +80,39 @@ for file in $DOTFILES; do
     # Remove existing symlink if it exists
     if [ -L "$target" ]; then
         rm "$target" || {
-            echo "Error: Failed to remove existing symlink for $file."
+            echo "Error: Failed to remove existing symlink for $target_file."
             exit 1
         }
     fi
 
     # Create symlink
     if [ -f "$source" ]; then
-        echo "Creating symlink for $file"
+        echo "Creating symlink for $target_file"
         ln -s "$source" "$target" || {
-            echo "Error: Failed to create symlink for $file."
+            echo "Error: Failed to create symlink for $target_file."
+            # Attempt to restore backup if symlink creation fails
+            if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
+                echo "Restoring backup for $target_file"
+                mv "$BACKUP_DIR/$target_file" "$target" || {
+                    echo "Error: Failed to restore backup for $target_file."
+                    exit 1
+                }
+            else
+                echo "No valid backup found for $target_file, skipping restoration."
+            fi
             exit 1
         }
     else
-        echo "Warning: $file not found in dotfiles repository."
-        # undo the backup if the source file does not exist
-        if [ -f "$BACKUP_DIR/$file" ]; then
-            echo "Restoring backup for $file"
-            mv "$BACKUP_DIR/$file" "$target" || {
-                echo "Error: Failed to restore backup for $file."
+        echo "Warning: $target_file not found in $source_subdir directory of dotfiles repository."
+        # Restore backup if source file does not exist
+        if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
+            echo "Restoring backup for $target_file"
+            mv "$BACKUP_DIR/$target_file" "$target" || {
+                echo "Error: Failed to restore backup for $target_file."
                 exit 1
             }
         else
-            echo "No backup found for $file, skipping restoration."
+            echo "No valid backup found for $target_file, skipping restoration."
         fi
     fi
 done
