@@ -89,6 +89,16 @@ for file in $DOTFILES; do
         }
     else
         echo "Warning: $file not found in dotfiles repository."
+        # undo the backup if the source file does not exist
+        if [ -f "$BACKUP_DIR/$file" ]; then
+            echo "Restoring backup for $file"
+            mv "$BACKUP_DIR/$file" "$target" || {
+                echo "Error: Failed to restore backup for $file."
+                exit 1
+            }
+        else
+            echo "No backup found for $file, skipping restoration."
+        fi
     fi
 done
 
