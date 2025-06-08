@@ -45,6 +45,13 @@ if [ -d "$HOME/.appimage" ]; then
     PATH="$HOME/.appimage:$PATH"
 fi
 
+# source local bash completion files
+if [ -d "${HOME}/.bash_completion" ]; then
+    for file in "${HOME}"/.bash_completion/*; do
+        source "$file"
+    done
+fi
+
 # If using multiple files for bashrc
 # and .bash_directory exists, source it
 if [ -f "${HOME}/.bash_directory" ]; then
@@ -1147,8 +1154,34 @@ function deletesnapshot() {
 #@end_function
 
 
+#@ Name: takesnapshot
+#@ Description: Create a ZFS snapshot for a specified dataset
+#@ Arguments: <dataset> [snapshot_suffix]
+#@ Usage: takesnapshot <dataset> [snapshot_suffix] [--dry-run]
+#@ define help information
+FUNCTION_HELP[takesnapshot]=$(cat << 'EOF'
+NAME
+    takesnapshot - Create a ZFS snapshot for a specified dataset
+DESCRIPTION
+    Create a ZFS snapshot for the specified dataset. If no snapshot suffix is provided, a default suffix of "manual-YYYY-MM-DD_HH-MM-SS" is used.
+USAGE
+    takesnapshot <dataset> [snapshot_suffix] [--dry-run]
+OPTIONS
+    <dataset>        : ZFS dataset name (e.g., poolname/dataset)
+    [snapshot_suffix]: Optional custom suffix for snapshot name (default: manual-YYYY-MM-DD_HH-MM-SS)
+    --dry-run        : Show the snapshot command without executing it
+    --help           : Display this help message
+EXAMPLES
+    takesnapshot poolname/dataset
+        Create a snapshot with the default suffix.
+    takesnapshot poolname/dataset custom_suffix
+        Create a snapshot with a custom suffix.
+    takesnapshot --dry-run poolname/dataset
+        Show the snapshot command without executing it.
+EOF
+)
 #@begin_function takesnapshot
-function takesnapshot() {
+function takesnapshot_old() {
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1171,6 +1204,108 @@ function takesnapshot() {
 }
 #@end_function
 
+#@ Name: takesnapshot
+#@ Description: Create a ZFS snapshot for a specified dataset
+#@ Arguments: <dataset> [snapshot_suffix]
+#@ Usage: takesnapshot <dataset> [snapshot_suffix] [--dry-run]
+#@ define help information
+FUNCTION_HELP[takesnapshot]=$(cat << 'EOF'
+NAME
+    takesnapshot - Create a ZFS snapshot for a specified dataset
+DESCRIPTION
+    Create a ZFS snapshot for the specified dataset. If no snapshot suffix is provided, a default suffix of "manual-YYYY-MM-DD_HH-MM-SS" is used.
+USAGE
+    takesnapshot <dataset> [snapshot_suffix] [--dry-run]
+OPTIONS
+    <dataset>        : ZFS dataset name (e.g., poolname/dataset)
+    [snapshot_suffix]: Optional custom suffix for snapshot name (default: manual-YYYY-MM-DD_HH-MM-SS)
+    --dry-run        : Show the snapshot command without executing it
+    --help           : Display this help message
+EXAMPLES
+    takesnapshot poolname/dataset
+        Create a snapshot with the default suffix.
+    takesnapshot poolname/dataset custom_suffix
+        Create a snapshot with a custom suffix.
+    takesnapshot --dry-run poolname/dataset
+        Show the snapshot command without executing it.
+EOF
+)
+#@begin_function takesnapshot
+function takesnapshot() {
+    # Display help message if --help is provided
+    if [ "$1" = "--help" ]; then
+        echo "Usage: takesnapshot <dataset> [snapshot_suffix]"
+        echo "Creates a ZFS snapshot for the specified dataset."
+        echo "  <dataset>        : ZFS dataset name (e.g., poolname/dataset)"
+        echo "  [snapshot_suffix]: Optional custom suffix for snapshot name (default: manual-YYYY-MM-DD_HH-MM-SS)"
+        echo "  --dry-run        : Show the snapshot command without executing it"
+        echo "  --help           : Display this help message"
+        return 0
+    fi
+
+    # Check if zfs command is available
+    if ! command -v zfs &> /dev/null; then
+        printf "Error: zfs command not found or not installed\n" 1>&2
+        return 1
+    fi
+
+    # Check if dataset is provided
+    if [ -z "$1" ]; then
+        printf "Error: No dataset specified\n" 1>&2
+        return 2
+    fi
+
+    local dataset="$1"
+    local snapshot_suffix="${2:-manual-$(date +"%Y-%m-%d_%H-%M-%S")}"
+    local dry_run=false
+
+    # Check for dry-run flag
+    if [ "$dataset" = "--dry-run" ]; then
+        if [ -z "$2" ]; then
+            printf "Error: --dry-run requires a dataset\n" 1>&2
+            return 2
+        fi
+        dry_run=true
+        dataset="$2"
+        snapshot_suffix="${3:-manual-$(date +"%Y-%m-%d_%H-%M-%S")}"
+    fi
+
+    # Validate dataset existence
+    if ! zfs list "$dataset" &> /dev/null; then
+        printf "Error: Dataset '%s' does not exist\n" "$dataset" 1>&2
+        return 3
+    fi
+
+    # Validate dataset name format (basic check for valid characters)
+    if [[ ! "$dataset" =~ ^[a-zA-Z0-9_/:-]+$ ]]; then
+        printf "Error: Invalid dataset name '%s'. Use alphanumeric characters, '/', ':', or '-'\n" "$dataset" 1>&2
+        return 4
+    fi
+
+    # Validate snapshot suffix (if provided)
+    if [ -n "$2" ] && [ "$2" != "--dry-run" ] && [[ ! "$snapshot_suffix" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        printf "Error: Invalid snapshot suffix '%s'. Use alphanumeric characters, '_', or '-'\n" "$snapshot_suffix" 1>&2
+        return 5
+    fi
+
+    local snapshot_name="$dataset@$snapshot_suffix"
+
+    # Perform dry run if requested
+    if [ "$dry_run" = true ]; then
+        printf "Dry run: Would execute: zfs snapshot %s\n" "$snapshot_name"
+        return 0
+    fi
+
+    # Create the snapshot
+    if output=$(zfs snapshot "$snapshot_name" 2>&1); then
+        printf "Snapshot created: %s\n" "$snapshot_name"
+        return 0
+    else
+        printf "Error creating snapshot: %s\n" "$output" 1>&2
+        return 6
+    fi
+}
+#@end_function takesnapshot
 
 #@begin_function getsnapshot
 function getsnapshot() {
@@ -1239,9 +1374,56 @@ function extensions() {
 #@end_function
 
 
-# Takes a alias name and gets the last command from the history. Makes it an
-# alias and puts it in .bash_aliases. Be sure to source .bash_aliases in .bashrc
-# or this wont work.
+#@Name: findext
+#@Description: Find files with a specific extension in the current directory
+#@Arguments: <extension>
+#@Usage: findext <extension>
+#@define help information
+FUNCTION_HELP[findext]=$(cat << 'EOF'
+NAME
+    findext - Find files with a specific extension in the current directory
+DESCRIPTION
+    Find files with a specific extension in the current directory and its subdirectories.
+USAGE
+    findext <extension>
+OPTIONS
+    <extension> : The file extension to search for (e.g., .txt, .jpg)
+EXAMPLES
+    findext .txt
+        Find all files with the .txt extension in the current directory and its subdirectories.
+EOF
+)
+#@begin_function findext
+function findext() {
+    # Check if the input is empty
+    if [ -z "$1" ]; then
+        printf "Input is empty\n" >&2
+        return 1
+    fi
+
+    # Find files with the specified extension
+    find -- * -type f -name "*$1" -print0 | xargs -0 ls -lh --color=always
+}
+#@end_function
+#@Name: makeAlias
+#@Description: Create a bash alias from the last command in history
+#@Arguments: <alias_name>
+#@Usage: makeAlias <alias_name>
+#@define help information
+FUNCTION_HELP[makeAlias]=$(cat << 'EOF'
+NAME
+    makeAlias - Create a bash alias from the last command in history
+DESCRIPTION
+    Create a bash alias from the last command in history. The alias will be saved in ~/.bash_aliases.
+USAGE
+    makeAlias <alias_name>
+OPTIONS
+    <alias_name> : The name of the alias to create
+EXAMPLES
+    makeAlias myalias
+        Create an alias named 'myalias' from the last command in history.
+EOF
+)
 #@begin_function makeAlias
 function makeAlias() {
     if [ $# -eq 0 ]; then
