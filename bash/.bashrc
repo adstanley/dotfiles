@@ -188,7 +188,7 @@ UNDERLINE='\033[04m'        # Underline ANSI escape code
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
 
-function git_prompt() {
+function git_prompt_broke() {
 
     local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
     local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
@@ -238,6 +238,59 @@ function git_prompt() {
     fi
 }
 
+function git_prompt() {
+    local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
+    local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
+    local COLOR_GIT_MODIFIED=$'\033[0;31m'  # Red for unstaged/untracked changes
+    local COLOR_RESET=$'\033[0m'            # Reset color
+
+    # Check if git is installed
+    if ! command -v git >/dev/null 2>&1; then
+        return
+    fi
+
+    # Check if in a git repository
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        return
+    fi
+
+    # Try to get tag name first
+    local ref
+    ref=$(git describe --tags --exact-match 2>/dev/null)
+
+    # If no tag, get branch name
+    if [ -z "$ref" ]; then
+        ref=$(git symbolic-ref -q HEAD 2>/dev/null)
+        ref=${ref##refs/heads/}
+        ref=${ref:-HEAD}
+    fi
+
+    # If no branch, get commit hash
+    if [ "$ref" = "HEAD" ]; then
+        ref=$(git rev-parse --short HEAD 2>/dev/null)
+    fi
+
+    # If no commit hash, set ref to "unknown"
+    if [ -z "$ref" ]; then
+        ref="unknown"
+    fi
+
+    # Check git status
+    local status_output
+    status_output=$(git status 2>/dev/null)
+
+    # If status is clean, show green
+    if [[ $status_output = *"nothing to commit"* ]]; then
+        printf " %s[%s]%s" "${COLOR_GIT_CLEAN}" "${ref}" "${COLOR_RESET}"
+    # If there are staged changes, show yellow
+    elif [[ $status_output = *"Changes to be committed"* ]]; then
+        printf " %s[%s*]%s" "${COLOR_GIT_STAGED}" "${ref}" "${COLOR_RESET}"
+    # If there are unstaged changes or untracked files, show red
+    else
+        printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
+    fi
+}
+
 # Set Prompt
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
 
@@ -269,8 +322,8 @@ fi
 
 # Source custom completion scripts from .bash_completion.d
 # if .bash_completion.d exists
-if [ -d "${HOME}/.bash_completion.d" ]; then
-    for file in "${HOME}"/.bash_completion.d/* ; do
+if [ -d "${HOME}/.bash_completion" ]; then
+    for file in "${HOME}"/.bash_completion/* ; do
         source "$file"
     done
 fi
