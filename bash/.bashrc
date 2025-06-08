@@ -45,13 +45,6 @@ if [ -d "$HOME/.appimage" ]; then
     PATH="$HOME/.appimage:$PATH"
 fi
 
-# source local bash completion files
-if [ -d "${HOME}/.bash_completion" ]; then
-    for file in "${HOME}"/.bash_completion/*; do
-        source "$file"
-    done
-fi
-
 # If using multiple files for bashrc
 # and .bash_directory exists, source it
 if [ -f "${HOME}/.bash_directory" ]; then
@@ -313,9 +306,9 @@ fi
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
-    if [ -f /usr/share/bash-completion/bash_completion ]; then
+    if [ -f "/usr/share/bash-completion/bash_completion" ]; then
         . /usr/share/bash-completion/bash_completion
-    elif [ -f /etc/bash_completion ]; then
+    elif [ -f "/etc/bash_completion" ]; then
         . /etc/bash_completion
     fi
 fi
@@ -520,9 +513,9 @@ zfs_alias() {
 #@end_function
 
 # Only call the function if ZFS is fully available
-if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
-  zfs_alias "$@"
-fi
+# if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
+#   zfs_alias "$@"
+# fi
 
 #@Name: nvim
 #@Description: Determine if Neovim AppImage exists and is executable
