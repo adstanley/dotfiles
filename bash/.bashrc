@@ -102,7 +102,7 @@ HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in 
 HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
 HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
 HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
-HISTFILE="${XDG_DATA_HOME}/bash_history"         # set history file location
+HISTFILE="${HOME}/.bash_history"         # set history file location
 HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
 
 shopt -s histappend # append to the history file, don't overwrite it
