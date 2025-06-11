@@ -341,6 +341,61 @@ fi
 # Some aliases are functions
 # nvim is an alias to nvim.appimage if it exists
 
+# Filesystem Shortcuts
+#@Name: cd_drive
+#@Description: Change directory to a specified drive
+#@Arguments: [directory]
+#@Usage: cd_drive [directory]
+#@define help information
+FUNCTION_HELP[cd_drive]=$(cat << 'EOF'
+NAME
+    cd_drive - Change directory to a specified drive
+
+DESCRIPTION
+    Change the current directory to a specified drive. If the directory does not exist, an error message is printed.
+
+USAGE
+    cd_drive [DIRECTORY]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function
+cd_drive() {
+    
+    local dir="$1"
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[example]}"
+        return 0
+    fi
+
+    if [[ -d "$dir" ]]; then
+        cd "$dir" || { printf "Failed to change to %s\n""$dir"; return 1; }
+    else
+        printf "Directory %s does not exist\m" "$dir"
+        return 1
+    fi
+}
+#@end_function
+
+# Directory shortcuts
+alias cd_sab='cd_drive /mnt/spool/SABnzbd/Completed'
+alias cd_torrent='cd_drive /mnt/spool/torrent'
+
+# Drive shortcuts
+alias cd_toshiba='cd_drive /mnt/toshiba'
+alias cd_toshiba2='cd_drive /mnt/toshiba2'
+alias cd_spool='cd_drive /mnt/spool'
+alias cd_spool-temp='cd_drive /mnt/spool/temp'
+alias cd_mach2='cd_drive /mnt/mach2'
+alias cd_seagatemirror='cd_drive /mnt/seagatemirror'
+
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
 alias nanobash='nano ~/.bashrc'
