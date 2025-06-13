@@ -51,10 +51,6 @@ if [ -f "${HOME}/.bash_directory" ]; then
     source "${HOME}/.bash_directory"
 fi
 
-# OpenCV include path for gcc
-CPLUS_INCLUDE_PATH=/usr/local/include/opencv4
-export CPLUS_INCLUDE_PATH
-
 ## Completions are sourced after standard completions are loaded
 
 ## "bat" as manpager
@@ -67,7 +63,6 @@ else
     export MANPAGER="less"
 fi
 
-## Set XDG Base Directories
 if [ -z "$XDG_CONFIG_HOME" ]; then
     export XDG_CONFIG_HOME="${HOME}/.config"
 fi
@@ -180,57 +175,6 @@ UNDERLINE='\033[04m'        # Underline ANSI escape code
 # export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
-
-function git_prompt_broke() {
-
-    local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
-    local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
-    local COLOR_GIT_MODIFIED=$'\033[0;31m'  # Red for unstaged/untracked changes
-    local COLOR_RESET=$'\033[0m'            # Reset color
-
-    # Check if git is installed
-    if ! command -v git > /dev/null 2>&1; then
-        return
-    fi
-
-    # Check if in a git repository
-    if [ -e ".git" ] || git rev-parse --git-dir > /dev/null 2>&1; then
-        # Try to get tag name first
-        local ref
-        ref=$(git describe --tags --exact-match 2> /dev/null)
-
-        # If no tag, get branch name
-        if [ -z "$ref" ]; then
-            ref=$(git symbolic-ref -q HEAD)
-            ref=${ref##refs/heads/}
-            ref=${ref:-HEAD}
-        fi
-
-        # If no branch, get commit hash
-        if [ -z "$ref" ]; then
-            ref=$(git rev-parse --short HEAD 2> /dev/null)
-        fi
-        # If no commit hash, set ref to "unknown"
-        if [ -z "$ref" ]; then
-            ref="unknown"
-        fi
-
-        # If status is clean, show dark gray
-        if [[ $(git status 2> /dev/null | tail -n1) = *"nothing to commit"* ]]; then
-            printf " %s[%s]%s" "${COLOR_GIT_CLEAN}" "${ref}" "${COLOR_RESET}"
-        # If there are staged changes, show cyan
-        elif [[ $(git status 2> /dev/null | head -n5) = *"Changes to be committed"* ]]; then
-            printf " %s[%s*]%s" "${COLOR_GIT_STAGED}" "${ref}" "${COLOR_RESET}"
-        # If there are unstaged changes, show yellow
-        elif [[ $(git status 2> /dev/null | head -n5) = *"Changes not staged for commit"* ]]; then
-            printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
-        # If there are untracked files or other git statuses, show yellow
-        else
-            printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
-        fi
-    fi
-}
-
 function git_prompt() {
     local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
     local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
@@ -289,19 +233,22 @@ PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:
 
 ## Change title of terminals
 case ${TERM} in
-xterm* | rxvt* | Eterm* | aterm | kterm | gnome* | alacritty | st | konsole*)
-    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\007"'
-    ;;
-screen*)
-    PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\033\\"'
-    ;;
+    xterm* | rxvt* | Eterm* | aterm | kterm | gnome* | alacritty | st | konsole*)
+        PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\007"'
+        ;;
+    
+    screen*)
+        PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\033\\"'
+        ;;
 esac
 
+# IDK man left it in from the default bashrc
 # If using debian, set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
+# IDK man left it in from the default bashrc
 # Enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -371,7 +318,7 @@ cd_drive() {
     local dir="$1"
 
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[example]}"
+        echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
         return 0
     fi
 
@@ -476,6 +423,45 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 #                                    Functions                                  #
 #################################################################################
 
+#@Name: show_help
+#@Description: Handle help requests for functions
+#@Arguments: [--help|-h]
+#@Usage: show_help [--help|-h]
+#@define help information
+FUNCTION_HELP[show_help]=$(cat << 'EOF'
+NAME
+    show_help - Handle help requests for functions
+DESCRIPTION
+    This function checks if the first argument is --help or -h and prints the help message for the calling function.
+    If no help message is available, it prints an error message.
+USAGE
+    show_help [--help|-h]
+OPTIONS
+    --help, -h
+        Show this help message and exit.
+EXAMPLES
+    show_help --help
+        Prints the help message for the calling function.
+    show_help -h
+        Prints the help message for the calling function.
+EOF
+)
+#@begin_function
+show_help() {
+    local callback="${FUNCNAME[1]}"
+    
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[$callback]}" ]]; then
+            echo "${FUNCTION_HELP[$callback]}"
+        else
+            echo "Help not available for function: $callback" >&2
+            return 2
+        fi
+        return 0
+    fi
+    return 1
+}
+
 #@Name: example
 #@Description: example function
 #@Arguments: None
@@ -501,8 +487,18 @@ EOF
 )
 #@begin_function
 function example() {
+
+    # Dedicated help function call
+    show_help "$1" && return 0
+    
+    # Direct help check
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[example]}"
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
     fi
 
@@ -540,117 +536,113 @@ EOF
 )
 #@begin_function
 zfs_alias() {
+    # Check if the first argument is --help or -h
+    # If so, print the help message and exit
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[zfs_alias]}"
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
     fi
 
-  # Create a temporary file using shell builtins
-  local tmp_file="/tmp/zfs_alias_$$.tmp"  # $$ is the process ID
-  
-  # Get list of pools
-  mapfile -t pools < <(zpool list -H -o name)
-  
-  # Write function definitions to the temporary file
-  for pool in "${pools[@]}"; do
-    mountpoint=$(zfs get -H mountpoint "$pool" | awk '{print $3}')
-    if [[ "$mountpoint" != "none" ]]; then
-      echo "cd.$pool() { cd \"$mountpoint\" || exit; }" >> "$tmp_file"
-    fi
-  done
-  
-  # Source the file to define the functions
-  source "$tmp_file"
-  
-  # Clean up
-  rm "$tmp_file"
+    # Create a temporary file using shell builtins
+    local tmp_file="/tmp/zfs_alias_$$.tmp"  # $$ is the process ID
+    
+    # Get list of pools
+    mapfile -t pools < <(zpool list -H -o name)
+    
+    # Write function definitions to the temporary file
+    for pool in "${pools[@]}"; do
+        mountpoint=$(zfs get -H mountpoint "$pool" | awk '{print $3}')
+        if [[ "$mountpoint" != "none" ]]; then
+        echo "cd.$pool() { cd \"$mountpoint\" || exit; }" >> "$tmp_file"
+        fi
+    done
+    
+    # Source the file to define the functions
+    source "$tmp_file"
+    
+    # Clean up
+    rm "$tmp_file"
 }
 #@end_function
 
-# Only call the function if ZFS is fully available
+# Only call the function if zfs-utils are installed
 # if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
 #   zfs_alias "$@"
 # fi
 
 #@Name: nvim
-#@Description: Determine if Neovim AppImage exists and is executable
-#@Arguments: None
-#@Usage: nvim
-#@define help information
-FUNCTION_HELP[find_nvim]=$(cat << 'EOF'
+#@Description: Launch best available Neovim installation
+#@Usage: nvim [options] [files...]
+FUNCTION_HELP[nvim]=$(cat << 'EOF'
 NAME
-    nvim - Open Neovim AppImage if available, otherwise use system nvim
+    nvim - Launch best available Neovim installation
 DESCRIPTION
-    Open Neovim AppImage if available, otherwise use system nvim.
+    Automatically finds and launches the best Neovim installation:
+    1. AppImage in ~/.appimage/
+    2. Locally compiled nvim in common paths
+    3. System package nvim
 USAGE
     nvim [OPTIONS] [FILE]...
-OPTIONS
-    -h, --help
-        Show this help message and exit.
 EXAMPLES
     nvim file.txt
-        Open file.txt in Neovim.
     nvim --version
-        Show Neovim version.
 EOF
 )
+
 #@begin_function
-function find_nvim() {
-    # Find nvim
-    # if directory .appimage exists, set alias to nvim.appimage
-    # else, set alias to nvim
-    if [ -d ~/.appimage ]; then 
-        if [ -f ~/.appimage/nvim.appimage ]; then
-            alias nvim='~/.appimage/nvim.appimage'
+nvim() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
         else
-            alias nvim='nvim'
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
+    # Cache the nvim path to avoid repeated searches
+    if [[ -z "$NVIM_PATH" ]]; then
+        # Priority order: AppImage, local compile, system package
+        local candidates=(
+            ~/.appimage/nvim.appimage
+            /usr/local/bin/nvim
+            ~/bin/nvim
+            ~/.local/bin/nvim
+        )
+        
+        for candidate in "${candidates[@]}"; do
+            if [[ -x "$candidate" ]]; then
+                export NVIM_PATH="$candidate"
+                break
+            fi
+        done
+        
+        # Fallback to system nvim
+        if [[ -z "$NVIM_PATH" ]] && command -v nvim >/dev/null 2>&1; then
+            NVIM_PATH="$(command -v nvim)"
+            export NVIM_PATH
+        fi
+        
+        if [[ -z "$NVIM_PATH" ]]; then
+            printf "Error: No Neovim installation found\n" >&2
+            return 1
         fi
     fi
+    
+    "$NVIM_PATH" "$@"
 }
 #@end_function
 
-#@Name: nvim
-#@Description: Determine if Neovim AppImage exists and is executable
-#@Arguments: None
-#@Usage: nvim
-#@define help information
-FUNCTION_HELP[find_nvim]=$(cat << 'EOF'
-NAME
-    nvim - Open Neovim AppImage if available, otherwise use system nvim
-DESCRIPTION
-    Open Neovim AppImage if available, otherwise use system nvim.
-USAGE
-    nvim [OPTIONS] [FILE]...
-OPTIONS
-    -h, --help
-        Show this help message and exit.
-EXAMPLES
-    nvim file.txt
-        Open file.txt in Neovim.
-    nvim --version
-        Show Neovim version.
-EOF
-)
-#@begin_function
-nvim() {   
-    local nvim_path
-    #nvim_path="$HOME/.appimage/nvim.appimage"
-    nvim_path="$(find ~/ -type f -name "nvim.appimage" -print -quit)"
-    
-    if [ -x "$nvim_path" ]; then
-        "$nvim_path" "$@"
-    else
-        command nvim "$@"
-    fi
-
-    if [[ ! -x "nvim_path" ]]; then
-        printf "Error: Neovim AppImage not found or not executable at %s" "$nvim_path" >&2
-        return 1
-    fi
-    
-    "nvim_path" "$@"
+nvim_reset() {
+    unset NVIM_PATH
+    echo "Neovim path cache cleared"
 }
-#@end_function
 
 #@name ls
 #@description Determine if eza or ls should be used
@@ -677,7 +669,12 @@ EOF
 #@begin_function
 function ls() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[ls]}"
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
     fi
 
@@ -707,6 +704,16 @@ EOF
 )
 #@begin_function
 function cdir() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     cd "${_%/*}" || return
 }
 
@@ -732,7 +739,12 @@ EOF
 #@begin_function countfields
 function countfields() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[countfields]}"
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
     fi
 
@@ -761,6 +773,16 @@ EOF
 )  
 #@begin_function dupebyname
 function dupebyname() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
 #@end_function
@@ -783,6 +805,17 @@ EOF
 )  
 #@begin_function ownroot
 function ownroot() {
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
 
@@ -816,6 +849,17 @@ EOF
 )  
 #@begin_function mod775
 function mod775() {
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # "${1:-.}" = if $1 is empty, use "."
     local target_dir="${1:-.}"
 
@@ -837,6 +881,16 @@ function mod775() {
 # Usage: git_shallow clone [url]
 #@begin_function git_shallow
 function git_shallow() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     if [ "$1" = "clone" ]; then
         shift 1
         command git clone --depth=1 "$@"
@@ -853,6 +907,16 @@ function git_shallow() {
 # Usage: git_branch
 #@begin_function
 function git_branch() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
 }
 #@end_function
@@ -864,6 +928,16 @@ function git_branch() {
 # Usage: mv_check [source] [destination]
 #@begin_function mv_check
 function mv_check() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # check if -t flag is present as this modifies the number of arguments we expect
     if [ "$1" = "-t" ]; then
         if [ $# -lt 3 ]; then
@@ -928,6 +1002,15 @@ function mv_check() {
 # Usage: rclonemove [source] [destination]
 #@begin_function rclonemove
 function rclonemove() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
     # Check number of arguments
     if [ $# -ne 2 ]; then
         printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
@@ -969,6 +1052,15 @@ function rclonemove() {
 # Copy Function
 #@begin_function rclonecopy
 function rclonecopy() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
     # Check number of arguments
     if [ $# -ne 2 ]; then
         printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
@@ -1008,6 +1100,16 @@ function rclonecopy() {
 # Function to find largest files in the current directory
 #@begin_function find_largest_files
 function find_largest_files() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     du -h -x -s -- * | sort -r -h | head -20;
 }
 #@end_function
@@ -1016,6 +1118,16 @@ function find_largest_files() {
 # Function to backup file by appending .bk to the end of the file name
 #@begin_function bk
 function bk() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     cp "$1" "$1_$(date +"%Y-%m-%d_%H-%M-%S")".bk
 }
 #@end_function
@@ -1024,6 +1136,16 @@ function bk() {
 # Function to convert hex to Asciic
 #@begin_function hexToAscii
 function hexToAscii() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     printf "\x%s" "$1"
 }
 #@end_function
@@ -1032,6 +1154,16 @@ function hexToAscii() {
 # idk man
 #@begin_function c2f
 function c2f() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     fc -lrn | head -1 >>"${1?}"
 }
 #@end_function
@@ -1040,6 +1172,15 @@ function c2f() {
 # Get history
 #@begin_function hist
 function hist() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
 
     if [ -z "$1" ]; then
         history
@@ -1053,6 +1194,16 @@ function hist() {
 
 #@begin_function findd
 function findd() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type d
 }
@@ -1061,6 +1212,16 @@ function findd() {
 
 #@begin_function findf
 function findf() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type f
 }
@@ -1071,6 +1232,16 @@ function findf() {
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
 #@begin_function 7zip
 function 7zip() { 
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1" 
 }
 #@end_function
@@ -1079,6 +1250,16 @@ function 7zip() {
 # Function to extract rar files from incomplete or broken NZB downloads
 #@begin_function packs
 function packs() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     printf "extracting rar volumes with out leading zeros.\n"
     { unrar e '*part1.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
     printf "extracting rar volumes with leading zeros.\n"
@@ -1090,6 +1271,16 @@ function packs() {
 # Simple function to identify the type of compression used on a file and extract accordingly
 #@begin_function extract
 function extract() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
         echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -1131,6 +1322,16 @@ function extract() {
 # usage: ex <file>
 #@begin_function ex
 function ex() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
         # display usage if no parameters given
         echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -1164,6 +1365,16 @@ function ex() {
 # navigation
 #@begin_function up
 function up() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     local d=""
     local limit="$1"
 
@@ -1185,6 +1396,16 @@ function up() {
 
 #@begin_function printargs
 function printargs() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     for ((i = 1; i <= $#; i++)); do
         printf "Arg %d: %s\n" "$i" "${!i}"
     done
@@ -1195,6 +1416,16 @@ function printargs() {
 # Define the function to show ZFS holds
 #@begin_function holds
 function holds() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
 #@end_function
@@ -1203,6 +1434,16 @@ function holds() {
 # Function to create multiple ZFS datasets at once
 #@begin_function create_datasets
 create_datasets() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
   local pool_name="$1"
   shift  # Remove the first argument (pool name)
   
@@ -1231,6 +1472,16 @@ create_datasets() {
 
 #@begin_function deletesnapshot
 function deletesnapshot() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1283,6 +1534,16 @@ EOF
 )
 #@begin_function takesnapshot
 function takesnapshot_old() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1334,13 +1595,13 @@ EOF
 #@begin_function takesnapshot
 function takesnapshot() {
     # Display help message if --help is provided
-    if [ "$1" = "--help" ]; then
-        echo "Usage: takesnapshot <dataset> [snapshot_suffix]"
-        echo "Creates a ZFS snapshot for the specified dataset."
-        echo "  <dataset>        : ZFS dataset name (e.g., poolname/dataset)"
-        echo "  [snapshot_suffix]: Optional custom suffix for snapshot name (default: manual-YYYY-MM-DD_HH-MM-SS)"
-        echo "  --dry-run        : Show the snapshot command without executing it"
-        echo "  --help           : Display this help message"
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
     fi
 
@@ -1410,6 +1671,16 @@ function takesnapshot() {
 
 #@begin_function getsnapshot
 function getsnapshot() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1435,6 +1706,15 @@ function getsnapshot() {
 
 #@begin_function getspace
 function getspace() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
 
     # Check if the input is empty
     if [ -z "$1" ]; then
@@ -1460,21 +1740,6 @@ function getspace() {
 }
 #@end_function
 
-
-# Function to find all file extensions in the current directory
-#@begin_function extensions
-function extensions() {
-    # Check if the directory is empty
-    if [ -d "$PWD" ]; then
-        printf "Directory is empty\n" >&2
-        return 1
-    fi
-
-    find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
-}
-#@end_function
-
-
 #@Name: findext
 #@Description: Find files with a specific extension in the current directory
 #@Arguments: <extension>
@@ -1496,6 +1761,16 @@ EOF
 )
 #@begin_function findext
 function findext() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1503,9 +1778,30 @@ function findext() {
     fi
 
     # Find files with the specified extension
-    find -- * -type f -name "*$1" -print0 | xargs -0 ls -lh --color=always
+    find -- * -type f -name "*$1" -print0 | xargs -0 command ls -lh --color=always
+}
+
+function extensions() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
+    # Check if the directory is empty
+    if [ -d "$PWD" ]; then
+        printf "Directory is empty\n" >&2
+        return 1
+    fi
+
+    find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
 }
 #@end_function
+
 #@Name: makeAlias
 #@Description: Create a bash alias from the last command in history
 #@Arguments: <alias_name>
@@ -1527,6 +1823,16 @@ EOF
 )
 #@begin_function makeAlias
 function makeAlias() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     if [ $# -eq 0 ]; then
         echo "No arguments supplied. You need to pass an alias name"
     else
@@ -1538,24 +1844,13 @@ function makeAlias() {
 }
 #@end_function
 
-
-#@begin_function moveTemplate
-function moveTemplate() {
-    local -a local="$1"
-    for ((i = 0; i < "${#local[@]}"; i++)); do
-        if [ -e "${local[$i]}" ]; then
-            cp -pvi "${local[$i]}" ./incomplete/
-            rm "${local[$i]}"
-        else
-            echo "Source file '${local[$i]}' does not exist."
-        fi
-    done
-}
-#@end_function
-
-
 #@begin_function insertDirectory
 function insertDirectory() {
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        return 0
+    fi
 
     if [ $# -ne 2 ]; then
         printf "Usage: %s <file> <directory>\n" "${FUNCNAME[0]}"
@@ -1563,10 +1858,16 @@ function insertDirectory() {
     fi
 
     local filename insert
-    #filename="$(readlink "$1")"
     filename="$(realpath "$1")" || return 1
     insert="$2"
 
+    # Check if file exists
+    if [ ! -e "$filename" ]; then
+        printf "File '%s' does not exist.\n" "$filename" >&2
+        return 1
+    fi
+
+    # Check if insert is a directory
     if [ ! -d "$PWD/$insert" ]; then
         read -rp "Directory '$insert' does not exist. Create Directory? (Y\N) " answer
         if [[ $answer =~ ^[Yy] ]]; then
@@ -1576,7 +1877,18 @@ function insertDirectory() {
             return 1
         fi
     fi
-    mv -iv "$filename" "$(dirname "$1")/$insert/$(basename "$1")"
+
+    # Preview change
+    printf "Preview: \nMoving:\n%s\nto:\n%s/%s/%s\n\n" "$filename" "$(dirname "$1")" "$insert" "$(basename "$1")"
+
+    # Prompt for confirmation
+    read -rp "Continue? (Y\N) " answer
+    if [[ $answer =~ ^[Yy] ]]; then
+        mv -iv "$filename" "$(dirname "$1")/$insert/$(basename "$1")"
+        return 0
+    else
+        printf "Aborting...\n"
+    fi
 }
 #@end_function
 
@@ -1610,6 +1922,16 @@ function flatten() {
     local -a duplicates
     local current_dir
     current_dir=$(pwd)
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
     
     readarray -t flatten < <(find "$current_dir" -type f)
     if [ "${#flatten[@]}" -eq 0 ]; then
@@ -1663,6 +1985,16 @@ EOF
 )
 #@begin_function
 function flatten_improved() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     local current_dir
     current_dir=$(pwd)
     
@@ -1702,30 +2034,51 @@ function flatten_improved() {
 }
 #@end_function
 
-
-#@begin_function abc
-function abc() {
-    local n=$1
-    local m=$2
-    shift 2
-    # It's good to log or echo the command for debugging; ensure to quote "$@" to handle spaces correctly.
-    args_string="$n $m $*"
-    echo "xyz -n '$n' -m '$m' $args_string"
-    # Properly quote "$@" to ensure all arguments are passed correctly to the xyz command.
-    xyz -n "$n" -m "$m" "$@"
-}
-#@end_function
-
-
-#@begin_function nested
+#@Name: nested
+#@Description: Find duplicate directory names in the current directory and its subdirectories
+#@Arguments: None
+#@Usage: nested
+#@define help information
+FUNCTION_HELP[nested]=$(cat << 'EOF'
+NAME
+    nested - Find duplicate directory names in the current directory and its subdirectories
+DESCRIPTION
+    Find duplicate directory names in the current directory and its subdirectories.
+USAGE
+    nested
+OPTIONS
+    None
+EXAMPLES
+    nested
+        Find and list duplicate directory names in the current directory and its subdirectories.
+EOF
+)
+#@begin_function
 function nested() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
 }
-#@end_function
 
-
-#@begin_function nested2
 function nested2() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     find -- * -type d |
         awk -F '/' '{print $NF}' |
         sort |
@@ -1741,6 +2094,16 @@ function nested2() {
 
 #@begin_function Zlist
 function Zlist() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     if [ -n "$1" ]; then
         zfs list "$1"
         zfs list -t snapshot "$1"
@@ -1751,26 +2114,43 @@ function Zlist() {
 }
 #@end_function
 
-
-#@begin_function command_exists
-function command_exists() {
-    local cmd="$1"
-
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: command_exists <command>" >&2
-        return 2
-    fi
-
-    if command -v "$cmd" > /dev/null 2>&1; then
+#@begin_function moveTemplate
+function moveTemplate() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
         return 0
-    else
-        return 1
     fi
+
+    local -a local="$1"
+    for ((i = 0; i < "${#local[@]}"; i++)); do
+        if [ -e "${local[$i]}" ]; then
+            cp -pvi "${local[$i]}" ./incomplete/
+            rm "${local[$i]}"
+        else
+            echo "Source file '${local[$i]}' does not exist."
+        fi
+    done
 }
 #@end_function
 
-#@begin_function
+
+#@begin_function rclone_move
 function rclone_move() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
     # Check if the input is empty
     if [ -z "$1" ]; then
         printf "Input is empty\n" >&2
@@ -1825,28 +2205,6 @@ function rclone_move() {
 }
 #@end_function
 
-
-function permissions() {
-
-    # Check if the input is less than 2 arguments
-    if [ $# -lt 1 ]; then
-        printf "Error: Must have at least 1 argument, but %d given.\n" "$#" >&2
-        return 1
-    fi
-
-    local target_dir="$1"
-    shift  # Remove the first argument
-
-    # Check if target directory exists
-    if [ ! -d "$target_dir" ]; then
-        printf "Target directory \"%s\" doesn't exist or is not accessible.\n" "$target_dir" >&2
-        return 1
-    fi
-
-    getfacl -p /mnt/spool/SABnzbd/ | setfacl -R --set-file=- "$target_dir"
-}
-
-
 #@Name: copyacl
 #@Description: Copy ACLs from source directory to destination directory
 #@Arguments: [source] [destination]
@@ -1875,12 +2233,21 @@ EOF
 )
 #@begin_function
 copyacl() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
 
     local source="${1:-/mnt/spool/SABnzbd/}"
     local destination="${2:-$(pwd)}"
 
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[copyacl]}"
+        echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
         return 0
     fi
     
