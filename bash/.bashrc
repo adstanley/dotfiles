@@ -338,6 +338,7 @@ alias cd_torrent='cd_drive /mnt/spool/torrent'
 # Drive shortcuts
 alias cd_toshiba='cd_drive /mnt/toshiba'
 alias cd_toshiba2='cd_drive /mnt/toshiba2'
+alias cd_toshiba3='cd_drive /mnt/toshiba3'
 alias cd_spool='cd_drive /mnt/spool'
 alias cd_spool-temp='cd_drive /mnt/spool/temp'
 alias cd_mach2='cd_drive /mnt/mach2'

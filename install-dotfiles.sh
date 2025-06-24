@@ -54,9 +54,33 @@ else
 fi
 
 # Create backup directory
-mkdir -p "$BACKUP_DIR" || {
-    echo "Error: Failed to create backup directory."
+if [ -d "$BACKUP_DIR" ]; then
+    if [ "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
+        echo "Error: Backup directory '$BACKUP_DIR' already exists and is not empty."
+        echo "Please remove it or choose a different name."
+        exit 1
+    else
+        echo "Using existing empty backup directory: $BACKUP_DIR"
+    fi
+elif ! mkdir -p "$BACKUP_DIR"; then
+    echo "Error: Failed to create backup directory '$BACKUP_DIR'."
     exit 1
+fi
+
+# Function to restore backup if it exists
+restore_backup() {
+    local target_file="$1"
+    local target="$2"
+    
+    if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
+        echo "Restoring backup for $target_file"
+        mv "$BACKUP_DIR/$target_file" "$target" || {
+            echo "Error: Failed to restore backup for $target_file."
+            exit 1
+        }
+    else
+        echo "No valid backup found for $target_file, skipping restoration."
+    fi
 }
 
 # Process each dotfile
@@ -90,30 +114,12 @@ for entry in $DOTFILES; do
         echo "Creating symlink for $target_file"
         ln -s "$source" "$target" || {
             echo "Error: Failed to create symlink for $target_file."
-            # Attempt to restore backup if symlink creation fails
-            if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
-                echo "Restoring backup for $target_file"
-                mv "$BACKUP_DIR/$target_file" "$target" || {
-                    echo "Error: Failed to restore backup for $target_file."
-                    exit 1
-                }
-            else
-                echo "No valid backup found for $target_file, skipping restoration."
-            fi
+            restore_backup "$target_file" "$target"
             exit 1
         }
     else
         echo "Warning: $target_file not found in $source_subdir directory of dotfiles repository."
-        # Restore backup if source file does not exist
-        if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
-            echo "Restoring backup for $target_file"
-            mv "$BACKUP_DIR/$target_file" "$target" || {
-                echo "Error: Failed to restore backup for $target_file."
-                exit 1
-            }
-        else
-            echo "No valid backup found for $target_file, skipping restoration."
-        fi
+        restore_backup "$target_file" "$target"
     fi
 done
 

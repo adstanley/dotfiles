@@ -10,9 +10,6 @@
 	s = status
 	snip = "!git ls-files -o | xargs -n 1 rm"
 	su = submodule update .
-[credential "https://github.com"]
-	helper =
-	helper = !/usr/bin/gh auth git-credential
 [commit]
 	gpgsign = true
 [help]
