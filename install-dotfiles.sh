@@ -18,34 +18,36 @@
 ###########################################################
 #
 # This script is designed to manage dotfiles in a user's home directory.
+#
 # Shellcheck Directvies
 # shellcheck shell=bash
 # shellcheck source=/dev/null
 # shellcheck disable=SC1090
 # shellcheck disable=SC1091
 # shellcheck disable=SC2034
+
 set -e  # Exit immediately if a command exits with a non-zero status
 set -u  # Treat unset variables as an error
 set -o pipefail  # Prevents errors in a pipeline from being masked
 
 # Configuration
 DOTFILES_DIR="$HOME/.github/dotfiles"
-REPO_URL="https://github.com/your-username/your-dotfiles-repo.git"
+REPO_URL="https://github.com/adstanley/dotfiles.git"
 BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
 # List of dotfiles to manage (format: target_file:source_subdir)
 # target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
-DOTFILES=".bashrc:bash"
+DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux"
 
 # Ensure the dotfiles directory exists
 if [ ! -d "$DOTFILES_DIR" ]; then
-    echo "Cloning dotfiles repository..."
+    printf "Cloning dotfiles repository...\n"
     git clone "$REPO_URL" "$DOTFILES_DIR" || {
         echo "Error: Failed to clone repository."
         exit 1
     }
 else
-    echo "Updating dotfiles repository..."
+    printf "Repository exists. Pulling repository...\n"
     cd "$DOTFILES_DIR" || exit 1
     git pull || {
         echo "Error: Failed to update repository."
@@ -56,8 +58,7 @@ fi
 # Create backup directory
 if [ -d "$BACKUP_DIR" ]; then
     if [ "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
-        echo "Error: Backup directory '$BACKUP_DIR' already exists and is not empty."
-        echo "Please remove it or choose a different name."
+        printf "Error: Backup directory %s exists.\n" "'$BACKUP_DIR'"
         exit 1
     else
         echo "Using existing empty backup directory: $BACKUP_DIR"
