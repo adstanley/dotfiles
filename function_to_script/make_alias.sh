@@ -47,89 +47,68 @@ EXAMPLES
 EOF
 )
 
-#@begin_function
-function makeAlias() {
-    local alias_name=""
-    local show_help=false
-    
-    # Parse options with getopts
-    while getopts "h" opt; do
-        case $opt in
-            h)
-                show_help=true
-                ;;
-            \?)
-                echo "Invalid option: -$OPTARG" >&2
-                echo "Usage: makeAlias [-h] [alias_name]"
-                return 1
-                ;;
-        esac
-    done
-    
-    # Shift past the options
-    shift $((OPTIND-1))
-    
-    # Handle --help (long option)
-    if [[ "$1" == "--help" ]]; then
-        show_help=true
-        shift
-    fi
-    
-    # Show help if requested
-    if [[ "$show_help" == true ]]; then
-        echo "${FUNCTION_HELP[makeAlias]}"
-        return 0
-    fi
-    
-    # Check if alias name is provided
-    if [[ $# -eq 0 ]]; then
-        echo "Error: No alias name provided." >&2
-        echo "Usage: makeAlias [-h] [alias_name]"
-        return 1
-    fi
-    
-    # Check for too many arguments
-    if [[ $# -gt 1 ]]; then
-        echo "Error: Too many arguments. Expected exactly one alias name." >&2
-        echo "Usage: makeAlias [-h] [alias_name]"
-        return 1
-    fi
-    
-    alias_name="$1"
-    
-    # Validate alias name format
-    if [[ ! "$alias_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-        echo "Error: Invalid alias name '$alias_name'." >&2
-        echo "Alias names must start with a letter or underscore and contain only letters, numbers, and underscores."
-        return 1
-    fi
-    
-    # Check if alias already exists
-    if alias "$alias_name" &>/dev/null; then
-        echo "Error: Alias '$alias_name' already exists. Please choose a different name." >&2
-        return 1
-    fi
-    
-    # Get the last command from history
-    local last_command
-    last_command=$(history | tail -n 2 | head -n 1 | sed 's/^[ ]*[0-9]*[ ]*//')
-    
-    if [[ -z "$last_command" ]]; then
-        echo "Error: Could not retrieve last command from history." >&2
-        return 1
-    fi
-    
-    # Escape single quotes in the command
-    local escaped_command="${last_command//\'/\'\\\'\'}"
-    
-    # Add alias to ~/.bash_aliases
-    echo "alias $alias_name='$escaped_command'" >> ~/.bash_aliases
-    
-    # Source the aliases file to make it available immediately
-    if [[ -f ~/.bash_aliases ]]; then
-        source ~/.bash_aliases
-    fi
-    
-    echo "Alias '$alias_name' created successfully for command: $last_command"
-    return 0
-}
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            echo "${FUNCTION_HELP[makeAlias]}"
+            exit 0
+            ;;
+        -a|--alias)
+            alias_name="$2"
+            shift 2
+            ;;
+        -*)
+            echo "Invalid option: $1" >&2
+            echo "${FUNCTION_HELP[makeAlias]}"
+            exit 1
+            ;;
+        *)
+            printf "Error: no option provided.\n" >&2
+            echo "${FUNCTION_HELP[makeAlias]}"
+            exit 0
+            ;;
+    esac
+done
+
+# Check if alias name is provided
+if [[ -z "$alias_name" ]]; then
+    echo "Error: No alias name provided." >&2
+    echo "Usage: makeAlias [-h|--help] [alias_name]"
+    exit 1
+fi
+
+# alias_name="$1"
+
+# # Validate alias name format
+# if [[ ! "$alias_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+#     echo "Error: Invalid alias name '$alias_name'." >&2
+#     echo "Alias names must start with a letter or underscore and contain only letters, numbers, and underscores."
+#     return 1
+# fi
+
+# # Check if alias already exists
+# if alias "$alias_name" &>/dev/null; then
+#     echo "Error: Alias '$alias_name' already exists. Please choose a different name." >&2
+#     return 1
+# fi
+
+# # Get the last command from history
+# last_command=$(history | tail -n 2 | head -n 1 | sed 's/^[ ]*[0-9]*[ ]*//')
+
+# if [[ -z "$last_command" ]]; then
+#     echo "Error: Could not retrieve last command from history." >&2
+#     return 1
+# fi
+
+# # Escape single quotes in the command
+# escaped_command="${last_command//\'/\'\\\'\'}"
+
+# # Add alias to ~/.bash_aliases
+# echo "alias $alias_name='$escaped_command'" >> ~/.bash_aliases
+
+# # Source the aliases file to make it available immediately
+# if [[ -f ~/.bash_aliases ]]; then
+#     source ~/.bash_aliases
+# fi
+
+# echo "Alias '$alias_name' created successfully for command: $last_command"

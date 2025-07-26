@@ -97,7 +97,7 @@ HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in 
 HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
 HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
 HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
-HISTFILE="${HOME}/.bash_history"         # set history file location
+HISTFILE="${HOME}/.bash_history"                 # set history file location
 HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
 
 shopt -s histappend # append to the history file, don't overwrite it
@@ -133,19 +133,6 @@ shopt -s nullglob       # null globbing, no match returns null
 #        tiple times, as necessary, to indicate multiple levels of  indi‐
 #        rection.  The default is ``+ ''.
 
-# TODO: Breaks line feed
-## ANSI Escape Codes
-# Colors
-# BLACK=$(tput setaf 0)   # \033[1;30m - Black
-# RED=$(tput setaf 1)     # \033[1;31m - Red
-# GREEN=$(tput setaf 2)   # \033[1;32m - Green
-# YELLOW=$(tput setaf 3)  # \033[1;33m - Yellow
-# BLUE=$(tput setaf 4)    # \033[1;34m - Blue
-# PURPLE=$(tput setaf 5)  # \033[1;35m - Purple (Magenta)
-# CYAN=$(tput setaf 6)    # \033[1;36m - Cyan
-# WHITE=$(tput setaf 7)   # \033[1;37m - White
-# RESET=$(tput sgr0)      # \033[0m - Reset all attributes
-
 ## ANSI Escape Codes
 # Colors
 BLACK='\[\033[01;30m\]'     # Black
@@ -164,6 +151,7 @@ RESET='\[\033[0m\]'         # Reset
 # Text Attributes
 BOLD='\033[01m'             # Bold ANSI escape code
 UNDERLINE='\033[04m'        # Underline ANSI escape code
+ITALIC='\033[03m'           # Italic ANSI escape code
 
 # Colored GCC warnings and errors
 # Errors will be displayed in bold red
@@ -175,8 +163,15 @@ UNDERLINE='\033[04m'        # Underline ANSI escape code
 # export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
+# Only check once if git is available, then set a flag.
+if command -v git >/dev/null 2>&1; then
+    __GIT_AVAILABLE=1
+else
+    __GIT_AVAILABLE=0
+fi
+
 function git_prompt() {
-    local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
+    local COLOR_GIT_CLEAN=$'\033[0;32m'     # Green for clean status
     local COLOR_GIT_STAGED=$'\033[0;33m'    # Yellow for staged changes
     local COLOR_GIT_MODIFIED=$'\033[0;31m'  # Red for unstaged/untracked changes
     local COLOR_RESET=$'\033[0m'            # Reset color
@@ -270,15 +265,19 @@ fi
 
 # SSH Agent
 # Check if ssh agent is running, if not start ssh agent and add .ssh keys
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s > /dev/null)"
-    
-    # Add all keys in ~/.ssh except for known_hosts and config
-    readarray -t ssh_keys < <(find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config")
+# Only start agent if there is a .ssh folder
+if [ ! -d "$HOME/.ssh" ]; then
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+        # Start the ssh-agent in the background
+        eval "$(ssh-agent -s > /dev/null)"        
+        
+        # Add all keys in ~/.ssh except for known_hosts and config
+        readarray -t ssh_keys < <(find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config")
 
-    for key in "${ssh_keys[@]}"; do
-        ssh-add "$key" 2>/dev/null
-    done
+        for key in "${ssh_keys[@]}"; do
+            ssh-add "$key" 2>/dev/null
+        done
+    fi
 fi
 
 #################################################################################
@@ -2294,7 +2293,7 @@ copyacl() {
 FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$FNM_PATH:$PATH"
-  eval "`fnm env`"
+  eval "$(fnm env)"
 fi
 
 # opencode
