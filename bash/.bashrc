@@ -85,6 +85,10 @@ if command -v "eza" > /dev/null 2>&1; then
     LS_COMMAND="eza"
 fi
 
+if command -v "exa" > /dev/null 2>&1; then
+    LS_COMMAND="exa"
+fi
+
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
@@ -231,7 +235,7 @@ case ${TERM} in
     xterm* | rxvt* | Eterm* | aterm | kterm | gnome* | alacritty | st | konsole*)
         PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\007"'
         ;;
-    
+
     screen*)
         PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\033\\"'
         ;;
@@ -313,7 +317,7 @@ EOF
 )
 #@begin_function
 cd_drive() {
-    
+
     local dir="$1"
 
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -531,7 +535,7 @@ EXAMPLES
         Create functions to change directory to ZFS mountpoints.
     zfs_alias --help
         Show this help message and exit.
-    
+
 EOF
 )
 #@begin_function
@@ -680,6 +684,10 @@ function ls() {
 
     if [ "$LS_COMMAND" = "eza" ]; then
         eza --all --long --header --git --icons --group-directories-first --color=always "$@"
+    fi 
+    
+    if [ "LS_COMMAND" = "exa"]; then
+        exa --all --long --header --git --icons --group-directories-first --color=always "$@"
     else
         command ls -lahg --color=always --group-directories-first "$@"
     fi
