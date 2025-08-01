@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# First, read and store all function info from .bashrc
-mapfile -t bashrc_contents < ~/.bashrc
+# Read the contents of .bashrc into an array
+mapfile -t bashrc_contents < "$HOME"/.bashrc
 
 # Initialize variables
 in_function=false
@@ -33,10 +33,8 @@ while IFS= read -r line; do
     fi
 done <<< "$(printf '%s\n' "${bashrc_contents[@]}")"
 
-# Now source .bashrc to get access to the functions
-source ~/.bashrc
 
-# Finally, print all collected functions
+# Print all functions
 for func in "${functions_to_print[@]}"; do
     # Print documentation
     echo "${function_docs[$func]}"

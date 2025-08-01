@@ -516,7 +516,7 @@ function example() {
 #@Arguments: None
 #@Usage: zfs_alias
 #@define help information
-FUNCTION_HELP[ls]=$(cat << 'EOF'
+FUNCTION_HELP[zfs_alias]=$(cat << 'EOF'
 NAME
     zfs_alias - Create functions to change directory to ZFS mountpoints
 
@@ -684,9 +684,7 @@ function ls() {
 
     if [ "$LS_COMMAND" = "eza" ]; then
         eza --all --long --header --git --icons --group-directories-first --color=always "$@"
-    fi 
-    
-    if [ "LS_COMMAND" = "exa"]; then
+    elif [ "$LS_COMMAND" = "exa" ]; then
         exa --all --long --header --git --icons --group-directories-first --color=always "$@"
     else
         command ls -lahg --color=always --group-directories-first "$@"
@@ -2292,6 +2290,32 @@ copyacl() {
     fi
 }
 #@end_function
+
+
+catalog_dir() {
+  local dir="${1:-.}"
+  local output="${2:-directory_catalog.txt}"
+
+  echo "Catalog of $dir created on $(date)" > "$output"
+  echo "----------------------------------------" >> "$output"
+
+  # File count and total size
+  echo "Summary:" >> "$output"
+  find "$dir" -type f | wc -l | xargs echo "Total files:" >> "$output"
+  du -sh "$dir" | awk '{print "Total size: " $1}' >> "$output"
+  echo "" >> "$output"
+
+  # Detailed listing with permissions, size, and date
+  echo "Detailed listing:" >> "$output"
+  /usr/bin/ls -lah "$dir" >> "$output"
+  echo "" >> "$output"
+
+  # File type breakdown
+  echo "File types:" >> "$output"
+  find "$dir" -type f | grep -v "^\." | sort | rev | cut -d. -f1 | rev | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr >> "$output"
+
+  echo "Catalog saved to $output"
+}
 
 #################################################################################
 #                               Installer Added                                 #

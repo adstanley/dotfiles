@@ -12,7 +12,7 @@
 function _tmux_complete_client_old() {
     local IFS=$'\n'
     local cur="${1}" && shift
-    COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "$(tmux "$@" list-clients -F '#{client_tty}' 2> /dev/null)" -- "${cur}") )
+    COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "$(tmux "$@" list-clients -F '#{client_tty}' 2> /dev/null)" -- "${cur}")" )
     options=""
     return 0
 }
@@ -35,7 +35,7 @@ function _tmux_complete_client() {
 function _tmux_complete_session() {
     local IFS=$'\n'
     local cur="${1}" && shift
-    COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "$(tmux "$@" list-sessions -F '#{session_name}' 2> /dev/null)" -- "${cur}") )
+    COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "$(tmux "$@" list-sessions -F '#{session_name}' 2> /dev/null)" -- "${cur}")" )
     options=""
     return 0
 }
@@ -54,7 +54,7 @@ function _tmux_complete_window() {
     fi
     cur="$(echo "${cur}" | sed -e 's/:/\\\\:/')"
     sessions="$(echo "${sessions}" | sed -e 's/:/\\\\:/')"
-    COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "${sessions}" -- "${cur}") )
+    COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "${sessions}" -- "${cur}")" )
     options=""
     return 0
 }
@@ -62,14 +62,14 @@ function _tmux_complete_window() {
 function _tmux_complete_socket_name() {
     local IFS=$'\n'
     local cur="${1}" && shift
-    COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "$(find /tmp/tmux-$UID -type s -printf '%P\n')" -- "${cur}") )
+    COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "$(find /tmp/tmux-$UID -type s -printf '%P\n')" -- "${cur}")" )
     options=""
     return 0
 }
 function _tmux_complete_socket_path() {
     local IFS=$'\n'
     local cur="${1}" && shift
-    COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "$(find /tmp/tmux-$UID -type s -printf '%p\n')" -- "${cur}") )
+    COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "$(find /tmp/tmux-$UID -type s -printf '%p\n')" -- "${cur}")" )
     options=""
     return 0
 }
@@ -110,7 +110,7 @@ _tmux() {
     fi
 
     if [[ $cword -eq 1 ]]; then
-        COMPREPLY=($( compgen -W "$(tmux start\; list-commands | cut -d' ' -f1)" -- "$cur" ));
+        COMPREPLY=("$( compgen -W "$(tmux start\; list-commands | cut -d' ' -f1)" -- "$cur" )");
         return 0
     else
         case ${words[index]} in
@@ -188,7 +188,7 @@ _tmux() {
     fi # command specified
 
     if [[ -n "${options}" ]]; then
-        COMPREPLY=( ${COMPREPLY[@]:-} $(compgen -W "${options}" -- "${cur}") )
+        COMPREPLY=( "${COMPREPLY[@]:-}" "$(compgen -W "${options}" -- "${cur}")" )
     fi
 
     return 0
