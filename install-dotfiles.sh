@@ -35,9 +35,17 @@ DOTFILES_DIR="$HOME/.github/dotfiles"
 BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 REPO_URL="https://github.com/adstanley/dotfiles.git"
 
+# Define the associative array
+declare -A DOTFILES
+DOTFILES=(
+    [".bashrc"]="bash"
+    [".nanorc"]="nano"
+    [".tmux.conf"]="tmux"
+)
+
 # List of dotfiles to manage (format: target_file:source_subdir)
 # target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
-DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux .nanorc:nano"
+#DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux .nanorc:nano"
 
 # Check if dotfiles directory exists, if not clone it
 if [ ! -d "$DOTFILES_DIR" ]; then
@@ -69,7 +77,7 @@ elif ! mkdir -p "$BACKUP_DIR"; then
     exit 1
 fi
 
-# Function to restore backup if it exists
+# If something terrible happens revert
 restore_backup() {
     local target_file="$1"
     local target="$2"
@@ -85,12 +93,9 @@ restore_backup() {
     fi
 }
 
-# Process each dotfile
-for entry in $DOTFILES; do
-    # Split entry into target_file and source_subdir
-    target_file=$(echo "$entry" | cut -d':' -f1)
-    source_subdir=$(echo "$entry" | cut -d':' -f2)
-
+# Process each dotfile in the array
+for target_file in "${!DOTFILES_ARRAY[@]}"; do
+    source_subdir="${DOTFILES_ARRAY[$target_file]}"
     target="$HOME/$target_file"
     source="$DOTFILES_DIR/$source_subdir/$target_file"
 
@@ -101,6 +106,9 @@ for entry in $DOTFILES; do
             echo "Error: Failed to backup $target_file."
             exit 1
         }
+
+        # Change backup file name to include hostname
+        mv "$BACKUP_DIR/$target_file" "$BACKUP_DIR/$(hostname)_$target_file"
     fi
 
     # Remove existing symlink if it exists

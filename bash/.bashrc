@@ -861,7 +861,7 @@ function ownroot() {
 #@Arguments: [directory]
 #@Usage: mod775 ./
 #@define help information
-FUNCTION_HELP[dupebyname]=$(cat << 'EOF'
+FUNCTION_HELP[mod775]=$(cat << 'EOF'
 NAME
     example - This is an example function
 USAGE
@@ -1458,7 +1458,7 @@ function holds() {
 
 # Function to create multiple ZFS datasets at once
 #@begin_function create_datasets
-create_datasets() {
+function create_datasets() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
             echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1694,6 +1694,29 @@ function takesnapshot() {
 }
 #@end_function takesnapshot
 
+#@Name: getsnapshot
+#@Description: Get a list of snapshots for a given dataset
+#@Arguments: <dataset>
+#@Usage: getsnapshot <dataset>
+#@define help information
+FUNCTION_HELP[getsnapshot]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function getsnapshot
 function getsnapshot() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -1728,7 +1751,29 @@ function getsnapshot() {
 }
 #@end_function
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
 
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function getspace
 function getspace() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -1869,6 +1914,29 @@ function makeAlias() {
 }
 #@end_function
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function insertDirectory
 function insertDirectory() {
 
@@ -1923,7 +1991,7 @@ function insertDirectory() {
 #@Arguments: None
 #@Usage: flatten
 #@define help information
-FUNCTION_HELP[flatten]=$(cat << 'EOF'
+FUNCTION_HELP[flatten_old]=$(cat << 'EOF'
 NAME
     flatten - Move all files from subdirectories to the current directory
 
@@ -1942,7 +2010,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function flatten() {
+function flatten_old() {
     local -a flatten
     local -a duplicates
     local current_dir
@@ -1985,17 +2053,17 @@ function flatten() {
 }
 #@end_function
 
-#@Name: flatten
-#@Description: flatten subdirectories by moving all files to the current directory
+#@Name: remove_empty_dirs
+#@Description: Remove empty directories in the specified directory
 #@Arguments: None
-#@Usage: flatten
+#@Usage: remove_empty_dirs
 #@define help information
-FUNCTION_HELP[flatten_improved]=$(cat << 'EOF'
+FUNCTION_HELP[remove_empty_dirs]=$(cat << 'EOF'
 NAME
-    flatten - Move all files from subdirectories to the current directory
+    remove_empty_dirs - Remove empty directories in the specified directory
 
 DESCRIPTION
-    Move all files from subdirectories to the current directory, avoiding duplicates.
+    Remove empty directories in the specified directory, prompting for confirmation before deletion.
 
 USAGE
     function_name [OPTIONS]
@@ -2009,7 +2077,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function flatten_improved() {
+function remove_empty_dirs() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
             echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -2090,19 +2158,8 @@ function nested() {
         return 0
     fi
 
-    find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
-}
-
-function nested2() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+    # Simple version
+    # find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
 
     find -- * -type d |
         awk -F '/' '{print $NF}' |
@@ -2116,9 +2173,31 @@ function nested2() {
 }
 #@end_function
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
 
-#@begin_function Zlist
-function Zlist() {
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function zfs_list
+function zfs_list() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
             echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -2139,6 +2218,29 @@ function Zlist() {
 }
 #@end_function
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function moveTemplate
 function moveTemplate() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -2163,7 +2265,29 @@ function moveTemplate() {
 }
 #@end_function
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[example]=$(cat << 'EOF'
+NAME
+    function_name - Short description of the function
 
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function rclone_move
 function rclone_move() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -2303,6 +2427,7 @@ copyacl() {
     
     if getfacl -p "$source" | setfacl -R --set-file=- "$destination"; then
         echo "ACLs copied successfully"
+        chmod -R -v 775 "$destination"
     else
         echo "Error copying ACLs" >&2
         return 1
@@ -2310,7 +2435,30 @@ copyacl() {
 }
 #@end_function
 
+#@Name: catalog_dir
+#@Description: Create a catalog of a directory's contents
+#@Arguments: [directory] [output_file]
+#@Usage: catalog_dir [directory] [output_file]
+#@define help information
+FUNCTION_HELP[catalog_dir]=$(cat << 'EOF'
+NAME
+    catalog_dir - Create a catalog of a directory's contents
 
+DESCRIPTION
+    This function creates a catalog of the contents of a directory, including a summary of file counts and sizes,
+    a detailed listing of files, and a breakdown of file types.
+
+USAGE
+    catalog_dir [DIRECTORY] [OUTPUT_FILE]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 catalog_dir() {
   local dir="${1:-.}"
   local output="${2:-directory_catalog.txt}"
@@ -2338,33 +2486,6 @@ catalog_dir() {
   echo "Catalog saved to $output"
 }
 #@end_function
-
-# catalog_dir() {
-#   local dir="${1:-.}"
-#   local output="${2:-directory_catalog.txt}"
-
-#   {
-#     echo "Catalog of $dir created on $(date)"
-#     echo "----------------------------------------"
-#    } >> "$output"
-
-#   # File count and total size
-#   echo "Summary:" >> "$output"
-#   find "$dir" -type f | wc -l | xargs echo "Total files:" >> "$output"
-#   du -sh "$dir" | awk '{print "Total size: " $1}' >> "$output"
-#   echo "" >> "$output"
-
-#   # Detailed listing with permissions, size, and date
-#   echo "Detailed listing:" >> "$output"
-#   /usr/bin/ls -lah "$dir" >> "$output"
-#   echo "" >> "$output"
-
-#   # File type breakdown
-#   echo "File types:" >> "$output"
-#   find "$dir" -type f | grep -v "^\." | sort | rev | cut -d. -f1 | rev | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr >> "$output"
-
-#   echo "Catalog saved to $output"
-# }
 
 #################################################################################
 #                               Installer Added                                 #
