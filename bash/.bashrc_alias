@@ -106,5 +106,3 @@ alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
 # docker
 alias docker-clean='docker system prune -a --volumes --force'
 alias docker-pull='docker pull --all-tags'
-
-# docker-compose

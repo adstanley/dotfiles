@@ -32,14 +32,14 @@ set -o pipefail  # Prevents errors in a pipeline from being masked
 
 # Configuration
 DOTFILES_DIR="$HOME/.github/dotfiles"
+BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 REPO_URL="https://github.com/adstanley/dotfiles.git"
-BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
 # List of dotfiles to manage (format: target_file:source_subdir)
 # target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
-DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux"
+DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux .nanorc:nano"
 
-# Ensure the dotfiles directory exists
+# Check if dotfiles directory exists, if not clone it
 if [ ! -d "$DOTFILES_DIR" ]; then
     printf "Cloning dotfiles repository...\n"
     git clone "$REPO_URL" "$DOTFILES_DIR" || {
@@ -47,6 +47,7 @@ if [ ! -d "$DOTFILES_DIR" ]; then
         exit 1
     }
 else
+    # check if repo needs to be updated
     printf "Repository exists. Pulling repository...\n"
     cd "$DOTFILES_DIR" || exit 1
     git pull || {

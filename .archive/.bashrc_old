@@ -138,7 +138,6 @@ WHITE='\[\033[01;37m\]'     # White
 GREEN="\[\033[38;5;2m\]"    # Green
 YELLOW="\[\033[38;5;11m\]"  # Yellow
 BLUE="\[\033[38;5;6m\]"     # Blue
-RESET="\[$(tput sgr0)\]"    # Reset
 RESET='\[\033[0m\]'         # Reset
 
 # Set Prompt
@@ -159,9 +158,7 @@ if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
+# Enable bash completion if not already enabled
 if ! shopt -oq posix; then
     if [ -f /usr/share/bash-completion/bash_completion ]; then
         . /usr/share/bash-completion/bash_completion
@@ -173,6 +170,10 @@ fi
 #################################################################################
 #################################### Aliases ####################################
 #################################################################################
+
+source "$HOME/.bash_aliases" || {
+    printf "Error: Failed to source .bash_aliases.\n"
+}
 
 # Find Aliases
 alias dupebyname='find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c' # Find duplicate directories by name
@@ -203,8 +204,8 @@ alias getfiles="tree -ifF | grep -v /$ | sed 's/.$//' | sed 's/^[^\/]*\///'"
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' # Find all file extensions in the current directory"
 
 # Chown Shortcuts
-alias ownroot='chown -R -v root:root ./' # chown root recursively
-alias mod770='chmod -R -v 755 ./'        # chmod 755 recursively
+# alias ownroot='chown -R -v root:root ./' # chown root recursively
+# alias mod770='chmod -R -v 755 ./'        # chmod 755 recursively
 
 # k3s Shortcuts
 alias pods='k3s kubectl get pods --all-namespaces'

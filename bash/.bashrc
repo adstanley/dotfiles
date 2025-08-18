@@ -80,14 +80,21 @@ if [ -z "$XDG_STATE_HOME" ]; then
 fi
 
 # Flags
-# Check if eza is installed
-if command -v "eza" > /dev/null 2>&1; then
-    LS_COMMAND="eza"
-fi
 
-if command -v "exa" > /dev/null 2>&1; then
-    LS_COMMAND="exa"
-fi
+LS_COMMAND='ls' # Default ls command
+
+get_ls_command() {
+    local commands=("eza" "exa" "ls")
+    for cmd in "${commands[@]}"; do
+        if command -v "$cmd" >/dev/null 2>&1; then
+            echo "$cmd"
+            return 0
+        fi
+    done
+    echo "ls"  # fallback
+}
+
+LS_COMMAND=$(get_ls_command)
 
 # Declare associative array for function help
 declare -A FUNCTION_HELP
@@ -269,12 +276,12 @@ fi
 
 # SSH Agent
 # Check if ssh agent is running, if not start ssh agent and add .ssh keys
-# Only start agent if there is a .ssh folder
+# Only start agent if there is an .ssh folder
 if [ ! -d "$HOME/.ssh" ]; then
     if [ -z "$SSH_AUTH_SOCK" ]; then
         # Start the ssh-agent in the background
-        eval "$(ssh-agent -s > /dev/null)"        
-        
+        eval "$(ssh-agent -s)" >/dev/null 2>&1
+
         # Add all keys in ~/.ssh except for known_hosts and config
         readarray -t ssh_keys < <(find ~/.ssh -type f -not -iname "*.pub" -not -name "known_hosts" -not -name "config")
 
@@ -350,6 +357,7 @@ alias cd_seagatemirror='cd_drive /mnt/seagatemirror'
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
 alias nanobash='nano ~/.bashrc'
+alias nvimbash='nvim ~/.bashrc'
 alias rc='nvim ~/.bashrc && exec $SHELL -l'
 
 # Some more alias to avoid making mistakes:
@@ -364,7 +372,7 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
 # Exa alias settings (Moved to function)
-alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
+# alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
 
 # Directory Shortcuts
 alias getfiles="find -- * -type f" # Find all files in the current directory
@@ -399,8 +407,9 @@ alias psuser='ps auxf | sort -nr -k 1'
 
 # get diskspace
 alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
-alias df='df -h'     # human-readable sizes
-alias free='free -m' # show sizes in MB
+alias df='df -h'
+alias du='du -hs'
+alias free='free -m'
 
 # get error messages from journalctl
 alias jctl="journalctl -p 3 -xb"
@@ -415,13 +424,6 @@ alias yta-opus="yt-dlp --extract-audio --audio-format opus "
 alias yta-vorbis="yt-dlp --extract-audio --audio-format vorbis "
 alias yta-wav="yt-dlp --extract-audio --audio-format wav "
 alias ytv-best="yt-dlp -f bestvideo+bestaudio "
-
-# bare git repo alias for dotfiles
-alias config='/usr/bin/git --git-dir=$HOME/dotfiles --work-tree=$HOME'
-
-# bash linter
-alias shellcheck='docker run --rm -v "$(pwd)":/mnt koalaman/shellcheck'
-
 
 #################################################################################
 #                                    Functions                                  #
@@ -491,9 +493,6 @@ EOF
 )
 #@begin_function
 function example() {
-
-    # Dedicated help function call
-    show_help "$1" && return 0
     
     # Direct help check
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -614,10 +613,10 @@ nvim() {
     if [[ -z "$NVIM_PATH" ]]; then
         # Priority order: AppImage, local compile, system package
         local candidates=(
-            ~/.appimage/nvim.appimage
             /usr/local/bin/nvim
-            ~/bin/nvim
-            ~/.local/bin/nvim
+            "$HOME"/.local/bin/nvim
+            "$HOME"/.appimage/nvim.appimage
+            "$HOME"/bin/nvim
         )
         
         for candidate in "${candidates[@]}"; do
@@ -686,7 +685,7 @@ function ls() {
         eza --all --long --header --git --icons --group-directories-first --color=always "$@"
     elif [ "$LS_COMMAND" = "exa" ]; then
         exa --all --long --header --git --icons --group-directories-first --color=always "$@"
-    else
+    elif [ "$LS_COMMAND" = "ls" ]; then
         command ls -lahg --color=always --group-directories-first "$@"
     fi
 }
@@ -798,15 +797,14 @@ function dupebyname() {
 #@Description: Change ownership to root
 #@Usage: ownroot [directory]
 #@define help information
-FUNCTION_HELP[dupebyname]=$(cat << 'EOF'
+FUNCTION_HELP[ownroot]=$(cat << 'EOF'
 NAME
-    example - This is an example function
+    ownroot - Change ownership to root
 USAGE
-    dupebyname [DIRECTORY]
+    ownroot [DIRECTORY]
 EXAMPLES
-    dupebyname /path/to/directory
-    dupebyname .
-    dupebyname *
+    ownroot /path/to/directory
+    ownroot .
 EOF
 )  
 #@begin_function ownroot
@@ -822,17 +820,38 @@ function ownroot() {
         return 0
     fi
 
-    # "${1:-.}" = if $1 is empty, use "."
+    # "${1:-.}" = if $1 is empty, use current dir "."
     local target_dir="${1:-.}"
+    target_dir=$(readlink -f "$target_dir")
 
     # Check if the target directory exists
     if [ ! -d "$target_dir" ]; then
         printf "Error: %s is not a directory.\n" "$target_dir" >&2
         return 1
     fi
+    
+    # Prevent modification of critical directories or their subdirectories
+    if [[ "$target_dir" == /* || "$target_dir" == /home/* || "$target_dir" == /root/* || "$target_dir" == /etc/* ]]; then
+        echo "Error: '$target_dir' is a critical system directory or subdirectory." >&2
+        return 1
+    fi
+
+    # Sanity Check
+    read -rp "Are you sure you want to change ownership of '$target_dir' to root? [y/N] " confirm
+
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Operation cancelled."
+        return 1
+    fi
 
     # Change ownership recursively
     chown -R -v root:root "$target_dir"
+
+    # Set directories to 755
+    find "$target_dir" -type d -exec chmod -v 755 {} \;
+
+    # Set folders to 644 idk grok suggested this revisit in future this is stupid anyway
+    find "$target_dir" -type f -exec chmod -v 644 {} \;
 }
 #@end_function
 
@@ -2296,26 +2315,56 @@ catalog_dir() {
   local dir="${1:-.}"
   local output="${2:-directory_catalog.txt}"
 
-  echo "Catalog of $dir created on $(date)" > "$output"
-  echo "----------------------------------------" >> "$output"
-
-  # File count and total size
-  echo "Summary:" >> "$output"
-  find "$dir" -type f | wc -l | xargs echo "Total files:" >> "$output"
-  du -sh "$dir" | awk '{print "Total size: " $1}' >> "$output"
-  echo "" >> "$output"
-
-  # Detailed listing with permissions, size, and date
-  echo "Detailed listing:" >> "$output"
-  /usr/bin/ls -lah "$dir" >> "$output"
-  echo "" >> "$output"
-
-  # File type breakdown
-  echo "File types:" >> "$output"
-  find "$dir" -type f | grep -v "^\." | sort | rev | cut -d. -f1 | rev | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr >> "$output"
+  {
+    echo "Catalog of $dir created on $(date)"
+    echo "----------------------------------------"
+    
+    # File count and total size
+    echo "Summary:"
+    find "$dir" -type f | wc -l | xargs echo "Total files:"
+    du -sh "$dir" | awk '{print "Total size: " $1}'
+    echo ""
+    
+    # Detailed listing with permissions, size, and date
+    echo "Detailed listing:"
+    /usr/bin/ls -lah "$dir"
+    echo ""
+    
+    # File type breakdown
+    echo "File types:"
+    find "$dir" -type f | grep -v "^\." | sort | rev | cut -d. -f1 | rev | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr
+  } >> "$output"
 
   echo "Catalog saved to $output"
 }
+#@end_function
+
+# catalog_dir() {
+#   local dir="${1:-.}"
+#   local output="${2:-directory_catalog.txt}"
+
+#   {
+#     echo "Catalog of $dir created on $(date)"
+#     echo "----------------------------------------"
+#    } >> "$output"
+
+#   # File count and total size
+#   echo "Summary:" >> "$output"
+#   find "$dir" -type f | wc -l | xargs echo "Total files:" >> "$output"
+#   du -sh "$dir" | awk '{print "Total size: " $1}' >> "$output"
+#   echo "" >> "$output"
+
+#   # Detailed listing with permissions, size, and date
+#   echo "Detailed listing:" >> "$output"
+#   /usr/bin/ls -lah "$dir" >> "$output"
+#   echo "" >> "$output"
+
+#   # File type breakdown
+#   echo "File types:" >> "$output"
+#   find "$dir" -type f | grep -v "^\." | sort | rev | cut -d. -f1 | rev | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr >> "$output"
+
+#   echo "Catalog saved to $output"
+# }
 
 #################################################################################
 #                               Installer Added                                 #
