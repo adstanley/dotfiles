@@ -331,6 +331,7 @@ handle_help() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
             echo "${FUNCTION_HELP[$func_name]}"
+            echo -e "\n"
             type "$func_name"
             return 0
         else
