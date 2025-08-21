@@ -25,6 +25,15 @@
 #
 #
 #################################################################################
+#                       Change to Modular Structure                             #
+#################################################################################
+# Source modular files
+# for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
+#     [ -r "$file" ] && . "$file"
+# done
+# unset file
+#
+#################################################################################
 #                       Environmental Variables                                 #
 #################################################################################
 
@@ -326,22 +335,39 @@ EOF
 #@begin_function
 handle_help() {
     local func_name="$1"
-    shift  # Remove function name from arguments
-
+    shift
+    local verbose=false
+    if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
+        verbose=true
+        shift
+    fi
+    if [[ -z "$func_name" ]]; then
+        printf "Error: No function name provided to handle_help\n" >&2
+        return 3
+    fi
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
             echo "${FUNCTION_HELP[$func_name]}"
-            echo -e "\n"
-            type "$func_name"
+            if [[ "$verbose" == true ]]; then
+                echo -e "\nFunction definition:"
+                type "$func_name"
+            fi
             return 0
         else
             printf "Help not available for function: %s\n" "$func_name" >&2
             return 2
         fi
     fi
-    return 1  # No help requested
+    return 1
 }
 #@end_function
+
+list_functions() {
+    printf "Available functions with help:\n"
+    for func in "${!FUNCTION_HELP[@]}"; do
+        printf "%s\n" "$func"
+    done | sort
+}
 
 # Filesystem Shortcuts
 #@Name: cd_drive
@@ -423,7 +449,7 @@ alias fgrep='fgrep --color=auto'
 
 # Directory Shortcuts
 alias getfiles="find -- * -type f" # Find all files in the current directory
-alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
+# alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Moved to Functions
 
 # k3s Shortcuts
 alias pods='k3s kubectl get pods --all-namespaces'
