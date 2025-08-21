@@ -331,6 +331,7 @@ handle_help() {
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
             echo "${FUNCTION_HELP[$func_name]}"
+            type "$func_name"
             return 0
         else
             printf "Help not available for function: %s\n" "$func_name" >&2
@@ -371,7 +372,7 @@ cd_drive() {
     local dir="$1"
 
     handle_help "${FUNCNAME[0]}" "$@" && return 0
-    
+
     # if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     #     echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
     #     return 0
