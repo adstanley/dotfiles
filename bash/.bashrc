@@ -298,6 +298,49 @@ fi
 # Some aliases are functions
 # nvim is an alias to nvim.appimage if it exists
 
+#@Name: handle_help
+#@Description: Display help message for a given function using FUNCTION_HELP array
+#@Arguments: [function_name] [--help|-h]
+#@Usage: handle_help <function_name> [--help|-h]
+#@define help information
+FUNCTION_HELP[handle_help]=$(cat << 'EOF'
+NAME
+    handle_help - Display help message for a given function
+
+DESCRIPTION
+    Checks if the second argument is --help or -h and prints the help message
+    stored in the FUNCTION_HELP associative array for the specified function name.
+
+USAGE
+    handle_help <function_name> [--help|-h]
+
+OPTIONS
+    <function_name> : Name of the function to display help for
+    --help, -h      : Show this help message and exit
+
+EXAMPLES
+    handle_help cd_drive --help
+        Prints the help message for the cd_drive function.
+EOF
+)
+#@begin_function
+handle_help() {
+    local func_name="$1"
+    shift  # Remove function name from arguments
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
+            echo "${FUNCTION_HELP[$func_name]}"
+            return 0
+        else
+            printf "Help not available for function: %s\n" "$func_name" >&2
+            return 2
+        fi
+    fi
+    return 1  # No help requested
+}
+#@end_function
+
 # Filesystem Shortcuts
 #@Name: cd_drive
 #@Description: Change directory to a specified drive
@@ -327,15 +370,17 @@ cd_drive() {
 
     local dir="$1"
 
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        return 0
-    fi
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
+    
+    # if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    #     echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+    #     return 0
+    # fi
 
     if [[ -d "$dir" ]]; then
-        cd "$dir" || { printf "Failed to change to %s\n""$dir"; return 1; }
+        cd "$dir" || { printf "Failed to change to %s\n" "$dir"; return 1; }
     else
-        printf "Directory %s does not exist\m" "$dir"
+        printf "Directory %s does not exist\n" "$dir"
         return 1
     fi
 }
