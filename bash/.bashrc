@@ -687,9 +687,9 @@ nvim() {
         # Priority order: AppImage, local compile, system package
         local candidates=(
             /usr/local/bin/nvim
-            "$HOME"/.local/bin/nvim
-            "$HOME"/.appimage/nvim.appimage
-            "$HOME"/bin/nvim
+            "$HOME/.local/bin/nvim"
+            "$HOME/.appimage/nvim.appimage"
+            "$HOME/.bin/nvim"
         )
         
         for candidate in "${candidates[@]}"; do

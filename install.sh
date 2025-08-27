@@ -25,29 +25,22 @@
 # shellcheck disable=SC1090
 # shellcheck disable=SC1091
 # shellcheck disable=SC2034
-
+# TODO: Change entire script to use gnu stow
 set -e  # Exit immediately if a command exits with a non-zero status
 set -u  # Treat unset variables as an error
 set -o pipefail  # Prevents errors in a pipeline from being masked
 
 # Configuration
+TEMP="$HOME/tmp"
 DOTFILES_DIR="$HOME/.github/dotfiles"
 BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 REPO_URL="https://github.com/adstanley/dotfiles.git"
-
-# Define the associative array
-declare -A DOTFILES
-DOTFILES=(
-    [".bashrc"]="bash"
-    [".nanorc"]="nano"
-    [".tmux.conf"]="tmux"
-)
 
 # List of dotfiles to manage (format: target_file:source_subdir)
 # target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
 #DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux .nanorc:nano"
 
-# Check if dotfiles directory exists, if not clone it
+# Check if repo exists locally, if not clone it
 if [ ! -d "$DOTFILES_DIR" ]; then
     printf "Cloning dotfiles repository...\n"
     git clone "$REPO_URL" "$DOTFILES_DIR" || {
@@ -63,6 +56,14 @@ else
         exit 1
     }
 fi
+
+# Define the associative array
+declare -A DOTFILES
+DOTFILES=(
+    [".bashrc"]="bash"
+    [".nanorc"]="nano"
+    [".tmux.conf"]="tmux"
+)
 
 # Create backup directory
 if [ -d "$BACKUP_DIR" ]; then
