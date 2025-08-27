@@ -2560,6 +2560,40 @@ catalog_dir() {
 }
 #@end_function
 
+#@Name: type
+#@Description: Run type command and format output with bat
+#@Arguments: function/alias/command
+#@Usage: type nvim
+#@define help information
+FUNCTION_HELP[type]=$(cat << 'EOF'
+NAME
+    type - Show the type of a command
+DESCRIPTION
+    This function uses the `type` command to display the type of a command (alias, function, built-in, or executable).
+USAGE
+    type [COMMAND]
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+EXAMPLES
+    type ls
+        Shows the type of the `ls` command.
+EOF
+)
+
+function type() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[type]}" ]]; then
+            echo "${FUNCTION_HELP[type]}"
+        else
+            echo "Help not available for function: type" >&2
+            return 2
+        fi
+        return 0
+    fi
+    command type "$@" | bat -l sh
+}
+
 #################################################################################
 #                               Installer Added                                 #
 #################################################################################
