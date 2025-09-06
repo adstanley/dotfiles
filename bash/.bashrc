@@ -23,10 +23,12 @@
 # 2. Aliases
 # 3. Functions
 #
-#
 #################################################################################
 #                       Change to Modular Structure                             #
 #################################################################################
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
 # Source modular files
 # for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
 #     [ -r "$file" ] && . "$file"
@@ -54,22 +56,35 @@ if [ -d "$HOME/.appimage" ]; then
     PATH="$HOME/.appimage:$PATH"
 fi
 
-# If using multiple files for bashrc
-# and .bash_directory exists, source it
-if [ -f "${HOME}/.bash_directory" ]; then
-    source "${HOME}/.bash_directory"
-fi
+# Figure out if bat or batcat is installed, if not fall back on cat
+function get_bat_command() {
+    local commands=("batcat" "bat")
+    for cmd in "${commands[@]}"; do
+        if command -v "$cmd" >/dev/null 2>&1; then
+            echo "$cmd"
+            return 0
+        fi
+    done
 
-## Completions are sourced after standard completions are loaded
+    # fallback on cat
+    echo "cat"
+    # 'set filetype to man, - to read from stdin'
+    # export MANPAGER="nvim -c 'set ft=man' -"
+}
 
 ## "bat" as manpager
 if command -v batcat >/dev/null 2>&1; then
-    export MANPAGER="batcat"
-    # 'set filetype to man, - to read from stdin'
-    # export MANPAGER="nvim -c 'set ft=man' -"
+    MANPAGER=$(get_bat_command)
+    export MANPAGER
 else
-    export EDITOR="nvim"
     export MANPAGER="less"
+fi
+
+## nvim as default editor
+if command -v batcat >/dev/null 2>&1; then
+    export EDITOR="nvim"
+else
+    export EDITOR="nano"
 fi
 
 if [ -z "$XDG_CONFIG_HOME" ]; then
@@ -88,28 +103,29 @@ if [ -z "$XDG_STATE_HOME" ]; then
     export XDG_STATE_HOME="${HOME}/.local/state"
 fi
 
-# Flags
+#################################################################################
+#####                             LS/EXA ETC                                #####
+#################################################################################
 
-LS_COMMAND='ls' # Default ls command
-
+# Figure out if eza or exa is installed, if not fall back on ls
 get_ls_command() {
-    local commands=("eza" "exa" "ls")
+    local commands=("eza" "exa")
     for cmd in "${commands[@]}"; do
         if command -v "$cmd" >/dev/null 2>&1; then
             echo "$cmd"
             return 0
         fi
     done
-    echo "ls"  # fallback
+
+    # fallback on ls
+    echo "ls"
 }
 
 LS_COMMAND=$(get_ls_command)
-
-# Declare associative array for function help
-declare -A FUNCTION_HELP
+LS_COMMAND='ls' # Default ls command
 
 #################################################################################
-#####                              OPTIONS                                  #####
+#####                             HISTORY OPTIONS                           #####
 #################################################################################
 
 ## Bash history
@@ -123,7 +139,13 @@ HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight command
 shopt -s histappend # append to the history file, don't overwrite it
 shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
 
-## Shell Options
+# Backup history file
+cp "${HISTFILE}" "${HISTFILE}.bak"
+
+#################################################################################
+#####                          SHELL OPTIONS                                #####
+#################################################################################
+
 # Set options
 set -o noclobber        # Prevent overwriting files
 # set -o vi             # Set vi mode, Allows for vi keybindings in the terminal
@@ -1280,12 +1302,23 @@ function hist() {
         return 0
     fi
 
+    local color="true"
+    
     if [ -z "$1" ]; then
         history
         return 0
     fi
-
-    history | grep "$1"
+    
+    if [ $color == "false" ]; then
+        history | grep "$1"
+        return 0
+    else
+        history | grep "$1" | awk '
+        {
+            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
+        }'
+    fi
+    
 }
 #@end_function
 
@@ -1736,16 +1769,10 @@ function takesnapshot() {
         return 3
     fi
 
-    # Validate dataset name format (basic check for valid characters)
-    if [[ ! "$dataset" =~ ^[a-zA-Z0-9_/:-]+$ ]]; then
-        printf "Error: Invalid dataset name '%s'. Use alphanumeric characters, '/', ':', or '-'\n" "$dataset" 1>&2
-        return 4
-    fi
-
     # Validate snapshot suffix (if provided)
     if [ -n "$2" ] && [ "$2" != "--dry-run" ] && [[ ! "$snapshot_suffix" =~ ^[a-zA-Z0-9_-]+$ ]]; then
         printf "Error: Invalid snapshot suffix '%s'. Use alphanumeric characters, '_', or '-'\n" "$snapshot_suffix" 1>&2
-        return 5
+        return 4
     fi
 
     local snapshot_name="$dataset@$snapshot_suffix"
