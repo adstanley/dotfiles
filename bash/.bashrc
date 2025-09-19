@@ -323,11 +323,8 @@ if [ ! -d "$HOME/.ssh" ]; then
 fi
 
 #################################################################################
-#                                    Aliases                                    #
+#                                    Help                                       #
 #################################################################################
-
-# Some aliases are functions
-# nvim is an alias to nvim.appimage if it exists
 
 #@Name: handle_help
 #@Description: Display help message for a given function using FUNCTION_HELP array
@@ -391,6 +388,13 @@ list_functions() {
     done | sort
 }
 
+#################################################################################
+#                                    Aliases                                    #
+#################################################################################
+
+# Some aliases are functions
+# nvim is an alias to nvim.appimage if it exists
+
 # Filesystem Shortcuts
 #@Name: cd_drive
 #@Description: Change directory to a specified drive
@@ -435,6 +439,8 @@ cd_drive() {
     fi
 }
 #@end_function
+
+alias resetcursor='printf \e[5 q'
 
 # Directory shortcuts
 alias cd_sab='cd_drive /mnt/spool/SABnzbd/Completed'
@@ -2091,7 +2097,7 @@ function insertDirectory() {
 #@Arguments: None
 #@Usage: flatten
 #@define help information
-FUNCTION_HELP[flatten_old]=$(cat << 'EOF'
+FUNCTION_HELP[flatten]=$(cat << 'EOF'
 NAME
     flatten - Move all files from subdirectories to the current directory
 
@@ -2110,7 +2116,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function flatten_old() {
+function flatten() {
     local -a flatten
     local -a duplicates
     local current_dir
