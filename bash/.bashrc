@@ -140,7 +140,7 @@ shopt -s histappend # append to the history file, don't overwrite it
 shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
 
 # Backup history file
-cp "${HISTFILE}" "${HISTFILE}.bak"
+# cp "${HISTFILE}" "${HISTFILE}.bak"
 
 #################################################################################
 #####                          SHELL OPTIONS                                #####
@@ -423,13 +423,7 @@ EOF
 cd_drive() {
 
     local dir="$1"
-
     handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-    # if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    #     echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-    #     return 0
-    # fi
 
     if [[ -d "$dir" ]]; then
         cd "$dir" || { printf "Failed to change to %s\n" "$dir"; return 1; }
@@ -447,13 +441,15 @@ alias cd_sab='cd_drive /mnt/spool/SABnzbd/Completed'
 alias cd_torrent='cd_drive /mnt/spool/torrent'
 
 # Drive shortcuts
-alias cd_toshiba='cd_drive /mnt/toshiba'
-alias cd_toshiba2='cd_drive /mnt/toshiba2'
-alias cd_toshiba3='cd_drive /mnt/toshiba3'
-alias cd_spool='cd_drive /mnt/spool'
-alias cd_spool-temp='cd_drive /mnt/spool/temp'
-alias cd_mach2='cd_drive /mnt/mach2'
-alias cd_seagatemirror='cd_drive /mnt/seagatemirror'
+alias cd_toshiba='cd /mnt/toshiba'
+alias cd_toshiba2='cd /mnt/toshiba2'
+alias cd_toshiba3='cd /mnt/toshiba3'
+alias cd_toshiba4='cd /mnt/toshiba4'
+alias cd_spool='cd /mnt/spool'
+alias cd_spool-temp='cd /mnt/spool/temp'
+alias cd_mach2='cd /mnt/mach2'
+alias cd_seagatemirror='cd /mnt/seagatemirror'
+alias cd_pron='cd /mnt/z2pool/Pr0n'
 
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'
