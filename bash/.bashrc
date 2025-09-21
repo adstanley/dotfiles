@@ -122,7 +122,6 @@ get_ls_command() {
 }
 
 LS_COMMAND=$(get_ls_command)
-LS_COMMAND='ls' # Default ls command
 
 #################################################################################
 #####                             HISTORY OPTIONS                           #####
@@ -510,17 +509,6 @@ alias free='free -m'
 
 # get error messages from journalctl
 alias jctl="journalctl -p 3 -xb"
-
-# yt-dlp
-alias yta-aac="yt-dlp --extract-audio --audio-format aac "
-alias yta-best="yt-dlp --extract-audio --audio-format best "
-alias yta-flac="yt-dlp --extract-audio --audio-format flac "
-alias yta-m4a="yt-dlp --extract-audio --audio-format m4a "
-alias yta-mp3="yt-dlp --extract-audio --audio-format mp3 "
-alias yta-opus="yt-dlp --extract-audio --audio-format opus "
-alias yta-vorbis="yt-dlp --extract-audio --audio-format vorbis "
-alias yta-wav="yt-dlp --extract-audio --audio-format wav "
-alias ytv-best="yt-dlp -f bestvideo+bestaudio "
 
 #################################################################################
 #                                    Functions                                  #
@@ -1305,12 +1293,12 @@ function hist() {
     fi
 
     local color="true"
-    
+
     if [ -z "$1" ]; then
         history
         return 0
     fi
-    
+
     if [ $color == "false" ]; then
         history | grep "$1"
         return 0
@@ -1320,7 +1308,7 @@ function hist() {
             printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
         }'
     fi
-    
+
 }
 #@end_function
 
