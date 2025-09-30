@@ -578,7 +578,9 @@ EOF
 )
 #@begin_function
 function example() {
-    
+    #####################
+    # Pick One
+    #####################
     # Direct help check
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -590,6 +592,10 @@ function example() {
         return 0
     fi
 
+    # Indirect help check
+    handle_help "$@" && return 0
+    #####################
+    
     # Example function code here
     echo "This is an example function."
 }
@@ -1210,15 +1216,7 @@ function rclonecopy() {
 # Function to find largest files in the current directory
 #@begin_function find_largest_files
 function find_largest_files() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+    handle_help "$@" && return 0
 
     du -h -x -s -- * | sort -r -h | head -20;
 }
@@ -1280,17 +1278,13 @@ function c2f() {
 
 
 # Get history
+#@name hist
+#@description Search bash history with colorized output
+#@usage hist [search_term]
+#@example hist ssh
 #@begin_function hist
 function hist() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+    handle_help "$@" && return 0
 
     local color="true"
 
@@ -1311,43 +1305,6 @@ function hist() {
 
 }
 #@end_function
-
-
-#@begin_function findd
-function findd() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
-
-    printf "Searching for *%s*. \n" "$1"
-    find -- * -iname "*$1*" -type d
-}
-#@end_function
-
-
-#@begin_function findf
-function findf() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
-
-    printf "Searching for *%s*. \n" "$1"
-    find -- * -iname "*$1*" -type f
-}
-#@end_function
-
 
 # Create a .7z compressed file with maximum compression
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"

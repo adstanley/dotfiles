@@ -116,6 +116,6 @@ function ownroot() {
     # Change ownership and permissions recursively
     chown -R -v root:root "$target_dir"
     find "$target_dir" -type d -exec chmod -v 755 {} \;
-    find "$target_dir" -type f -exec chmod -v 644 {} \;
+    # find "$target_dir" -type f -exec chmod -v 644 {} \;
 }
 #@end_function
