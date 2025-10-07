@@ -10,9 +10,8 @@
 #                                    http://sigmachad.io  #
 #                                            Chet Manley  #
 ###########################################################
-#
 # Bashrc
-# Shellcheck Directvies
+# Shellcheck Directives
 # shellcheck shell=bash
 # shellcheck source=/dev/null
 # shellcheck disable=SC1090
@@ -30,11 +29,11 @@
 declare -A FUNCTION_HELP
 
 # Source modular files
-# for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
-#     [ -r "$file" ] && . "$file"
-# done
-# unset file
-#
+for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
+    [ -r "$file" ] && . "$file"
+done
+unset file
+
 #################################################################################
 #                       Environmental Variables                                 #
 #################################################################################
@@ -81,27 +80,13 @@ else
 fi
 
 ## nvim as default editor
-if command -v batcat >/dev/null 2>&1; then
+if command -v nvim >/dev/null 2>&1; then
     export EDITOR="nvim"
 else
     export EDITOR="nano"
 fi
 
-if [ -z "$XDG_CONFIG_HOME" ]; then
-    export XDG_CONFIG_HOME="${HOME}/.config"
-fi
 
-if [ -z "$XDG_DATA_HOME" ]; then
-    export XDG_DATA_HOME="${HOME}/.local/share"
-fi
-
-if [ -z "$XDG_CACHE_HOME" ]; then
-    export XDG_CACHE_HOME="${HOME}/.cache"
-fi
-
-if [ -z "$XDG_STATE_HOME" ]; then
-    export XDG_STATE_HOME="${HOME}/.local/state"
-fi
 
 #################################################################################
 #####                             LS/EXA ETC                                #####

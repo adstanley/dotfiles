@@ -1,0 +1,18 @@
+# .shellcheckrc
+
+# Allow 'source' from current directory
+source-path=.
+
+# Specify the shell dialect
+shell=bash
+
+# Allow opening any 'source'd file, even if not specified as input
+external-sources=true
+
+# Unused variables
+disable=SC2034
+
+# read without -r
+disable=SC2162
+
+disable=SC1017
