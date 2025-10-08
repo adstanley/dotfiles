@@ -29,11 +29,13 @@
 declare -A FUNCTION_HELP
 
 # Source modular files
-for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
-    [ -r "$file" ] && . "$file"
-done
-unset file
-
+# for file in ~/.bash_{envs,init,shell,prompt,functions,aliases}; do
+#     [ -r "$file" ] && . "$file"
+# done
+# unset file
+if [ -f "${HOME}/.bash_find" ]; then
+    source "${HOME}/.bash_find"
+fi
 #################################################################################
 #                       Environmental Variables                                 #
 #################################################################################
@@ -54,6 +56,10 @@ fi
 if [ -d "$HOME/.appimage" ]; then
     PATH="$HOME/.appimage:$PATH"
 fi
+
+#################################################################################
+#####                            BATCAT/BAT                                 #####
+#################################################################################
 
 # Figure out if bat or batcat is installed, if not fall back on cat
 function get_bat_command() {
@@ -85,7 +91,6 @@ if command -v nvim >/dev/null 2>&1; then
 else
     export EDITOR="nano"
 fi
-
 
 
 #################################################################################
