@@ -232,9 +232,9 @@ src/configure && make -C src || true
 cd ~/
 mkdir -p "$(nodenv root)"/plugins
 git clone https://github.com/nodenv/node-build.git "$(nodenv root)"/plugins/node-build
-git clone https://github.com/nodenv/nodenv-aliases.git $(nodenv root)/plugins/nodenv-aliases
+git clone https://github.com/nodenv/nodenv-aliases.git "$(nodenv root)"/plugins/nodenv-aliases
 nodenv install 20.11.1
 nodenv global 20.11.1
-sudo ln -vs $(nodenv root)/shims/* /usr/local/bin/
+sudo ln -vs "$(nodenv root)"/shims/* /usr/local/bin/
 echo 'eval "$(nodenv init -)"' >> ~/.bashrc
 source ~/.bashrc
