@@ -33,13 +33,13 @@ echo "Use Tweak Tool to set Fonts > Size > Scaling Factor: 0.80"
 echo "Use Extension Manager to install: Tactile, Blur my Shell, Just Perfection"
 
 # Install chrome
-cd ~/Downloads
+cd ~/Downloads || exit
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo dpkg -i google-chrome-stable_current_amd64.deb
 home
 
 # Install Cascadia Nerd Font
-cd ~/Downloads
+cd ~/Downloads || exit
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/CascadiaMono.zip
 unzip CascadiaMono.zip -d CascadiaFont
 mkdir -p ~/.local/share/fonts
@@ -135,30 +135,30 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 echo "alias n='nvim'" >> ~/.bashrc
 
 # Install lazygit
-cd ~/Downloads
+cd ~/Downloads || exit
 LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
 curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
 tar xf lazygit.tar.gz lazygit
 sudo install lazygit /usr/local/bin
-cd -
+cd - || exit
 
 # Install lazydocker
-cd ~/Downloads
+cd ~/Downloads || exit
 LAZYDOCKER_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
 curl -Lo lazydocker.tar.gz "https://github.com/jesseduffield/lazydocker/releases/latest/download/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz"
 tar xf lazydocker.tar.gz lazydocker
 sudo install lazydocker /usr/local/bin
-cd -
+cd - || exit
 
 # Install iA Writer theme for Typora
-cd ~/Downloads
+cd ~/Downloads || exit
 git clone https://github.com/dhh/ia_typora
 mkdir -p ~/.local/share/fonts
 cp ia_typora/fonts/iAWriterMonoS-* ~/.local/share/fonts/
 fc-cache
 mkdir -p ~/snap/typora/88/.config/Typora/themes/
 cp ia_typora/ia_typora*.css ~/snap/typora/88/.config/Typora/themes/
-cd -
+cd - || exit
 
 # Ruby
 echo 'eval "$(/usr/bin/rbenv init - bash)"' >> ~/.bashrc
