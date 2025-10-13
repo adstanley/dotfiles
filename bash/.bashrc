@@ -10,9 +10,8 @@
 #                                    http://sigmachad.io  #
 #                                            Chet Manley  #
 ###########################################################
-#
 # Bashrc
-# Shellcheck Directvies
+# Shellcheck Directives
 # shellcheck shell=bash
 # shellcheck source=/dev/null
 # shellcheck disable=SC1090
@@ -34,7 +33,9 @@ declare -A FUNCTION_HELP
 #     [ -r "$file" ] && . "$file"
 # done
 # unset file
-#
+if [ -f "${HOME}/.bash_find" ]; then
+    source "${HOME}/.bash_find"
+fi
 #################################################################################
 #                       Environmental Variables                                 #
 #################################################################################
@@ -55,6 +56,10 @@ fi
 if [ -d "$HOME/.appimage" ]; then
     PATH="$HOME/.appimage:$PATH"
 fi
+
+#################################################################################
+#####                            BATCAT/BAT                                 #####
+#################################################################################
 
 # Figure out if bat or batcat is installed, if not fall back on cat
 function get_bat_command() {
@@ -81,27 +86,12 @@ else
 fi
 
 ## nvim as default editor
-if command -v batcat >/dev/null 2>&1; then
+if command -v nvim >/dev/null 2>&1; then
     export EDITOR="nvim"
 else
     export EDITOR="nano"
 fi
 
-if [ -z "$XDG_CONFIG_HOME" ]; then
-    export XDG_CONFIG_HOME="${HOME}/.config"
-fi
-
-if [ -z "$XDG_DATA_HOME" ]; then
-    export XDG_DATA_HOME="${HOME}/.local/share"
-fi
-
-if [ -z "$XDG_CACHE_HOME" ]; then
-    export XDG_CACHE_HOME="${HOME}/.cache"
-fi
-
-if [ -z "$XDG_STATE_HOME" ]; then
-    export XDG_STATE_HOME="${HOME}/.local/state"
-fi
 
 #################################################################################
 #####                             LS/EXA ETC                                #####
