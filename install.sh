@@ -19,12 +19,6 @@
 #
 # This script is designed to manage dotfiles in a user's home directory.
 #
-# Shellcheck Directvies
-# shellcheck shell=bash
-# shellcheck source=/dev/null
-# shellcheck disable=SC1090
-# shellcheck disable=SC1091
-# shellcheck disable=SC2034
 # TODO: Change entire script to use gnu stow
 set -e  # Exit immediately if a command exits with a non-zero status
 set -u  # Treat unset variables as an error
@@ -32,8 +26,14 @@ set -o pipefail  # Prevents errors in a pipeline from being masked
 
 # Configuration
 TEMP="$HOME/tmp"
+
+# Dotfiles Directory
 DOTFILES_DIR="$HOME/.github/dotfiles"
+
+# Dotfiles backup directory
 BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+
+# Dotfiles repo url
 REPO_URL="https://github.com/adstanley/dotfiles.git"
 
 # List of dotfiles to manage (format: target_file:source_subdir)
@@ -58,53 +58,65 @@ else
 fi
 
 # Define the associative array
-declare -A DOTFILES
-DOTFILES=(
+declare -A DOTFILES_ARRAY
+DOTFILES_ARRAY=(
     [".bashrc"]="bash"
     [".nanorc"]="nano"
     [".tmux.conf"]="tmux"
+    [".vimrc"]="vim"
+    [".gitconfig"]="git"
+    [".zshrc"]="zsh"
 )
 
-# Create backup directory
-if [ -d "$BACKUP_DIR" ]; then
-    if [ "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
-        printf "Error: Backup directory %s exists.\n" "'$BACKUP_DIR'"
-        exit 1
-    else
-        echo "Using existing empty backup directory: $BACKUP_DIR"
-    fi
-elif ! mkdir -p "$BACKUP_DIR"; then
-    echo "Error: Failed to create backup directory '$BACKUP_DIR'."
-    exit 1
-fi
+declare -A FOLDERS
+FOLDERS=(
+    ["bash_completion"]="bash_completion"
+    ["nvim"]="{$HOME}/.config/nvim"
+)
 
-# If something terrible happens revert
+# Reversion Function
 restore_backup() {
     local target_file="$1"
     local target="$2"
     
     if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
-        echo "Restoring backup for $target_file"
+        printf "Restoring backup for %s.\n" "$target_file"
         mv "$BACKUP_DIR/$target_file" "$target" || {
-            echo "Error: Failed to restore backup for $target_file."
+            printf "Error: Failed to restore backup for %s.\n" "$target_file"
             exit 1
         }
     else
-        echo "No valid backup found for $target_file, skipping restoration."
+        printf "No valid backup found for %s, skipping restoration.\n" "$target_file"
     fi
+}
+
+# Make backup directory if it doesn't exist and ensure it's empty
+if [ "$(find "$BACKUP_DIR" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+    printf "Error: Backup directory %s exists and is not empty.\n" "'$BACKUP_DIR'"
+    exit 1
+fi
+mkdir -p "$BACKUP_DIR" || {
+    printf "Error: Failed to create backup directory: '%s'\n" "$BACKUP_DIR"
+    exit 1
 }
 
 # Process each dotfile in the array
 for target_file in "${!DOTFILES_ARRAY[@]}"; do
-    source_subdir="${DOTFILES_ARRAY[$target_file]}"
+
+    # Target file is Key
     target="$HOME/$target_file"
+
+    # Source subdir is value
+    source_subdir="${DOTFILES_ARRAY[$target_file]}"
+
+    # Construct source path
     source="$DOTFILES_DIR/$source_subdir/$target_file"
 
     # Backup existing file if it exists and is not a symlink
     if [ -f "$target" ] && [ ! -L "$target" ]; then
-        echo "Backing up existing $target_file to $BACKUP_DIR/"
-        mv "$target" "$BACKUP_DIR/" || {
-            echo "Error: Failed to backup $target_file."
+        printf "Backing up existing %s to %s/\n" "$target_file" "$BACKUP_DIR"
+        mv -v "$target" "$BACKUP_DIR/" || {
+            printf "Error: Failed to backup %s.\n" "$target_file"
             exit 1
         }
 
@@ -114,24 +126,41 @@ for target_file in "${!DOTFILES_ARRAY[@]}"; do
 
     # Remove existing symlink if it exists
     if [ -L "$target" ]; then
-        rm "$target" || {
-            echo "Error: Failed to remove existing symlink for $target_file."
+        rm -v "$target" || {
+            printf "Error: Failed to remove existing symlink for %s.\n" "$target_file"
             exit 1
         }
     fi
 
     # Create symlink
     if [ -f "$source" ]; then
-        echo "Creating symlink for $target_file"
+        printf "Creating symlink for %s\n" "$target_file"
         ln -s "$source" "$target" || {
-            echo "Error: Failed to create symlink for $target_file."
+            printf "Error: Failed to create symlink for %s.\n" "$target_file"
             restore_backup "$target_file" "$target"
             exit 1
         }
     else
-        echo "Warning: $target_file not found in $source_subdir directory of dotfiles repository."
+        printf "Warning: %s not found in %s directory of dotfiles repository.\n" "$target_file" "$source_subdir"
         restore_backup "$target_file" "$target"
     fi
 done
 
-echo "Dotfiles installation complete. Backups stored in $BACKUP_DIR"
+printf "Dotfiles installation complete. Backups stored in %s\n" "$BACKUP_DIR"
+
+# Process each folder in the array
+# for folder_name in "${!FOLDERS[@]}"; do
+#     target_folder="${FOLDERS[$folder_name]}"
+#     source_folder="$DOTFILES_DIR/$folder_name"
+
+#     # Create symlink for the folder
+#     if [ -d "$source_folder" ]; then
+#         printf "Creating symlink for %s\n" "$target_folder"
+#         ln -s "$source_folder" "$target_folder" || {
+#             printf "Error: Failed to create symlink for %s.\n" "$target_folder"
+#             exit 1
+#         }
+#     else
+#         printf "Warning: %s not found in dotfiles repository.\n" "$source_folder"
+#     fi
+# done

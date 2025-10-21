@@ -9,6 +9,9 @@ shell=bash
 # Allow opening any 'source'd file, even if not specified as input
 external-sources=true
 
+# Ignore missing sourced files
+source=/dev/null
+
 # Unused variables
 disable=SC2034
 

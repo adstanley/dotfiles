@@ -409,7 +409,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
-cd_drive() {
+cd_() {
 
     local dir="$1"
     handle_help "${FUNCNAME[0]}" "$@" && return 0
@@ -435,7 +435,7 @@ alias cd_toshiba2='cd /mnt/toshiba2'
 alias cd_toshiba3='cd /mnt/toshiba3'
 alias cd_toshiba4='cd /mnt/toshiba4'
 alias cd_spool='cd /mnt/spool'
-alias cd_spool-temp='cd /mnt/spool/temp'
+alias cd_spool-temp='cd /mnt/spool-temp'
 alias cd_mach2='cd /mnt/mach2'
 alias cd_seagatemirror='cd /mnt/seagatemirror'
 alias cd_pron='cd /mnt/z2pool/Pr0n'
@@ -2053,16 +2053,17 @@ function flatten() {
     local current_dir
     current_dir=$(pwd)
 
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
     
+    readarray -t subdirs < <(find "$current_dir" -type d ! -path "$current_dir")
+    if [ "${#subdirs[@]}" -eq 0 ]; then
+        printf "No subdirectories found.\n" >&2
+        return 1
+    else
+        printf "Found %s subdirectories:\n" "${#subdirs[@]}"
+        printf "%s\n" "${subdirs[@]}"
+    fi
+
     readarray -t flatten < <(find "$current_dir" -type f)
     if [ "${#flatten[@]}" -eq 0 ]; then
         printf "No files found in subdirectories.\n" >&2
