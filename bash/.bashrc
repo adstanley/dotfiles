@@ -36,6 +36,13 @@ declare -A FUNCTION_HELP
 if [ -f "${HOME}/.bash_find" ]; then
     source "${HOME}/.bash_find"
 fi
+
+# Source bash-git-prompt if it exists
+# if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
+#     GIT_PROMPT_ONLY_IN_REPO=1
+#     source "$HOME/.bash-git-prompt/gitprompt.sh"
+# fi
+
 #################################################################################
 #                       Environmental Variables                                 #
 #################################################################################
@@ -44,18 +51,34 @@ fi
 [[ $- != *i* ]] && return
 
 ## Add to PATH first
-if [ -d "${HOME}/.bin" ]; then
-    PATH="${HOME}/.bin:$PATH"
-fi
+for directory in "${HOME}/.bin" "${HOME}/.local/bin" "${HOME}/.appimage" "${HOME}/.cargo/bin"; do
+    if [ -d "$directory" ]; then
+        case ":$PATH:" in
+            *":$directory:"*) ;;
+            *) PATH="$directory:$PATH" ;;
+        esac
+    fi
+done
+export PATH
 
-if [ -d "${HOME}/.local/bin" ]; then
-    PATH="${HOME}/.local/bin:$PATH"
-fi
+# if [ -d "${HOME}/.bin" ]; then
+#     PATH="${HOME}/.bin:$PATH"
+# fi
 
-# add appimage directory to path
-if [ -d "$HOME/.appimage" ]; then
-    PATH="$HOME/.appimage:$PATH"
-fi
+# if [ -d "${HOME}/.local/bin" ]; then
+#     PATH="${HOME}/.local/bin:$PATH"
+# fi
+
+# # add appimage directory to path
+# if [ -d "$HOME/.appimage" ]; then
+#     PATH="$HOME/.appimage:$PATH"
+# fi
+
+# if [ -d "${HOME}/.cargo/bin" ]; then
+#     PATH="${HOME}/.cargo/bin:$PATH"
+# fi
+
+# export PATH
 
 #################################################################################
 #####                            BATCAT/BAT                                 #####
@@ -503,6 +526,11 @@ alias jctl="journalctl -p 3 -xb"
 #################################################################################
 #                                    Functions                                  #
 #################################################################################
+
+alias bathelp='bat --plain --language=help'
+help() {
+    "$@" --help 2>&1 | bathelp
+}
 
 #@Name: show_help
 #@Description: Handle help requests for functions
