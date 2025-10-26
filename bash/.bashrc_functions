@@ -11,7 +11,8 @@ declare -A FUNCTION_HELP
 #@Description: Change ownership to root
 #@Usage: ownroot [directory] [--force]
 #@define help information
-FUNCTION_HELP[ownroot]=$(cat << 'EOF'
+FUNCTION_HELP[ownroot]=$(
+    cat <<'EOF'
 NAME
     ownroot - Change ownership to root
 USAGE
@@ -101,7 +102,7 @@ function ownroot() {
     done
 
     # Sanity Check
-    if [[ $force -eq 0 && -t 0 ]]; then  # Prompt only if not forced and stdin is a terminal
+    if [[ $force -eq 0 && -t 0 ]]; then # Prompt only if not forced and stdin is a terminal
         echo "WARNING: Changing ownership of '$target_dir' to root:root may make files inaccessible to non-root users."
         read -t 30 -rp "Are you sure you want to proceed? [y/N] " confirm
         if [[ ! "$confirm" =~ ^[Yy]$ ]]; then

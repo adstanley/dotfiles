@@ -1,0 +1,109 @@
+declare -A FUNCTION_HELP
+
+#@Name: show_help
+#@Description: Handle help requests for functions
+#@Arguments: [--help|-h]
+#@Usage: show_help [--help|-h]
+#@define help information
+FUNCTION_HELP[show_help]=$(
+    cat <<'EOF'
+NAME
+    show_help - Handle help requests for functions
+DESCRIPTION
+    This function checks if the first argument is --help or -h and prints the help message for the calling function.
+    If no help message is available, it prints an error message.
+USAGE
+    show_help [--help|-h]
+OPTIONS
+    --help, -h
+        Show this help message and exit.
+EXAMPLES
+    show_help --help
+        Prints the help message for the calling function.
+    show_help -h
+        Prints the help message for the calling function.
+EOF
+)
+#@begin_function
+show_help() {
+    local callback="${FUNCNAME[1]}"
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[$callback]}" ]]; then
+            echo "${FUNCTION_HELP[$callback]}"
+        else
+            echo "Help not available for function: $callback" >&2
+            return 2
+        fi
+        return 0
+    fi
+    return 1
+}
+
+#################################################################################
+#                                    Help                                       #
+#################################################################################
+
+#@Name: handle_help
+#@Description: Display help message for a given function using FUNCTION_HELP array
+#@Arguments: [function_name] [--help|-h]
+#@Usage: handle_help <function_name> [--help|-h]
+#@define help information
+FUNCTION_HELP[handle_help]=$(
+    cat <<'EOF'
+NAME
+    handle_help - Display help message for a given function
+
+DESCRIPTION
+    Checks if the second argument is --help or -h and prints the help message
+    stored in the FUNCTION_HELP associative array for the specified function name.
+
+USAGE
+    handle_help <function_name> [--help|-h]
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+OPTIONS
+    <function_name> : Name of the function to display help for
+    --help, -h      : Show this help message and exit
+
+EXAMPLES
+    handle_help cd_drive --help
+        Prints the help message for the cd_drive function.
+EOF
+)
+#@begin_function
+handle_help() {
+    local func_name="$1"
+    shift
+    local verbose=false
+    if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
+        verbose=true
+        shift
+    fi
+    if [[ -z "$func_name" ]]; then
+        printf "Error: No function name provided to handle_help\n" >&2
+        return 3
+    fi
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
+            echo "${FUNCTION_HELP[$func_name]}"
+            if [[ "$verbose" == true ]]; then
+                echo -e "\nFunction definition:"
+                type "$func_name"
+            fi
+            return 0
+        else
+            printf "Help not available for function: %s\n" "$func_name" >&2
+            return 2
+        fi
+    fi
+    return 1
+}
+#@end_function
+
+list_functions() {
+    printf "Available functions with help:\n"
+    for func in "${!FUNCTION_HELP[@]}"; do
+        printf "%s\n" "$func"
+    done | sort
+}

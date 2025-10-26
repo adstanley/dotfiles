@@ -1,7 +1,73 @@
-# shellcheck shell=bash
-# shellcheck source=/dev/null
-
 declare -A FUNCTION_HELP
+
+#@Name: zfs_alias
+#@Description: Create functions to change directory to ZFS mountpoints
+#@Arguments: None
+#@Usage: zfs_alias
+#@define help information
+FUNCTION_HELP[zfs_alias]=$(
+    cat <<'EOF'
+NAME
+    zfs_alias - Create functions to change directory to ZFS mountpoints
+
+DESCRIPTION
+    Create functions to change directory to ZFS mountpoints.
+
+USAGE
+    zfs_alias [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+    zfs_alias
+        Create functions to change directory to ZFS mountpoints.
+    zfs_alias --help
+        Show this help message and exit.
+
+EOF
+)
+#@begin_function
+zfs_alias() {
+    # Check if the first argument is --help or -h
+    # If so, print the help message and exit
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+        else
+            echo "Help not available for function: ${FUNCNAME[0]}" >&2
+            return 2
+        fi
+        return 0
+    fi
+
+    # Create a temporary file using shell builtins
+    local tmp_file="/tmp/zfs_alias_$$.tmp" # $$ is the process ID
+
+    # Get list of pools
+    mapfile -t pools < <(zpool list -H -o name)
+
+    # Write function definitions to the temporary file
+    for pool in "${pools[@]}"; do
+        mountpoint=$(zfs get -H mountpoint "$pool" | awk '{print $3}')
+        if [[ "$mountpoint" != "none" ]]; then
+            echo "cd.$pool() { cd \"$mountpoint\" || exit; }" >>"$tmp_file"
+        fi
+    done
+
+    # Source the file to define the functions
+    source "$tmp_file"
+
+    # Clean up
+    rm "$tmp_file"
+}
+#@end_function
+
+Only call the function if zfs-utils are installed
+if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
+  zfs_alias "$@"
+fi
 
 #@ Name: takesnapshot
 #@ Description: Create a ZFS snapshot for a specified dataset
@@ -308,24 +374,3 @@ function deletesnapshot() {
     fi
 }
 #@end_function
-
-function zfs_alias() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
-
-    # Check if the input is empty
-    if [ -z "$1" ]; then
-        printf "Input is empty\n" >&2
-        return 1
-    fi
-
-    # Create a ZFS alias
-    zfs set mountpoint=legacy "$1"
-}

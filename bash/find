@@ -1,14 +1,11 @@
-# shellcheck shell=bash
-# shellcheck source=/dev/null
-
 # Search all datasets
 #@begin_function find_all
 function find_all() {
     handle_help "$@" && return 0
-    
+
     if [ "$HOSTNAME" == "ix-truenas" ]; then
-        find /mnt/spool-temp /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/spool/ /mnt/mach2/Pr0n /mnt/mach2/From.z2pool/ -not -path "*/Incomplete/*" -type d -iname "*$1*"
-        elif [ "$HOSTNAME" == "ix-truenas2" ]; then
+        find /mnt/spool-temp /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/spool/ /mnt/spool-temp /mnt/mach2/Pr0n /mnt/mach2/From.z2pool/ -not -path "*/Incomplete/*" -type d -iname "*$1*"
+    elif [ "$HOSTNAME" == "ix-truenas2" ]; then
         find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*"
     else
         echo "This function is only available on ix-truenas and ix-truenas2"
@@ -20,17 +17,16 @@ function find_all() {
 #@begin_function findd
 function findd() {
     handle_help "$@" && return 0
-    
+
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type d
 }
 #@end_function
 
-
 #@begin_function findf
 function findf() {
     handle_help "$@" && return 0
-    
+
     printf "Searching for *%s*. \n" "$1"
     find -- * -iname "*$1*" -type f
 }

@@ -4,7 +4,7 @@
 # For Debian/Ubuntu systems
 
 # Check if we're on a Debian-based system
-if ! command -v apt-get &> /dev/null; then
+if ! command -v apt-get &>/dev/null; then
     echo "This doesn't appear to be a Debian-based system. Exiting."
     exit 1
 fi
@@ -28,13 +28,13 @@ if sudo grep -q "^$USERNAME.*NOPASSWD:.*ALL" /etc/sudoers; then
 else
     # Create a backup of the sudoers file
     sudo cp /etc/sudoers /etc/sudoers.bak."$(date +%Y%m%d%H%M%S)"
-    
+
     # Get the current sudoers file
     sudo cp /etc/sudoers "$TMP_SUDOERS"
-    
+
     # Add the NOPASSWD entry for the current user
-    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" | sudo tee -a "$TMP_SUDOERS" > /dev/null
-    
+    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" | sudo tee -a "$TMP_SUDOERS" >/dev/null
+
     # Validate the syntax of the new sudoers file
     if sudo visudo -c -f "$TMP_SUDOERS"; then
         # If validation succeeded, install the new sudoers file

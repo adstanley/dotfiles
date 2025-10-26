@@ -8,7 +8,10 @@
 cd_drive() {
   local dir="$1"
   if [[ -d "$dir" ]]; then
-    cd "$dir" || { printf "Failed to change to %s\n""$dir"; return 1; }
+    cd "$dir" || {
+      printf "Failed to change to %s\n""$dir"
+      return 1
+    }
   else
     printf "Directory %s does not exist\m" "$dir"
     return 1
@@ -47,7 +50,7 @@ alias fgrep='fgrep --color=auto'
 alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
 
 # Directory Shortcuts
-alias getfiles="find -- * -type f" # Find all files in the current directory
+alias getfiles="find -- * -type f"                                           # Find all files in the current directory
 alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Find all file extensions in the current directory
 
 # k3s Shortcuts
@@ -78,8 +81,8 @@ alias pscpu='ps auxf | sort -nr -k 3'
 
 # get diskspace
 alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
-alias df='df -h'     # human-readable sizes
-alias free='free -m' # show sizes in MB
+alias df='df -h'                            # human-readable sizes
+alias free='free -m'                        # show sizes in MB
 
 # get error messages from journalctl
 alias jctl="journalctl -p 3 -xb"
