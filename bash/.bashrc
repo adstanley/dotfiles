@@ -65,6 +65,7 @@ unset file
 
 # Custom PATH additions
 declare -a path_array=(
+	"${HOME}/.bin"
 	"${HOME}/.appimage"
 	"${HOME}/.cargo/bin"
 	"${HOME}/.local/share/fnm"
