@@ -30,6 +30,7 @@ declare -A FUNCTION_HELP
 
 # Declare modular array
 declare -a modular_files=(
+	"find"
 	"colors"
 	"envs"
 	"init"
@@ -1119,15 +1120,6 @@ function rclonecopy() {
 
 	printf "Copying \"%s\" to \"%s\".\n" "$source" "$destination"
 	rclone copy -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
-}
-#@end_function
-
-# Function to find largest files in the current directory
-#@begin_function find_largest_files
-function find_largest_files() {
-	handle_help "$@" && return 0
-
-	du -h -x -s -- * | sort -r -h | head -20
 }
 #@end_function
 
