@@ -31,21 +31,21 @@ declare -A FUNCTION_HELP
 # Declare modular array
 declare -a modular_files=(
 	"find"
-	"colors"
-	"envs"
-	"init"
-	"shell"
-	"prompt"
-	"functions"
-	"aliases"
-	"ssh"
-	"help"
+	# "colors"
+	# "envs"
+	# "init"
+	# "shell"
+	# "prompt"
+	# "functions"
+	# "aliases"
+	# "ssh"
+	# "help"
 )
 
 # Source modular files
 for file in "${modular_files[@]}"; do
-	if [ -f "${HOME}/$file" ]; then
-		source "${HOME}/$file"
+	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
+		source "${HOME}/.github/dotfiles/bash/$file"
 	fi
 done
 unset file
