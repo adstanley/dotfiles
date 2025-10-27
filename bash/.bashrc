@@ -30,16 +30,18 @@ declare -A FUNCTION_HELP
 
 # Declare modular array
 declare -a modular_files=(
+	"shell_opt"
 	"find"
+	"prompt"
+	"history"
 	# "colors"
 	# "envs"
 	# "init"
 	# "shell"
-	# "prompt"
 	# "functions"
 	# "aliases"
 	# "ssh"
-	# "help"
+	"help"
 )
 
 # Source modular files
@@ -49,12 +51,6 @@ for file in "${modular_files[@]}"; do
 	fi
 done
 unset file
-
-# Source bash-git-prompt if it exists
-# if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
-#     GIT_PROMPT_ONLY_IN_REPO=1
-#     source "$HOME/.bash-git-prompt/gitprompt.sh"
-# fi
 
 #################################################################################
 #####                             Path                                      #####
@@ -130,7 +126,7 @@ else
 fi
 
 #################################################################################
-#####                             LS/EXA ETC                                #####
+#####                             LS/EXA                                    #####
 #################################################################################
 
 # Figure out if eza or exa is installed, if not fall back on ls
@@ -148,150 +144,11 @@ get_ls_command() {
 }
 
 LS_COMMAND=$(get_ls_command)
+export LS_COMMAND
 
 #################################################################################
-#####                             HISTORY OPTIONS                           #####
+#####                           Terminal Title                              #####
 #################################################################################
-
-## Bash history
-HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in the history.
-HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
-HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
-HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
-HISTFILE="${HOME}/.bash_history"                 # set history file location
-HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
-
-shopt -s histappend # append to the history file, don't overwrite it
-shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
-
-# Backup history file
-# cp "${HISTFILE}" "${HISTFILE}.bak"
-
-#################################################################################
-#####                          SHELL OPTIONS                                #####
-#################################################################################
-
-# Set options
-set -o noclobber # Prevent overwriting files
-# set -o vi             # Set vi mode, Allows for vi keybindings in the terminal
-
-# Shopt Options
-shopt -s autocd         # change to named directory
-shopt -s cdspell        # autocorrects cd misspellings
-shopt -s dotglob        # include hidden files in globbing
-shopt -s expand_aliases # expand aliases
-shopt -s checkwinsize   # checks term size when bash regains control
-shopt -s extglob        # extended pattern matching
-shopt -s globstar       # recursive globbing
-shopt -s histverify     # show command with history expansion to allow editing
-shopt -s nullglob       # null globbing, no match returns null
-
-## Prompt
-# PS1    The  value  of  this parameter is expanded (see PROMPTING below)
-#        and used as the primary prompt string.   The  default  value  is
-#        ``\s-\v\$ ''.
-# PS2    The  value of this parameter is expanded as with PS1 and used as
-#        the secondary prompt string.  The default is ``> ''.
-# PS3    The value of this parameter is used as the prompt for the select
-#        command (see SHELL GRAMMAR above).
-# PS4    The  value  of  this  parameter  is expanded as with PS1 and the
-#        value is printed before each command  bash  displays  during  an
-#        execution  trace.  The first character of PS4 is replicated mul‐
-#        tiple times, as necessary, to indicate multiple levels of  indi‐
-#        rection.  The default is ``+ ''.
-
-## ANSI Escape Codes
-# Colors
-BLACK='\[\033[01;30m\]'    # Black
-RED='\[\033[01;31m\]'      # Red
-GREEN='\[\033[01;32m\]'    # Green
-YELLOW='\[\033[01;33m\]'   # Yellow
-BLUE='\[\033[01;34m\]'     # Blue
-PURPLE='\[\033[01;35m\]'   # Purple
-CYAN='\[\033[01;36m\]'     # Cyan
-WHITE='\[\033[01;37m\]'    # White
-GREEN="\[\033[38;5;2m\]"   # Green
-YELLOW="\[\033[38;5;11m\]" # Yellow
-BLUE="\[\033[38;5;6m\]"    # Blue
-RESET='\[\033[0m\]'        # Reset
-
-# Text Attributes
-BOLD='\033[01m'      # Bold ANSI escape code
-UNDERLINE='\033[04m' # Underline ANSI escape code
-ITALIC='\033[03m'    # Italic ANSI escape code
-
-# Colored GCC warnings and errors
-# Errors will be displayed in bold red
-# Warnings will be displayed in bold purple
-# Notes will be displayed in bold cyan
-# Carets will be displayed in bold green
-# Locus will be displayed in bold white
-# Quotes will be displayed in bold yellow
-# export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
-
-# Only check once if git is available, then set a flag.
-if command -v git >/dev/null 2>&1; then
-	__GIT_AVAILABLE=1
-else
-	__GIT_AVAILABLE=0
-fi
-
-function git_prompt() {
-	local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
-	local COLOR_GIT_STAGED=$'\033[0;33m'   # Yellow for staged changes
-	local COLOR_GIT_MODIFIED=$'\033[0;31m' # Red for unstaged/untracked changes
-	local COLOR_RESET=$'\033[0m'           # Reset color
-
-	# Check if git is installed
-	if ! command -v git >/dev/null 2>&1; then
-		return
-	fi
-
-	# Check if in a git repository
-	if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-		return
-	fi
-
-	# Try to get tag name first
-	local ref
-	ref=$(git describe --tags --exact-match 2>/dev/null)
-
-	# If no tag, get branch name
-	if [ -z "$ref" ]; then
-		ref=$(git symbolic-ref -q HEAD 2>/dev/null)
-		ref=${ref##refs/heads/}
-		ref=${ref:-HEAD}
-	fi
-
-	# If no branch, get commit hash
-	if [ "$ref" = "HEAD" ]; then
-		ref=$(git rev-parse --short HEAD 2>/dev/null)
-	fi
-
-	# If no commit hash, set ref to "unknown"
-	if [ -z "$ref" ]; then
-		ref="unknown"
-	fi
-
-	# Check git status
-	local status_output
-	status_output=$(git status 2>/dev/null)
-
-	# If status is clean, show green
-	if [[ $status_output = *"nothing to commit"* ]]; then
-		printf " %s[%s]%s" "${COLOR_GIT_CLEAN}" "${ref}" "${COLOR_RESET}"
-	# If there are staged changes, show yellow
-	elif [[ $status_output = *"Changes to be committed"* ]]; then
-		printf " %s[%s*]%s" "${COLOR_GIT_STAGED}" "${ref}" "${COLOR_RESET}"
-	# If there are unstaged changes or untracked files, show red
-	else
-		printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
-	fi
-}
-
-# Set Prompt
-PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
 
 ## Change title of terminals
 case ${TERM} in
@@ -329,73 +186,6 @@ if [ -d "${HOME}/.bash_completion" ]; then
 		source "$file"
 	done
 fi
-
-#################################################################################
-#                                    Help                                       #
-#################################################################################
-
-# #@Name: handle_help
-# #@Description: Display help message for a given function using FUNCTION_HELP array
-# #@Arguments: [function_name] [--help|-h]
-# #@Usage: handle_help <function_name> [--help|-h]
-# #@define help information
-# FUNCTION_HELP[handle_help]=$(
-#     cat <<'EOF'
-# NAME
-#     handle_help - Display help message for a given function
-
-# DESCRIPTION
-#     Checks if the second argument is --help or -h and prints the help message
-#     stored in the FUNCTION_HELP associative array for the specified function name.
-
-# USAGE
-#     handle_help <function_name> [--help|-h]
-
-# OPTIONS
-#     <function_name> : Name of the function to display help for
-#     --help, -h      : Show this help message and exit
-
-# EXAMPLES
-#     handle_help cd_drive --help
-#         Prints the help message for the cd_drive function.
-# EOF
-# )
-# #@begin_function
-# handle_help() {
-#     local func_name="$1"
-#     shift
-#     local verbose=false
-#     if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
-#         verbose=true
-#         shift
-#     fi
-#     if [[ -z "$func_name" ]]; then
-#         printf "Error: No function name provided to handle_help\n" >&2
-#         return 3
-#     fi
-#     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-#         if [[ -n "${FUNCTION_HELP[$func_name]}" ]]; then
-#             echo "${FUNCTION_HELP[$func_name]}"
-#             if [[ "$verbose" == true ]]; then
-#                 echo -e "\nFunction definition:"
-#                 type "$func_name"
-#             fi
-#             return 0
-#         else
-#             printf "Help not available for function: %s\n" "$func_name" >&2
-#             return 2
-#         fi
-#     fi
-#     return 1
-# }
-# #@end_function
-
-# list_functions() {
-#     printf "Available functions with help:\n"
-#     for func in "${!FUNCTION_HELP[@]}"; do
-#         printf "%s\n" "$func"
-#     done | sort
-# }
 
 #################################################################################
 #                                    Aliases                                    #

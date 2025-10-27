@@ -1,0 +1,17 @@
+#################################################################################
+#####                             HISTORY OPTIONS                           #####
+#################################################################################
+
+## Bash history
+HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in the history.
+HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
+HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
+HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
+HISTFILE="${HOME}/.bash_history"                 # set history file location
+HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
+
+shopt -s histappend # append to the history file, don't overwrite it
+shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
+
+# Backup history file
+# cp "${HISTFILE}" "${HISTFILE}.bak"

@@ -10,7 +10,7 @@ shell=bash
 external-sources=true
 
 # Ignore missing sourced files
-source=/dev/null
+# source=/dev/null
 
 # Unused variables
 disable=SC2034

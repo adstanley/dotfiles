@@ -101,9 +101,11 @@ handle_help() {
 }
 #@end_function
 
+#@begin_function
 list_functions() {
     printf "Available functions with help:\n"
     for func in "${!FUNCTION_HELP[@]}"; do
         printf "%s\n" "$func"
     done | sort
 }
+#@end_function
