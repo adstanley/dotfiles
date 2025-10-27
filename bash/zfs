@@ -1,5 +1,27 @@
 declare -A FUNCTION_HELP
 
+## ZFS Aliases
+# iostat
+alias iostat='zpool iostat -vly 5 1'
+alias zdb='zdb -U /data/zfs/zpool.cache'
+
+# get snapshots
+alias snapshot='zfs list -t snapshot'
+alias snapshot1='zfs list -H -o name -t snapshot'
+
+# ps
+alias psa="ps auxf"
+alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
+alias psmem='ps auxf | sort -nr -k 4'
+alias pscpu='ps auxf | sort -nr -k 3'
+alias psuser='ps auxf | sort -nr -k 1'
+
+# get diskspace
+alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
+alias df='df -h'
+alias du='du -hs'
+alias free='free -m'
+
 #@Name: zfs_alias
 #@Description: Create functions to change directory to ZFS mountpoints
 #@Arguments: None
@@ -74,7 +96,7 @@ fi
 #@ Arguments: <dataset> [snapshot_suffix]
 #@ Usage: takesnapshot <dataset> [snapshot_suffix] [--dry-run]
 #@ define help information
-FUNCTION_HELP[takesnapshot]=$(cat << 'EOF'
+FUNCTION_HELP[takesnapshot_old]=$(cat << 'EOF'
 NAME
     takesnapshot - Create a ZFS snapshot for a specified dataset
 DESCRIPTION

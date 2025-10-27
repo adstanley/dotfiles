@@ -1,4 +1,6 @@
+#!/usr/bin/env bash
 # Search all datasets
+
 #@begin_function find_all
 function find_all() {
 	handle_help "$@" && return 0

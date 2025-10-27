@@ -76,14 +76,14 @@ for directory in "${path_array[@]}"; do
 		esac
 	fi
 done
-export PATH
 unset directory
 
-# De-duplicate PATH entries
+# De-duplicate PATH entries and export
 PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!a[$0]++')
 PATH=${PATH%:}
+export PATH
 
-# print path
+# DEBUG: Print each path entry on a new line
 function print_path() {
 	IFS=':' read -ra paths <<< "$PATH"
 	printf "%s\n" "${paths[@]}"
@@ -93,6 +93,11 @@ function print_path() {
 #################################################################################
 #####                            BATCAT/BAT                                 #####
 #################################################################################
+# if ! command -v "bat"; then
+# 	if command -v "batcat"; then 
+# 		ln -s /usr/bin/batcat /usr/bin/bat
+# 	fi
+# fi
 
 # Figure out if bat or batcat is installed, if not fall back on cat
 function get_bat_command() {
@@ -118,13 +123,6 @@ else
 	export MANPAGER="less"
 fi
 
-## nvim as default editor
-if command -v nvim >/dev/null 2>&1; then
-	export EDITOR="nvim"
-else
-	export EDITOR="nano"
-fi
-
 #################################################################################
 #####                             LS/EXA                                    #####
 #################################################################################
@@ -143,8 +141,22 @@ get_ls_command() {
 	echo "ls"
 }
 
+function test() {
+	command
+}
+
 LS_COMMAND=$(get_ls_command)
 export LS_COMMAND
+
+#################################################################################
+#####                               NVIM                                    #####
+#################################################################################
+## nvim as default editor
+if command -v nvim >/dev/null 2>&1; then
+	export EDITOR="nvim"
+else
+	export EDITOR="nano"
+fi
 
 #################################################################################
 #####                           Terminal Title                              #####
@@ -187,8 +199,10 @@ if [ -d "${HOME}/.bash_completion" ]; then
 	done
 fi
 
+[[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path bash)"
+
 #################################################################################
-#                                    Aliases                                    #
+#####                            Aliases                                    #####
 #################################################################################
 
 # Some aliases are functions
@@ -240,8 +254,9 @@ cd_() {
 alias resetcursor='printf \e[5 q'
 
 # Directory shortcuts
-alias cd_sab='cd_drive /mnt/spool/SABnzbd/Completed'
-alias cd_torrent='cd_drive /mnt/spool/torrent'
+alias cd_sab='cd /mnt/spool/SABnzbd/Completed'
+alias cd_torrent='cd /mnt/spool/torrent'
+alias cd_pron='cd /mnt/z2pool/Pr0n'
 
 # Drive shortcuts
 alias cd_toshiba='cd /mnt/toshiba'
@@ -271,12 +286,9 @@ alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
-# Exa alias settings (Moved to function)
-# alias eza='eza --all --long --header --git --icons --group-directories-first --color=always'
-
 # Directory Shortcuts
 alias getfiles="find -- * -type f" # Find all files in the current directory
-# alias extensions="find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///'" # Moved to Functions
+alias getfolders="find -- * type d" # Find all folders in the current directory
 
 # k3s Shortcuts
 alias pods='k3s kubectl get pods --all-namespaces'
@@ -288,28 +300,6 @@ alias cpv='rsync -ah --info=progress2'
 
 # Truetool script Shortcut
 alias truetool='bash ~/truetool/truetool.sh'
-
-## ZFS Aliases
-# iostat
-alias iostat='zpool iostat -vly 5 1'
-alias zdb='zdb -U /data/zfs/zpool.cache'
-
-# get snapshots
-alias snapshot='zfs list -t snapshot'
-alias snapshot1='zfs list -H -o name -t snapshot'
-
-# ps
-alias psa="ps auxf"
-alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
-alias psmem='ps auxf | sort -nr -k 4'
-alias pscpu='ps auxf | sort -nr -k 3'
-alias psuser='ps auxf | sort -nr -k 1'
-
-# get diskspace
-alias diskspace="du -S | sort -n -r | less" # get disk space sorted by size piped to less
-alias df='df -h'
-alias du='du -hs'
-alias free='free -m'
 
 # get error messages from journalctl
 alias jctl="journalctl -p 3 -xb"
