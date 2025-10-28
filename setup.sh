@@ -47,7 +47,7 @@ git clone https://github.com/NvChad/NvChad ~/.config/nvim --depth 1
 # cd - || exit
 
 # Install lazydocker
-cd ~/Downloads || exit
+cd "${HOME}/Downloads" || exit
 LAZYDOCKER_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
 curl -Lo lazydocker.tar.gz "https://github.com/jesseduffield/lazydocker/releases/latest/download/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz"
 tar xf lazydocker.tar.gz lazydocker
@@ -65,14 +65,14 @@ cd - || exit
 # cd - || exit
 
 # Ruby
-# echo 'eval "$(/usr/bin/rbenv init - bash)"' >> ~/.bashrc
-# source ~/.bashrc
+# echo 'eval "$(/usr/bin/rbenv init - bash)"' >> "${HOME}/.bashrc"
+# source "${HOME}/.bashrc"
 # git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
 # rbenv install 3.3.1
 # rbenv global 3.3.1
 
 # Binstubs
-# cat << EOF >> ~/.bashrc
+# cat << EOF >> "${HOME}/.bashrc"
 # export PATH="./bin:$PATH"
 # set +h
 # alias r='./bin/rails'
@@ -80,17 +80,17 @@ cd - || exit
 
 
 
-cat << EOF >> ~/.bashrc
+cat << EOF >> "${HOME}/.bashrc"
 alias g='git'
 alias gcm='git commit -m'
 alias gcam='git commit -a -m'
 alias gcad='git commit -a --amend'
 EOF
 
-source ~/.bashrc
+source "${HOME}/.bashrc"
 
 # Setup bash
-cat << EOF >> ~/.bashrc
+cat << EOF >> "${HOME}/.bashrc"
 alias ls='eza -lh --group-directories-first --icons'
 alias lt='eza --tree --level=2 --long --icons --git'
 alias ff="fzf --preview 'batcat --style=numbers --color=always {}'" 
@@ -98,7 +98,7 @@ alias bat='batcat'
 eval "$(zoxide init bash)"
 EOF
 
-source ~/.bashrc
+source "${HOME}/.bashrc"
 
 
 # Setup GitHub CLI
@@ -111,14 +111,14 @@ gh auth login
 
 # Setup Docker
 echo "Add user to docker group (needs restart to become effective)"
-sudo usermod -aG docker ${USER}
-echo "alias d='docker'" >> ~/.bashrc
-source ~/.bashrc
+sudo usermod -aG docker "${USER}"
+echo "alias d='docker'" >> "${HOME}/.bashrc"
+source "${HOME}/.bashrc"
 
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+mkdir -p "$DOCKER_CONFIG"/cli-plugins
+curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o "$DOCKER_CONFIG/cli-plugins/docker-compose"
+chmod +x "$DOCKER_CONFIG/cli-plugins/docker-compose"
 
 docker run -d --restart unless-stopped -p 3306:3306 --name=mysql8 -e MYSQL_ROOT_PASSWORD= -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8
 docker run -d --restart unless-stopped -p 6379:6379 --name=redis redis
@@ -126,14 +126,15 @@ docker run -d --restart unless-stopped -p 6379:6379 --name=redis redis
 # Setup nodenv
 git clone https://github.com/nodenv/nodenv.git ~/.nodenv
 sudo ln -vs ~/.nodenv/bin/nodenv /usr/local/bin/nodenv
-cd ~/.nodenv
-src/configure && make -C src || true
-cd ~/
+cd ~/.nodenv || exit
+src/configure && make -C src
+
+cd "${HOME}" || exit
 mkdir -p "$(nodenv root)"/plugins
 git clone https://github.com/nodenv/node-build.git "$(nodenv root)"/plugins/node-build
 git clone https://github.com/nodenv/nodenv-aliases.git "$(nodenv root)"/plugins/nodenv-aliases
 nodenv install 20.11.1
 nodenv global 20.11.1
 sudo ln -vs "$(nodenv root)"/shims/* /usr/local/bin/
-echo 'eval "$(nodenv init -)"' >> ~/.bashrc
-source ~/.bashrc
+echo 'eval "$(nodenv init -)"' >> "${HOME}/.bashrc"
+source "${HOME}/.bashrc"

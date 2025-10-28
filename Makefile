@@ -1,3 +1,8 @@
-check-scripts:
-    # Fail if any of these files have warnings
-    shellcheck install.sh
+
+SC = shellcheck
+SCFLAGS = --color=always
+SHELLSCRIPTS := setup.sh install.sh
+
+shellcheck: $(SHELLSCRIPTS)
+	@echo "Running ShellCheck on shell scripts..."
+	$(SC) $(SCFLAGS) $(SHELLSCRIPTS)

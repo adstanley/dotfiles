@@ -1,16 +1,12 @@
 # .shellcheckrc
 
-# Allow 'source' from current directory
-source-path=.
-
-# Specify the shell dialect
-shell=bash
-
 # Allow opening any 'source'd file, even if not specified as input
 external-sources=true
 
-# Ignore missing sourced files
-# source=/dev/null
+source-path=/home/sigmachad/.github/dotfiles/bash
+
+# Specify the shell dialect
+shell=bash
 
 # Unused variables
 disable=SC2034

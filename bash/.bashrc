@@ -11,22 +11,13 @@
 #                                            Chet Manley  #
 ###########################################################
 # Bashrc
-# Shellcheck Directives
-# shellcheck shell=bash
-# shellcheck source=/dev/null
-# shellcheck disable=SC1090
-# shellcheck disable=SC1091
-# shellcheck disable=SC2034
 #
-# 1. Environmental Variables / Bash Options
-# 2. Aliases
-# 3. Functions
+# Declare associative array for function help
+declare -A FUNCTION_HELP
 #
 #################################################################################
 #                       Change to Modular Structure                             #
 #################################################################################
-# Declare associative array for function help
-declare -A FUNCTION_HELP
 
 # Declare modular array
 declare -a modular_files=(
@@ -34,20 +25,21 @@ declare -a modular_files=(
 	"find"
 	"prompt"
 	"history"
+	"zfs"
+	"xdg"
 	# "colors"
 	# "envs"
-	# "init"
 	# "shell"
 	# "functions"
 	# "aliases"
-	# "ssh"
+	"ssh"
 	"help"
 )
 
 # Source modular files
 for file in "${modular_files[@]}"; do
 	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
-		source "${HOME}/.github/dotfiles/bash/$file"
+		source "${HOME}/.github/dotfiles/bash/$file" && printf "sourced %s\n" "$file"
 	fi
 done
 unset file
@@ -139,10 +131,6 @@ get_ls_command() {
 
 	# fallback on ls
 	echo "ls"
-}
-
-function test() {
-	command
 }
 
 LS_COMMAND=$(get_ls_command)
