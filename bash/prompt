@@ -41,7 +41,6 @@ ITALIC='\033[03m'    # Italic ANSI escape code
 # Carets will be displayed in bold green
 # Locus will be displayed in bold white
 # Quotes will be displayed in bold yellow
-# export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
 
 # Source bash-git-prompt if it exists

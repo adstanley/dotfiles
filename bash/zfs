@@ -86,7 +86,7 @@ zfs_alias() {
 }
 #@end_function
 
-Only call the function if zfs-utils are installed
+# Only call the function if zfs-utils are installed
 if command -v zpool > /dev/null 2>&1 && zpool list > /dev/null 2>&1; then
   zfs_alias "$@"
 fi

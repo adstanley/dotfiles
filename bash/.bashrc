@@ -21,25 +21,29 @@ declare -A FUNCTION_HELP
 
 # Declare modular array
 declare -a modular_files=(
-	"shell_opt"
+	# "bash_aliases"
+	"bash_completion"
+	# "bash_functions"
+	"colors"
 	"find"
-	"prompt"
-	"history"
-	"zfs"
-	"xdg"
-	# "colors"
-	# "envs"
-	# "shell"
-	# "functions"
-	# "aliases"
-	"ssh"
+	"git"
 	"help"
+	"history"
+	"prompt"
+	"shell_opt"
+	"ssh"
+	"terminal"
+	"xdg"
+	"yt-dlp"
+	"zfs"
 )
 
 # Source modular files
 for file in "${modular_files[@]}"; do
 	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
-		source "${HOME}/.github/dotfiles/bash/$file" && printf "sourced %s\n" "$file"
+		source "${HOME}/.github/dotfiles/bash/$file"
+		# DEBUG: Print sourced file
+		# printf "sourced %s\n" "$file"
 	fi
 done
 unset file
@@ -76,8 +80,9 @@ PATH=${PATH%:}
 export PATH
 
 # DEBUG: Print each path entry on a new line
-function print_path() {
-	IFS=':' read -ra paths <<< "$PATH"
+function print_path()
+{
+	IFS=':' read -ra paths <<<"$PATH"
 	printf "%s\n" "${paths[@]}"
 	unset paths
 }
@@ -86,13 +91,14 @@ function print_path() {
 #####                            BATCAT/BAT                                 #####
 #################################################################################
 # if ! command -v "bat"; then
-# 	if command -v "batcat"; then 
+# 	if command -v "batcat"; then
 # 		ln -s /usr/bin/batcat /usr/bin/bat
 # 	fi
 # fi
 
 # Figure out if bat or batcat is installed, if not fall back on cat
-function get_bat_command() {
+function get_bat_command()
+{
 	local commands=("batcat" "bat")
 	for cmd in "${commands[@]}"; do
 		if command -v "$cmd" >/dev/null 2>&1; then
@@ -120,7 +126,8 @@ fi
 #################################################################################
 
 # Figure out if eza or exa is installed, if not fall back on ls
-get_ls_command() {
+get_ls_command()
+{
 	local commands=("eza" "exa")
 	for cmd in "${commands[@]}"; do
 		if command -v "$cmd" >/dev/null 2>&1; then
@@ -187,117 +194,15 @@ if [ -d "${HOME}/.bash_completion" ]; then
 	done
 fi
 
-[[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path bash)"
-
-#################################################################################
-#####                            Aliases                                    #####
-#################################################################################
-
-# Some aliases are functions
-# nvim is an alias to nvim.appimage if it exists
-
-# Filesystem Shortcuts
-#@Name: cd_drive
-#@Description: Change directory to a specified drive
-#@Arguments: [directory]
-#@Usage: cd_drive [directory]
-#@define help information
-FUNCTION_HELP[cd_drive]=$(
-	cat <<'EOF'
-NAME
-    cd_drive - Change directory to a specified drive
-
-DESCRIPTION
-    Change the current directory to a specified drive. If the directory does not exist, an error message is printed.
-
-USAGE
-    cd_drive [DIRECTORY]
-
-OPTIONS
-    -h, --help
-        Show this help message and exit.
-
-EXAMPLES
-
-EOF
-)
-#@begin_function
-cd_() {
-
-	local dir="$1"
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [[ -d "$dir" ]]; then
-		cd "$dir" || {
-			printf "Failed to change to %s\n" "$dir"
-			return 1
-		}
-	else
-		printf "Directory %s does not exist\n" "$dir"
-		return 1
-	fi
-}
-#@end_function
-
-alias resetcursor='printf \e[5 q'
-
-# Directory shortcuts
-alias cd_sab='cd /mnt/spool/SABnzbd/Completed'
-alias cd_torrent='cd /mnt/spool/torrent'
-alias cd_pron='cd /mnt/z2pool/Pr0n'
-
-# Drive shortcuts
-alias cd_toshiba='cd /mnt/toshiba'
-alias cd_toshiba2='cd /mnt/toshiba2'
-alias cd_toshiba3='cd /mnt/toshiba3'
-alias cd_toshiba4='cd /mnt/toshiba4'
-alias cd_spool='cd /mnt/spool'
-alias cd_spool-temp='cd /mnt/spool-temp'
-alias cd_mach2='cd /mnt/mach2'
-alias cd_seagatemirror='cd /mnt/seagatemirror'
-alias cd_pron='cd /mnt/z2pool/Pr0n'
-
-# Alias to edit/reload bashrc
-alias reload='source ~/.bashrc'
-alias nanobash='nano ~/.bashrc'
-alias nvimbash='nvim ~/.bashrc'
-alias rc='nvim ~/.bashrc && exec $SHELL -l'
-
-# Some more alias to avoid making mistakes:
-alias rm='rm -vI'
-alias cp='cp -vi'
-alias mv='mv -vi'
-alias mkdir='mkdir -pv'
-
-# Colorize grep output
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
-
-# Directory Shortcuts
-alias getfiles="find -- * -type f" # Find all files in the current directory
-alias getfolders="find -- * type d" # Find all folders in the current directory
-
-# k3s Shortcuts
-alias pods='k3s kubectl get pods --all-namespaces'
-alias showfailed='systemctl list-units --state failed'
-alias namespaces='k3s kubectl get namespaces'
-
-# Rclone / Rsync progress
-alias cpv='rsync -ah --info=progress2'
-
-# Truetool script Shortcut
-alias truetool='bash ~/truetool/truetool.sh'
-
-# get error messages from journalctl
-alias jctl="journalctl -p 3 -xb"
+[[ "$TERM_PROGRAM" == "vscode" ]] && source "$(code --locate-shell-integration-path bash)"
 
 #################################################################################
 #                                    Functions                                  #
 #################################################################################
 
 alias bathelp='bat --plain --language=help'
-help() {
+help()
+{
 	"$@" --help 2>&1 | bathelp
 }
 
@@ -326,7 +231,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function example() {
+function example()
+{
 	#####################
 	# Pick One
 	#####################
@@ -371,7 +277,8 @@ EOF
 )
 
 #@begin_function
-nvim() {
+nvim()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -415,7 +322,8 @@ nvim() {
 }
 #@end_function
 
-nvim_reset() {
+nvim_reset()
+{
 	unset NVIM_PATH
 	echo "Neovim path cache cleared"
 }
@@ -444,7 +352,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function ls() {
+function ls()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -483,7 +392,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function cdir() {
+function cdir()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -518,7 +428,8 @@ EXAMPLES
 EOF
 )
 #@begin_function countfields
-function countfields() {
+function countfields()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -553,7 +464,8 @@ EXAMPLES
 EOF
 )
 #@begin_function dupebyname
-function dupebyname() {
+function dupebyname()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -584,7 +496,8 @@ EXAMPLES
 EOF
 )
 #@begin_function ownroot
-function ownroot() {
+function ownroot()
+{
 
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -649,7 +562,8 @@ EXAMPLES
 EOF
 )
 #@begin_function mod775
-function mod775() {
+function mod775()
+{
 
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -680,7 +594,8 @@ function mod775() {
 # Arguments: [clone] [url]
 # Usage: git_shallow clone [url]
 #@begin_function git_shallow
-function git_shallow() {
+function git_shallow()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -705,7 +620,8 @@ function git_shallow() {
 # Arguments: None
 # Usage: git_branch
 #@begin_function
-function git_branch() {
+function git_branch()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -725,7 +641,8 @@ function git_branch() {
 # Arguments: [source] [destination]
 # Usage: mv_check [source] [destination]
 #@begin_function mv_check
-function mv_check() {
+function mv_check()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -798,7 +715,8 @@ function mv_check() {
 # Arguments: [source] [destination]
 # Usage: rclonemove [source] [destination]
 #@begin_function rclonemove
-function rclonemove() {
+function rclonemove()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -847,7 +765,8 @@ function rclonemove() {
 
 # Copy Function
 #@begin_function rclonecopy
-function rclonecopy() {
+function rclonecopy()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -894,7 +813,8 @@ function rclonecopy() {
 
 # Function to backup file by appending .bk to the end of the file name
 #@begin_function bk
-function bk() {
+function bk()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -911,7 +831,8 @@ function bk() {
 
 # Function to convert hex to Asciic
 #@begin_function hexToAscii
-function hexToAscii() {
+function hexToAscii()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -928,7 +849,8 @@ function hexToAscii() {
 
 # idk man
 #@begin_function c2f
-function c2f() {
+function c2f()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -949,7 +871,8 @@ function c2f() {
 #@usage hist [search_term]
 #@example hist ssh
 #@begin_function hist
-function hist() {
+function hist()
+{
 	handle_help "$@" && return 0
 
 	local color="true"
@@ -975,7 +898,8 @@ function hist() {
 # Create a .7z compressed file with maximum compression
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
 #@begin_function 7zip
-function 7zip() {
+function 7zip()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -992,7 +916,8 @@ function 7zip() {
 
 # Function to extract rar files from incomplete or broken NZB downloads
 #@begin_function packs
-function packs() {
+function packs()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1004,15 +929,20 @@ function packs() {
 	fi
 
 	printf "extracting rar volumes with out leading zeros.\n"
-	{ unrar e '*part1.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
+	{
+		unrar e '*part1.rar' >/dev/null
+	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
 	printf "extracting rar volumes with leading zeros.\n"
-	{ unrar e '*part01.rar' >/dev/null; } 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
+	{
+		unrar e '*part01.rar' >/dev/null
+	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
 }
 #@end_function
 
 # Simple function to identify the type of compression used on a file and extract accordingly
 #@begin_function extract
-function extract() {
+function extract()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1063,7 +993,8 @@ function extract() {
 ### ARCHIVE EXTRACTION
 # usage: ex <file>
 #@begin_function ex
-function ex() {
+function ex()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1106,7 +1037,8 @@ function ex() {
 
 # navigation
 #@begin_function up
-function up() {
+function up()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1137,7 +1069,8 @@ function up() {
 #@end_function
 
 #@begin_function printargs
-function printargs() {
+function printargs()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1156,7 +1089,8 @@ function printargs() {
 
 # Define the function to show ZFS holds
 #@begin_function holds
-function holds() {
+function holds()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1173,7 +1107,8 @@ function holds() {
 
 # Function to create multiple ZFS datasets at once
 #@begin_function create_datasets
-function create_datasets() {
+function create_datasets()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1210,7 +1145,8 @@ function create_datasets() {
 #@end_function
 
 #@begin_function deletesnapshot
-function deletesnapshot() {
+function deletesnapshot()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1272,7 +1208,8 @@ EXAMPLES
 EOF
 )
 #@begin_function takesnapshot
-function takesnapshot_old() {
+function takesnapshot_old()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1333,7 +1270,8 @@ EXAMPLES
 EOF
 )
 #@begin_function takesnapshot
-function takesnapshot() {
+function takesnapshot()
+{
 	# Display help message if --help is provided
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -1428,7 +1366,8 @@ EXAMPLES
 EOF
 )
 #@begin_function getsnapshot
-function getsnapshot() {
+function getsnapshot()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1486,7 +1425,8 @@ EXAMPLES
 EOF
 )
 #@begin_function getspace
-function getspace() {
+function getspace()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1542,7 +1482,8 @@ EXAMPLES
 EOF
 )
 #@begin_function findext
-function findext() {
+function findext()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1563,7 +1504,8 @@ function findext() {
 	find -- * -type f -name "*$1" -print0 | xargs -0 command ls -lh --color=always
 }
 
-function extensions() {
+function extensions()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1605,7 +1547,8 @@ EXAMPLES
 EOF
 )
 #@begin_function makeAlias
-function makeAlias() {
+function makeAlias()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1652,7 +1595,8 @@ EXAMPLES
 EOF
 )
 #@begin_function insertDirectory
-function insertDirectory() {
+function insertDirectory()
+{
 
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1724,7 +1668,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function flatten() {
+function flatten()
+{
 	local -a flatten
 	local -a duplicates
 	local current_dir
@@ -1793,7 +1738,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function remove_empty_dirs() {
+function remove_empty_dirs()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1864,7 +1810,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function nested() {
+function nested()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1915,7 +1862,8 @@ EXAMPLES
 EOF
 )
 #@begin_function zfs_list
-function zfs_list() {
+function zfs_list()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -1961,7 +1909,8 @@ EXAMPLES
 EOF
 )
 #@begin_function moveTemplate
-function moveTemplate() {
+function moveTemplate()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -2009,7 +1958,8 @@ EXAMPLES
 EOF
 )
 #@begin_function rclone_move
-function rclone_move() {
+function rclone_move()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -2102,7 +2052,8 @@ EXAMPLES
 EOF
 )
 #@begin_function
-copyacl() {
+copyacl()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
 			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
@@ -2181,7 +2132,8 @@ EXAMPLES
 
 EOF
 )
-catalog_dir() {
+catalog_dir()
+{
 	local dir="${1:-.}"
 	local output="${2:-directory_catalog.txt}"
 
@@ -2231,7 +2183,8 @@ EXAMPLES
 EOF
 )
 
-function type() {
+function type()
+{
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[type]}" ]]; then
 			echo "${FUNCTION_HELP[type]}"

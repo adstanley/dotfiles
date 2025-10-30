@@ -20,15 +20,16 @@
 # This script is designed to manage dotfiles in a user's home directory.
 #
 # TODO: Change entire script to use gnu stow
-set -e  # Exit immediately if a command exits with a non-zero status
-set -u  # Treat unset variables as an error
-set -o pipefail  # Prevents errors in a pipeline from being masked
+set -eou pipefail # Prevents errors in a pipeline from being masked
 
 # Configuration
 TEMP="$HOME/tmp"
 
+# Github Directory
+GITHUB_DIR="$HOME/.github"
+
 # Dotfiles Directory
-DOTFILES_DIR="$HOME/.github/dotfiles"
+DOTFILES_DIR="$GITHUB_DIR/dotfiles"
 
 # Dotfiles backup directory
 BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
@@ -57,28 +58,24 @@ else
     }
 fi
 
-# Define the associative array
+# Define dotfiles array
 declare -A DOTFILES_ARRAY
+
 DOTFILES_ARRAY=(
     [".bashrc"]="bash"
+    [".gitconfig"]="git"
     [".nanorc"]="nano"
     [".tmux.conf"]="tmux"
     [".vimrc"]="vim"
-    [".gitconfig"]="git"
     [".zshrc"]="zsh"
 )
 
-declare -A FOLDERS
-FOLDERS=(
-    ["bash_completion"]="bash_completion"
-    ["nvim"]="{$HOME}/.config/nvim"
-)
-
 # Reversion Function
-restore_backup() {
+function restore_backup()
+{
     local target_file="$1"
     local target="$2"
-    
+
     if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
         printf "Restoring backup for %s.\n" "$target_file"
         mv "$BACKUP_DIR/$target_file" "$target" || {
@@ -90,15 +87,13 @@ restore_backup() {
     fi
 }
 
-# Make backup directory if it doesn't exist and ensure it's empty
-if [ "$(find "$BACKUP_DIR" -mindepth 1 -print -quit 2>/dev/null)" ]; then
-    printf "Error: Backup directory %s exists and is not empty.\n" "'$BACKUP_DIR'"
-    exit 1
+# Make backup directory if it doesn't exist
+if [ -d "$BACKUP_DIR" ]; then
+    if ! mkdir -p "$BACKUP_DIR"; then
+        printf "Error: Failed to create backup directory: '%s'\n" "$BACKUP_DIR"
+        exit 1
+    fi
 fi
-mkdir -p "$BACKUP_DIR" || {
-    printf "Error: Failed to create backup directory: '%s'\n" "$BACKUP_DIR"
-    exit 1
-}
 
 # Process each dotfile in the array
 for target_file in "${!DOTFILES_ARRAY[@]}"; do
@@ -148,19 +143,27 @@ done
 
 printf "Dotfiles installation complete. Backups stored in %s\n" "$BACKUP_DIR"
 
-# Process each folder in the array
-# for folder_name in "${!FOLDERS[@]}"; do
-#     target_folder="${FOLDERS[$folder_name]}"
-#     source_folder="$DOTFILES_DIR/$folder_name"
+# Define folder array
+declare -A FOLDERS
 
-#     # Create symlink for the folder
-#     if [ -d "$source_folder" ]; then
-#         printf "Creating symlink for %s\n" "$target_folder"
-#         ln -s "$source_folder" "$target_folder" || {
-#             printf "Error: Failed to create symlink for %s.\n" "$target_folder"
-#             exit 1
-#         }
-#     else
-#         printf "Warning: %s not found in dotfiles repository.\n" "$source_folder"
-#     fi
-# done
+FOLDERS=(
+    ["bash_completion"]="{$HOME}/.bash_completion"
+    ["nvim"]="{$HOME}/.config/nvim"
+)
+
+# Process each folder in the array
+for folder_name in "${!FOLDERS[@]}"; do
+    target_folder="${FOLDERS[$folder_name]}"
+    source_folder="$DOTFILES_DIR/$folder_name"
+
+    # Create symlink for the folder
+    if [ -d "$source_folder" ]; then
+        printf "Creating symlink for %s\n" "$target_folder"
+        ln -s "$source_folder" "$target_folder" || {
+            printf "Error: Failed to create symlink for %s.\n" "$target_folder"
+            exit 1
+        }
+    else
+        printf "Warning: %s not found in dotfiles repository.\n" "$source_folder"
+    fi
+done
