@@ -21,8 +21,8 @@ declare -A FUNCTION_HELP
 
 # Declare modular array
 declare -a modular_files=(
-	# "bash_aliases"
-	"bash_completion"
+	".bash_aliases"
+	".bash_completion"
 	# "bash_functions"
 	"colors"
 	"find"
