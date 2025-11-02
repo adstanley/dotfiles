@@ -4,7 +4,7 @@ dir="$HOME/.github/dotfiles/bash"
 
 readarray -t modular_files < <(find "$dir" -type f -iname "*.sh")
 for file in "${modular_files[@]}"; do
-    shellcheck --shell=bash "${HOME}/.github/dotfiles/bash/$file"
+    shellcheck --shell=bash "$file"
 done
 
-shellcheck --shell=bash "${HOME}/.github/dotfiles/bash/.bashrc"
+shellcheck --shell=bash "$dir/.bashrc"
