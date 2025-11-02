@@ -1,3 +1,4 @@
+# Declare associative array for function help
 declare -A FUNCTION_HELP
 
 ## ZFS Aliases
@@ -65,7 +66,7 @@ zfs_alias() {
     fi
 
     # Create a temporary file using shell builtins
-    local tmp_file="/tmp/zfs_alias_$$.tmp" # $$ is the process ID
+    local tmp_file="$HOME/tmp/$HOSTNAME.txt" # $$ is the process ID
 
     # Get list of pools
     mapfile -t pools < <(zpool list -H -o name)
@@ -79,10 +80,10 @@ zfs_alias() {
     done
 
     # Source the file to define the functions
-    source "$tmp_file"
+    # source "$tmp_file"
 
     # Clean up
-    rm "$tmp_file"
+    # rm "$tmp_file"
 }
 #@end_function
 

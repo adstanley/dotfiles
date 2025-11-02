@@ -5,6 +5,9 @@
 # Some aliases are functions
 # nvim is an alias to nvim.appimage if it exists
 
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
 # Filesystem Shortcuts
 #@Name: cd_drive
 #@Description: Change directory to a specified drive

@@ -14,4 +14,5 @@ disable=SC2034
 # read without -r
 disable=SC2162
 
+# Sourcing files that are not specified as input
 disable=SC1090
