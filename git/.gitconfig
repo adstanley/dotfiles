@@ -7,9 +7,23 @@
 [user]
   email = xander515@tampabay.rr.com
   name = sigmachad
+  # email = adstanley@ufl.edu
+  # name = Alexander
 [core]
   editor = nano
+  pager = delta
   excludesfile = ~/.gitignore_global
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true  # use n and N to move between diff sections
+    dark = true      # or light = true, or omit for auto-detection
+    side-by-side = true
+    line-numbers = true
+    syntax-theme = Solarized (dark)
+    file-style = syntax # or "plain"
+[merge]
+    conflictStyle = zdiff3
 [alias]
   st = status
   co = checkout
