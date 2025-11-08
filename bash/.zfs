@@ -23,6 +23,53 @@ alias df='df -h'
 alias du='du -hs'
 alias free='free -m'
 
+#@Name: example
+#@Description: example function
+#@Arguments: None
+#@Usage: example
+#@define help information
+FUNCTION_HELP[zfs_list]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
+#@begin_function zfs_list
+function zfs_list()
+{
+	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
+			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
+		else
+			echo "Help not available for function: ${FUNCNAME[0]}" >&2
+			return 2
+		fi
+		return 0
+	fi
+
+	if [ -n "$1" ]; then
+		zfs list "$1"
+		zfs list -t snapshot "$1"
+	fi
+
+	# one-liner
+	# { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
+}
+#@end_function
+
 #@Name: zfs_alias
 #@Description: Create functions to change directory to ZFS mountpoints
 #@Arguments: None

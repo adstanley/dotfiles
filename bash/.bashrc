@@ -232,6 +232,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
+
 function example()
 {
 	#####################
@@ -283,15 +284,7 @@ EOF
 #@begin_function
 function ls()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	if [ "$LS_COMMAND" = "eza" ]; then
 		eza --all --long --header --git --icons --group-directories-first --color=always "$@"
@@ -323,15 +316,7 @@ EOF
 #@begin_function
 function cdir()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	cd "${_%/*}" || return
 }
@@ -359,15 +344,7 @@ EOF
 #@begin_function countfields
 function countfields()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	# if $1 is empty, use "*"
 	local target_dir="${1:-*}"
@@ -395,15 +372,7 @@ EOF
 #@begin_function dupebyname
 function dupebyname()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
@@ -428,15 +397,7 @@ EOF
 function ownroot()
 {
 
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	# "${1:-.}" = if $1 is empty, use current dir "."
 	local target_dir="${1:-.}"
@@ -493,16 +454,7 @@ EOF
 #@begin_function mod775
 function mod775()
 {
-
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	# "${1:-.}" = if $1 is empty, use "."
 	local target_dir="${1:-.}"
@@ -518,53 +470,6 @@ function mod775()
 }
 #@end_function
 
-# Name: git_shallow
-# Description: Shallow clone a git repository
-# Arguments: [clone] [url]
-# Usage: git_shallow clone [url]
-#@begin_function git_shallow
-function git_shallow()
-{
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
-
-	if [ "$1" = "clone" ]; then
-		shift 1
-		command git clone --depth=1 "$@"
-	else
-		command git "$@"
-	fi
-}
-#@end_function
-
-# Name: git_branch
-# Description: Shows current git branch
-# Arguments: None
-# Usage: git_branch
-#@begin_function
-function git_branch()
-{
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
-
-	git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
-}
-#@end_function
-
 # Name: mv_check
 # Description: Function for checking syntax of mv command
 # Arguments: [source] [destination]
@@ -572,15 +477,7 @@ function git_branch()
 #@begin_function mv_check
 function mv_check()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	# check if -t flag is present as this modifies the number of arguments we expect
 	if [ "$1" = "-t" ]; then
@@ -1790,65 +1687,10 @@ EXAMPLES
 
 EOF
 )
-#@begin_function zfs_list
-function zfs_list()
-{
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
-
-	if [ -n "$1" ]; then
-		zfs list "$1"
-		zfs list -t snapshot "$1"
-	fi
-
-	# one-liner
-	# { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
-}
-#@end_function
-
-#@Name: example
-#@Description: example function
-#@Arguments: None
-#@Usage: example
-#@define help information
-FUNCTION_HELP[example]=$(
-	cat <<'EOF'
-NAME
-    function_name - Short description of the function
-
-DESCRIPTION
-    A longer description of the function, explaining what it does and how to use it.
-
-USAGE
-    function_name [OPTIONS]
-
-OPTIONS
-    -h, --help
-        Show this help message and exit.
-
-EXAMPLES
-
-EOF
-)
 #@begin_function moveTemplate
 function moveTemplate()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	local -a local="$1"
 	for ((i = 0; i < "${#local[@]}"; i++)); do
@@ -1889,15 +1731,7 @@ EOF
 #@begin_function rclone_move
 function rclone_move()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	handle_help "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1968,71 +1802,127 @@ DESCRIPTION
     It ensures that the destination is not a critical system directory and that the source is readable.
 
 USAGE
-    copyacl [SOURCE] [DESTINATION]
+    Usage: copyacl [OPTIONS] [SOURCE] [DESTINATION]
     If SOURCE is not provided, it defaults to /mnt/spool/SABnzbd/.
     If DESTINATION is not provided, it defaults to the current working directory.
 
 OPTIONS
-    -h, --help
-        Show this help message and exit.
+    -h, --help			   Show this help message and exit.
+	-s, --source=PATH      Source directory (default: /mnt/spool/SABnzbd/)
+  	-d, --dest=PATH        Destination directory (default: current directory)
 
 EXAMPLES
+  copyacl
+  copyacl -d /path/to/target
+  copyacl /other/source /my/target
+  copyacl --source=/src --dest=/dst
 
 EOF
 )
 #@begin_function
-copyacl()
+function copyacl()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+    # Defaults
+    local source="/mnt/spool/SABnzbd/"
+    local destination
+	destination="$(pwd)"
 
-	local source="${1:-/mnt/spool/SABnzbd/}"
-	local destination="${2:-$(pwd)}"
+    # Reset getopts in case it was used before
+    unset OPTIND
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                handle_help "$@" && return 0
+                ;;
+            -s|--source)
+                [[ -z "$2" ]] && echo "Error: --source requires an argument" >&2 && return 1
+                source="$2"
+                shift 2
+                ;;
+            --source=*)
+                source="${1#*=}"
+                shift
+                ;;
+            -d|--dest)
+                [[ -z "$2" ]] && echo "Error: --dest requires an argument" >&2 && return 1
+                destination="$2"
+                shift 2
+                ;;
+            --dest=*)
+                destination="${1#*=}"
+                shift
+                ;;
+            -s*)  # Handle -s/path (combined short option)
+                source="${1#-s}"
+                [[ -z "$source" ]] && { echo "Error: -s requires an argument" >&2; return 1; }
+                shift
+                ;;
+            -d*)
+                destination="${1#-d}"
+                [[ -z "$destination" ]] && { echo "Error: -d requires an argument" >&2; return 1; }
+                shift
+                ;;
+            *)  # Positional arguments (only if not already set via flags)
+                if [[ "$source" == "/mnt/spool/SABnzbd/" && "$destination" == "$(pwd)" ]]; then
+                    # First positional = source, second = dest
+                    if [[ -n "$1" && -n "$2" ]]; then
+                        source="$1"
+                        destination="$2"
+                        shift 2
+                    elif [[ -n "$1" ]]; then
+                        # Only one positional → treat as destination (common pattern)
+                        destination="$1"
+                        shift
+                    fi
+                else
+                    echo "Error: Unexpected positional argument: $1" >&2
+                    echo "$USAGE" >&2
+                    return 1
+                fi
+                ;;
+        esac
+    done
 
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		return 0
-	fi
+    # Final fallback: if only destination was given positionally and source is still default
+    # (this allows: copyacl /my/target   → uses default source, sets new dest)
 
-	# Resolve destination to absolute path for accurate checking
-	destination=$(readlink -f "$destination")
+    # Resolve absolute path
+    destination=$(readlink -f "$destination") || return 1
 
-	# Protection from operating in critical directories
-	case "$destination" in
-	/ | /boot | /home | /root | /etc | /var | /var/log | /usr | /bin | /sbin | /lib | /lib64 | /dev | /proc | /sys | /tmp | /opt | /srv | /media | /mnt)
-		echo "Error: Refusing to modify ACLs in critical directory '$destination'" >&2
-		return 1
-		;;
-	esac
+    # Safety check - prevent damage to system dirs
+    case "$destination" in
+        /|/boot|/home|/root|/etc|/var|/var/log|/usr|/bin|/sbin|/lib|/lib64|/dev|/proc|/sys|/tmp|/opt|/srv|/media|/mnt)
+            echo "Error: Refusing to modify ACLs in critical system directory '$destination'" >&2
+            return 1
+            ;;
+    esac
 
-	# Check if source exists and is readable
-	if [[ ! -r "$source" ]]; then
-		echo "Error: Cannot read source '$source'" >&2
-		return 1
-	fi
+    # Validate source exists and is readable
+    if [[ ! -d "$source" ]]; then
+        echo "Error: Source directory '$source' does not exist" >&2
+        return 1
+    fi
+    if [[ ! -r "$source" ]]; then
+        echo "Error: Source directory '$source' is not readable" >&2
+        return 1
+    fi
 
-	# Check if destination exists
-	if [[ ! -d "$destination" ]]; then
-		echo "Error: Destination '$destination' does not exist or is not a directory" >&2
-		return 1
-	fi
+    # Validate destination
+    if [[ ! -d "$destination" ]]; then
+        echo "Error: Destination '$destination' is not a directory" >&2
+        return 1
+    fi
 
-	echo "Copying ACLs from '$source' to '$destination'..."
+    echo "Copying ACLs from '$source' to '$destination'..."
 
-	if getfacl -p "$source" | setfacl -R --set-file=- "$destination"; then
-		echo "ACLs copied successfully"
-		chmod -R -v 775 "$destination"
-	else
-		echo "Error copying ACLs" >&2
-		return 1
-	fi
+    # Actually copy the ACLs
+    if getfacl -R -p "$source" | setfacl -R --set-file=- "$destination"; then
+        echo "ACLs copied successfully from '$source' to '$destination'"
+        return 0
+    else
+        echo "Failed to copy ACLs" >&2
+        return 1
+    fi
 }
 #@end_function
 
@@ -2061,7 +1951,7 @@ EXAMPLES
 
 EOF
 )
-catalog_dir()
+function catalog_dir()
 {
 	local dir="${1:-.}"
 	local output="${2:-directory_catalog.txt}"
@@ -2111,18 +2001,9 @@ EXAMPLES
         Shows the type of the `ls` command.
 EOF
 )
-
 function type()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[type]}" ]]; then
-			echo "${FUNCTION_HELP[type]}"
-		else
-			echo "Help not available for function: type" >&2
-			return 2
-		fi
-		return 0
-	fi
+ 	handle_help "$@" && return 0
 	command type "$@" | bat -l sh
 }
 
