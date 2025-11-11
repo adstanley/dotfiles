@@ -23,7 +23,7 @@ declare -A FUNCTION_HELP
 declare -a modular_files=(
 	".bash_aliases"
 	".bash_completion"
-	# "bash_functions"
+	".bash_functions"
 	".colors"
 	".find"
 	".git"
@@ -250,7 +250,7 @@ function example()
 	fi
 
 	# Indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 	#####################
 
 	# Example function code here
@@ -284,7 +284,7 @@ EOF
 #@begin_function
 function ls()
 {
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ "$LS_COMMAND" = "eza" ]; then
 		eza --all --long --header --git --icons --group-directories-first --color=always "$@"

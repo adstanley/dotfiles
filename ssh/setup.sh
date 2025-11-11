@@ -6,6 +6,6 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 if [ -d "$HOME/.ssh" ]; then
-  echo "~/.ssh already exists. Exiting to avoid overwriting existing SSH configuration."
+  echo "${HOME}/.ssh already exists. Exiting to avoid overwriting existing SSH configuration."
   exit 1
 fi
