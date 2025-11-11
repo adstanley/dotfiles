@@ -235,9 +235,10 @@ EOF
 
 function example()
 {
-	#####################
+	######################################################################
 	# Pick One
-	#####################
+	######################################################################
+
 	# Direct help check
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -248,21 +249,25 @@ function example()
 		fi
 		return 0
 	fi
+	######################################################################
 
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
-	#####################
+
+	######################################################################
 
 	# Example function code here
 	echo "This is an example function."
+
+	######################################################################
 }
 #@end_function
 
-#@name ls
+#@name ls_old
 #@description Determine if eza or ls should be used
-#@usage ls
+#@usage ls_old
 #@define help information
-FUNCTION_HELP[ls]=$(
+FUNCTION_HELP[ls_old]=$(
 	cat <<'EOF'
 NAME
     ls - list directory contents
@@ -282,8 +287,9 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function ls()
+function ls_old()
 {
+	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ "$LS_COMMAND" = "eza" ]; then
@@ -293,6 +299,63 @@ function ls()
 	elif [ "$LS_COMMAND" = "ls" ]; then
 		command ls -lahg --color=always --group-directories-first "$@"
 	fi
+}
+#@end_function
+
+FUNCTION_HELP[ls]=$(
+    cat <<'EOF'
+NAME
+    ls - Enhanced directory listing with fallback support
+
+DESCRIPTION
+    A smart wrapper around eza, exa, or native ls. Uses $LS_COMMAND to decide
+    which tool to use. Provides consistent formatting with icons, git status,
+    and color.
+
+USAGE
+    ls [options] [path]
+
+OPTIONS
+    --help, -h
+        Show this help message
+    All other options are passed to the underlying command (eza/exa/ls)
+
+EXAMPLES
+    ls
+        List current directory with enhanced view
+    ls -l
+        Pass -l to underlying tool
+    ls --help
+        Show this message
+
+CONFIGURATION
+    Set LS_COMMAND=eza  (or exa, ls) to control behavior
+EOF
+)
+#@begin_function
+function ls()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	local cmd
+	case "$LS_COMMAND" in
+	eza)
+		cmd="eza --all --long --header --git --icons --group-directories-first --color=always"
+		;;
+	exa)
+		cmd="exa --all --long --header --git --icons --group-directories-first --color=always"
+		;;
+	ls | "")
+		cmd="command ls -lahg --color=always --group-directories-first"
+		;;
+	*)
+		echo "Unknown LS_COMMAND: $LS_COMMAND, falling back to ls" >&2
+		cmd="command ls -lahg --color=always --group-directories-first"
+		;;
+	esac
+
+	eval "$cmd \"\$@\""
 }
 #@end_function
 
@@ -316,7 +379,8 @@ EOF
 #@begin_function
 function cdir()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	cd "${_%/*}" || return
 }
@@ -344,7 +408,8 @@ EOF
 #@begin_function countfields
 function countfields()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# if $1 is empty, use "*"
 	local target_dir="${1:-*}"
@@ -372,7 +437,8 @@ EOF
 #@begin_function dupebyname
 function dupebyname()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
@@ -397,7 +463,8 @@ EOF
 function ownroot()
 {
 
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# "${1:-.}" = if $1 is empty, use current dir "."
 	local target_dir="${1:-.}"
@@ -454,7 +521,8 @@ EOF
 #@begin_function mod775
 function mod775()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# "${1:-.}" = if $1 is empty, use "."
 	local target_dir="${1:-.}"
@@ -477,7 +545,8 @@ function mod775()
 #@begin_function mv_check
 function mv_check()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# check if -t flag is present as this modifies the number of arguments we expect
 	if [ "$1" = "-t" ]; then
@@ -543,15 +612,9 @@ function mv_check()
 #@begin_function rclonemove
 function rclonemove()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
 	# Check number of arguments
 	if [ $# -ne 2 ]; then
 		printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
@@ -593,15 +656,9 @@ function rclonemove()
 #@begin_function rclonecopy
 function rclonecopy()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
 	# Check number of arguments
 	if [ $# -ne 2 ]; then
 		printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
@@ -641,15 +698,8 @@ function rclonecopy()
 #@begin_function bk
 function bk()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	cp "$1" "$1_$(date +"%Y-%m-%d_%H-%M-%S")".bk
 }
@@ -659,15 +709,8 @@ function bk()
 #@begin_function hexToAscii
 function hexToAscii()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	printf "\x%s" "$1"
 }
@@ -677,15 +720,8 @@ function hexToAscii()
 #@begin_function c2f
 function c2f()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	fc -lrn | head -1 >>"${1?}"
 }
@@ -699,7 +735,8 @@ function c2f()
 #@begin_function hist
 function hist()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local color="true"
 
@@ -726,15 +763,8 @@ function hist()
 #@begin_function 7zip
 function 7zip()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1"
 }
@@ -744,15 +774,8 @@ function 7zip()
 #@begin_function packs
 function packs()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	printf "extracting rar volumes with out leading zeros.\n"
 	{
@@ -769,15 +792,8 @@ function packs()
 #@begin_function extract
 function extract()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
 		# display usage if no parameters given
@@ -821,15 +837,8 @@ function extract()
 #@begin_function ex
 function ex()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
 		# display usage if no parameters given
@@ -865,15 +874,8 @@ function ex()
 #@begin_function up
 function up()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local d=""
 	local limit="$1"
@@ -897,15 +899,8 @@ function up()
 #@begin_function printargs
 function printargs()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	for ((i = 1; i <= $#; i++)); do
 		printf "Arg %d: %s\n" "$i" "${!i}"
@@ -917,15 +912,8 @@ function printargs()
 #@begin_function holds
 function holds()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
@@ -935,15 +923,8 @@ function holds()
 #@begin_function create_datasets
 function create_datasets()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local pool_name="$1"
 	shift # Remove the first argument (pool name)
@@ -973,15 +954,8 @@ function create_datasets()
 #@begin_function deletesnapshot
 function deletesnapshot()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1036,15 +1010,8 @@ EOF
 #@begin_function takesnapshot
 function takesnapshot_old()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1098,16 +1065,8 @@ EOF
 #@begin_function takesnapshot
 function takesnapshot()
 {
-	# Display help message if --help is provided
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if zfs command is available
 	if ! command -v zfs &>/dev/null; then
@@ -1194,15 +1153,8 @@ EOF
 #@begin_function getsnapshot
 function getsnapshot()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1253,15 +1205,8 @@ EOF
 #@begin_function getspace
 function getspace()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1310,15 +1255,8 @@ EOF
 #@begin_function findext
 function findext()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1332,15 +1270,8 @@ function findext()
 
 function extensions()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the directory is empty
 	if [ -d "$PWD" ]; then
@@ -1375,15 +1306,8 @@ EOF
 #@begin_function makeAlias
 function makeAlias()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ $# -eq 0 ]; then
 		echo "No arguments supplied. You need to pass an alias name"
@@ -1424,15 +1348,8 @@ EOF
 function insertDirectory()
 {
 
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		return 0
-	fi
-
-	if [ $# -ne 2 ]; then
-		printf "Usage: %s <file> <directory>\n" "${FUNCNAME[0]}"
-		return 1
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local filename insert
 	filename="$(realpath "$1")" || return 1
@@ -1501,6 +1418,7 @@ function flatten()
 	local current_dir
 	current_dir=$(pwd)
 
+	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	readarray -t subdirs < <(find "$current_dir" -type d ! -path "$current_dir")
@@ -1566,15 +1484,8 @@ EOF
 #@begin_function
 function remove_empty_dirs()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local current_dir
 	current_dir=$(pwd)
@@ -1638,15 +1549,8 @@ EOF
 #@begin_function
 function nested()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Simple version
 	# find "$(pwd)" -type d | awk -F'/' '{print $NF}' | sort | uniq -cd
@@ -1690,7 +1594,8 @@ EOF
 #@begin_function moveTemplate
 function moveTemplate()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	local -a local="$1"
 	for ((i = 0; i < "${#local[@]}"; i++)); do
@@ -1731,7 +1636,8 @@ EOF
 #@begin_function rclone_move
 function rclone_move()
 {
-	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Check if the input is empty
 	if [ -z "$1" ]; then
@@ -1822,107 +1728,114 @@ EOF
 #@begin_function
 function copyacl()
 {
-    # Defaults
-    local source="/mnt/spool/SABnzbd/"
-    local destination
+	# Defaults
+	local source="/mnt/spool/SABnzbd/"
+	local destination
 	destination="$(pwd)"
 
-    # Reset getopts in case it was used before
-    unset OPTIND
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -h|--help)
-                handle_help "$@" && return 0
-                ;;
-            -s|--source)
-                [[ -z "$2" ]] && echo "Error: --source requires an argument" >&2 && return 1
-                source="$2"
-                shift 2
-                ;;
-            --source=*)
-                source="${1#*=}"
-                shift
-                ;;
-            -d|--dest)
-                [[ -z "$2" ]] && echo "Error: --dest requires an argument" >&2 && return 1
-                destination="$2"
-                shift 2
-                ;;
-            --dest=*)
-                destination="${1#*=}"
-                shift
-                ;;
-            -s*)  # Handle -s/path (combined short option)
-                source="${1#-s}"
-                [[ -z "$source" ]] && { echo "Error: -s requires an argument" >&2; return 1; }
-                shift
-                ;;
-            -d*)
-                destination="${1#-d}"
-                [[ -z "$destination" ]] && { echo "Error: -d requires an argument" >&2; return 1; }
-                shift
-                ;;
-            *)  # Positional arguments (only if not already set via flags)
-                if [[ "$source" == "/mnt/spool/SABnzbd/" && "$destination" == "$(pwd)" ]]; then
-                    # First positional = source, second = dest
-                    if [[ -n "$1" && -n "$2" ]]; then
-                        source="$1"
-                        destination="$2"
-                        shift 2
-                    elif [[ -n "$1" ]]; then
-                        # Only one positional → treat as destination (common pattern)
-                        destination="$1"
-                        shift
-                    fi
-                else
-                    echo "Error: Unexpected positional argument: $1" >&2
-                    echo "$USAGE" >&2
-                    return 1
-                fi
-                ;;
-        esac
-    done
+	# Reset getopts in case it was used before
+	unset OPTIND
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+		-h | --help)
+			# Indirect help check
+			handle_help "${FUNCNAME[0]}" "$@" && return 0
+			;;
+		-s | --source)
+			[[ -z "$2" ]] && echo "Error: --source requires an argument" >&2 && return 1
+			source="$2"
+			shift 2
+			;;
+		--source=*)
+			source="${1#*=}"
+			shift
+			;;
+		-d | --dest)
+			[[ -z "$2" ]] && echo "Error: --dest requires an argument" >&2 && return 1
+			destination="$2"
+			shift 2
+			;;
+		--dest=*)
+			destination="${1#*=}"
+			shift
+			;;
+		-s*) # Handle -s/path (combined short option)
+			source="${1#-s}"
+			[[ -z "$source" ]] && {
+				echo "Error: -s requires an argument" >&2
+				return 1
+			}
+			shift
+			;;
+		-d*)
+			destination="${1#-d}"
+			[[ -z "$destination" ]] && {
+				echo "Error: -d requires an argument" >&2
+				return 1
+			}
+			shift
+			;;
+		*) # Positional arguments (only if not already set via flags)
+			if [[ "$source" == "/mnt/spool/SABnzbd/" && "$destination" == "$(pwd)" ]]; then
+				# First positional = source, second = dest
+				if [[ -n "$1" && -n "$2" ]]; then
+					source="$1"
+					destination="$2"
+					shift 2
+				elif [[ -n "$1" ]]; then
+					# Only one positional → treat as destination (common pattern)
+					destination="$1"
+					shift
+				fi
+			else
+				echo "Error: Unexpected positional argument: $1" >&2
+				echo "$USAGE" >&2
+				return 1
+			fi
+			;;
+		esac
+	done
 
-    # Final fallback: if only destination was given positionally and source is still default
-    # (this allows: copyacl /my/target   → uses default source, sets new dest)
+	# Final fallback: if only destination was given positionally and source is still default
+	# (this allows: copyacl /my/target   → uses default source, sets new dest)
 
-    # Resolve absolute path
-    destination=$(readlink -f "$destination") || return 1
+	# Resolve absolute path
+	destination=$(readlink -f "$destination") || return 1
 
-    # Safety check - prevent damage to system dirs
-    case "$destination" in
-        /|/boot|/home|/root|/etc|/var|/var/log|/usr|/bin|/sbin|/lib|/lib64|/dev|/proc|/sys|/tmp|/opt|/srv|/media|/mnt)
-            echo "Error: Refusing to modify ACLs in critical system directory '$destination'" >&2
-            return 1
-            ;;
-    esac
+	# Safety check - prevent damage to system dirs
+	case "$destination" in
+	/ | /boot | /home | /root | /etc | /var | /var/log | /usr | /bin | /sbin | /lib | /lib64 | /dev | /proc | /sys | /tmp | /opt | /srv | /media | /mnt)
+		echo "Error: Refusing to modify ACLs in critical system directory '$destination'" >&2
+		return 1
+		;;
+	esac
 
-    # Validate source exists and is readable
-    if [[ ! -d "$source" ]]; then
-        echo "Error: Source directory '$source' does not exist" >&2
-        return 1
-    fi
-    if [[ ! -r "$source" ]]; then
-        echo "Error: Source directory '$source' is not readable" >&2
-        return 1
-    fi
+	# Validate source exists and is readable
+	if [[ ! -d "$source" ]]; then
+		echo "Error: Source directory '$source' does not exist" >&2
+		return 1
+	fi
+	if [[ ! -r "$source" ]]; then
+		echo "Error: Source directory '$source' is not readable" >&2
+		return 1
+	fi
 
-    # Validate destination
-    if [[ ! -d "$destination" ]]; then
-        echo "Error: Destination '$destination' is not a directory" >&2
-        return 1
-    fi
+	# Validate destination
+	if [[ ! -d "$destination" ]]; then
+		echo "Error: Destination '$destination' is not a directory" >&2
+		return 1
+	fi
 
-    echo "Copying ACLs from '$source' to '$destination'..."
+	echo "Copying ACLs from '$source' to '$destination'..."
 
-    # Actually copy the ACLs
-    if getfacl -R -p "$source" | setfacl -R --set-file=- "$destination"; then
-        echo "ACLs copied successfully from '$source' to '$destination'"
-        return 0
-    else
-        echo "Failed to copy ACLs" >&2
-        return 1
-    fi
+	# Actually copy the ACLs
+	if getfacl -R -p "$source" | setfacl -R --set-file=- "$destination"; then
+		echo "ACLs copied successfully from '$source' to '$destination'"
+		return 0
+	else
+		echo "Failed to copy ACLs" >&2
+		return 1
+	fi
 }
 #@end_function
 
@@ -1955,6 +1868,9 @@ function catalog_dir()
 {
 	local dir="${1:-.}"
 	local output="${2:-directory_catalog.txt}"
+
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	{
 		echo "Catalog of $dir created on $(date)"
@@ -2003,7 +1919,9 @@ EOF
 )
 function type()
 {
- 	handle_help "$@" && return 0
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
 	command type "$@" | bat -l sh
 }
 
