@@ -32,14 +32,10 @@ GITHUB_DIR="$HOME/.github"
 DOTFILES_DIR="$GITHUB_DIR/dotfiles"
 
 # Dotfiles backup directory
-BACKUP_DIR="$HOME/.backup/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="$HOME/.backup/dotfiles_backup-$(date +%Y%m%d_%H%M%S)"
 
 # Dotfiles repo url
 REPO_URL="https://github.com/adstanley/dotfiles.git"
-
-# List of dotfiles to manage (format: target_file:source_subdir)
-# target_file is the file in $HOME, source_subdir is the folder in $DOTFILES_DIR
-#DOTFILES=".bashrc:bash .nanorc:nano .tmux.conf:tmux .nanorc:nano"
 
 # Check if repo exists locally, if not clone it
 if [ ! -d "$DOTFILES_DIR" ]; then
@@ -56,6 +52,14 @@ else
         echo "Error: Failed to update repository."
         exit 1
     }
+fi
+
+# Make backup directory if it doesn't exist
+if [ ! -d "$BACKUP_DIR" ]; then
+    if ! mkdir -p "$BACKUP_DIR"; then
+        printf "Error: Failed to create backup directory: '%s'\n" "$BACKUP_DIR"
+        exit 1
+    fi
 fi
 
 # Define dotfiles array
@@ -86,14 +90,6 @@ function restore_backup()
         printf "No valid backup found for %s, skipping restoration.\n" "$target_file"
     fi
 }
-
-# Make backup directory if it doesn't exist
-if [ -d "$BACKUP_DIR" ]; then
-    if ! mkdir -p "$BACKUP_DIR"; then
-        printf "Error: Failed to create backup directory: '%s'\n" "$BACKUP_DIR"
-        exit 1
-    fi
-fi
 
 # Process each dotfile in the array
 for target_file in "${!DOTFILES_ARRAY[@]}"; do

@@ -7,7 +7,7 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # remove all snap packages
-snap list | awk '{print $1}' | xargs -r snap remove
+snap list | awk '{print $1}' | xargs -r snap remove --purge
 
 # Remove snapd package
 echo "Removing snapd package..."

@@ -3,15 +3,95 @@
 #################################################################################
 
 ## Bash history
-HISTCONTROL=ignoredups:erasedups                 # don't put duplicate lines in the history.
-HISTSIZE='INFINITE'                              # set history length, non integer values set history to infinite
-HISTFILESIZE='STONKS'                            # set file size, non integer values set history to infinite
-HISTTIMEFORMAT="%F %T "                          # set history time format, %F = full date, %T = time
-HISTFILE="${HOME}/.bash_history"                 # set history file location
-HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*" # ignore these midnight commander entries
+HISTCONTROL=ignoredups:erasedups                            # don't put duplicate lines in the history.
+HISTSIZE='INFINITE'                                         # set history length, non integer values set history to infinite
+HISTFILESIZE='STONKS'                                       # set file size, non integer values set history to infinite
+HISTTIMEFORMAT="%F %T "                                     # set history time format, %F = full date, %T = time
+HISTFILE="${HOME}/.bash_history"                            # set history file location
+HISTBACKUPDIR="${HOME}/.bash_history_backups"               # set history backup directory
+HISTFILEBACKUP="${HOME}/${HISTBACKUPDIR}/.bash_history.bak" # set history backup file location
+HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*"            # ignore these midnight commander entries
 
+## History options
 shopt -s histappend # append to the history file, don't overwrite it
 shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
 
-# Backup history file
-# cp "${HISTFILE}" "${HISTFILE}.bak"
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
+#@Name: backup_history
+#@Description: Backup bash history file
+#@Usage: backup_history
+FUNCTION_HELP[backup_history]=$(
+    cat <<'EOF'
+NAME
+    backup_history - Backup bash history file
+DESCRIPTION
+    Creates a backup copy of the current bash history file in a designated backup directory.
+USAGE
+    backup_history
+EOF
+)
+#@begin_function backup_history
+function backup_history()
+{
+    # Backup history file
+    if [ ! -d "${HISTBACKUPDIR}" ]; then
+        mkdir -p "${HISTBACKUPDIR}"
+    fi
+
+    cp "${HISTFILE}" "${HISTFILEBACKUP}" 2>/dev/null
+}
+#@end_function
+
+#@name hist
+#@description Search bash history with colorized output
+#@usage hist [search_term]
+#@example hist ssh
+#@begin_function hist
+function hist_old()
+{
+    # Indirect help check
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+    local color="true"
+
+    if [ -z "$1" ]; then
+        history
+        return 0
+    fi
+
+    if [ $color == "false" ]; then
+        history | grep "$1"
+        return 0
+    else
+        history | grep "$1" | awk '
+        {
+            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
+        }'
+    fi
+
+}
+#@end_function
+
+function hist()
+{
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
+    local color="true"
+    if [ -z "$1" ]; then
+        history
+        return 0
+    fi
+    if [ $color == "false" ]; then
+        # Use grep with color for simple highlight (as intended)
+        history | grep --color=auto "$1"
+        return 0
+    else
+        # Use grep for simple text filtering ONLY, then let awk apply ALL colors
+        history | grep "$1" | awk '
+        {
+            # Apply color codes for: History Number (1;34m), Timestamp (1;36m), Command (1;32m)
+            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
+        }'
+    fi
+}

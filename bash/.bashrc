@@ -11,10 +11,26 @@
 #                                            Chet Manley  #
 ###########################################################
 # Bashrc
-#
+
 # Declare associative array for function help
 declare -A FUNCTION_HELP
-#
+
+## If not running interactively, don't do anything
+# This prevents functions, aliases, and paths from being loaded 
+# unnecessarily by non-interactive shells (like scripts or sftp sessions).
+[[ $- != *i* ]] && return
+
+#################################################################################
+#####                                ENV                                    #####
+#################################################################################
+## nvim as default editor
+if command -v nvim >/dev/null 2>&1; then
+	export EDITOR="nvim"
+else
+	export EDITOR="nano"
+fi
+
+
 #################################################################################
 #                       Change to Modular Structure                             #
 #################################################################################
@@ -49,17 +65,17 @@ for file in "${modular_files[@]}"; do
 done
 unset file
 
+
 #################################################################################
 #####                             Path                                      #####
 #################################################################################
 
-## If not running interactively, don't do anything
-[[ $- != *i* ]] && return
-
 # Custom PATH additions
 declare -a path_array=(
 	"${HOME}/.bin"
+	"${HOME}/.local/bin"
 	"${HOME}/.appimage"
+	"${HOME}/.applications"
 	"${HOME}/.cargo/bin"
 	"${HOME}/.local/share/fnm"
 )
@@ -116,8 +132,8 @@ function get_bat_command()
 
 ## "bat" as manpager
 if command -v batcat >/dev/null 2>&1; then
-	MANPAGER=$(get_bat_command)
-	export MANPAGER
+	bat_command=$(get_bat_command)
+	export MANPAGER=
 else
 	export MANPAGER="less"
 fi
@@ -126,8 +142,15 @@ fi
 #####                             LS/EXA                                    #####
 #################################################################################
 
-# Figure out if eza or exa is installed, if not fall back on ls
-get_ls_command()
+#######################################
+# Figure out if exa or eza is installed,
+# if not fall back on ls.
+# Globals:
+#   None
+# Arguments:
+#   None
+#######################################
+function get_ls_command()
 {
 	local commands=("eza" "exa")
 	for cmd in "${commands[@]}"; do
@@ -143,16 +166,6 @@ get_ls_command()
 
 LS_COMMAND=$(get_ls_command)
 export LS_COMMAND
-
-#################################################################################
-#####                               NVIM                                    #####
-#################################################################################
-## nvim as default editor
-if command -v nvim >/dev/null 2>&1; then
-	export EDITOR="nvim"
-else
-	export EDITOR="nano"
-fi
 
 #################################################################################
 #####                           Terminal Title                              #####
@@ -200,249 +213,6 @@ fi
 #################################################################################
 #                                    Functions                                  #
 #################################################################################
-
-alias bathelp='bat --plain --language=help'
-help()
-{
-	"$@" --help 2>&1 | bathelp
-}
-
-#@Name: example
-#@Description: example function
-#@Arguments: None
-#@Usage: example
-#@define help information
-FUNCTION_HELP[example]=$(
-	cat <<'EOF'
-NAME
-    function_name - Short description of the function
-
-DESCRIPTION
-    A longer description of the function, explaining what it does and how to use it.
-
-USAGE
-    function_name [OPTIONS]
-
-OPTIONS
-    -h, --help
-        Show this help message and exit.
-
-EXAMPLES
-
-EOF
-)
-#@begin_function
-
-function example()
-{
-	######################################################################
-	# Pick One
-	######################################################################
-
-	# Direct help check
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
-	######################################################################
-
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	######################################################################
-
-	# Example function code here
-	echo "This is an example function."
-
-	######################################################################
-}
-#@end_function
-
-#@name ls_old
-#@description Determine if eza or ls should be used
-#@usage ls_old
-#@define help information
-FUNCTION_HELP[ls_old]=$(
-	cat <<'EOF'
-NAME
-    ls - list directory contents
-
-DESCRIPTION
-    List information about files and directories, using eza if available.
-
-USAGE
-    ls [OPTIONS] [FILE]...
-
-OPTIONS
-    Same options as eza or ls depending on which is available.
-    Add --help or -h to see this help message.
-
-EXAMPLES
-    ls -la ~/Documents
-EOF
-)
-#@begin_function
-function ls_old()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [ "$LS_COMMAND" = "eza" ]; then
-		eza --all --long --header --git --icons --group-directories-first --color=always "$@"
-	elif [ "$LS_COMMAND" = "exa" ]; then
-		exa --all --long --header --git --icons --group-directories-first --color=always "$@"
-	elif [ "$LS_COMMAND" = "ls" ]; then
-		command ls -lahg --color=always --group-directories-first "$@"
-	fi
-}
-#@end_function
-
-FUNCTION_HELP[ls]=$(
-    cat <<'EOF'
-NAME
-    ls - Enhanced directory listing with fallback support
-
-DESCRIPTION
-    A smart wrapper around eza, exa, or native ls. Uses $LS_COMMAND to decide
-    which tool to use. Provides consistent formatting with icons, git status,
-    and color.
-
-USAGE
-    ls [options] [path]
-
-OPTIONS
-    --help, -h
-        Show this help message
-    All other options are passed to the underlying command (eza/exa/ls)
-
-EXAMPLES
-    ls
-        List current directory with enhanced view
-    ls -l
-        Pass -l to underlying tool
-    ls --help
-        Show this message
-
-CONFIGURATION
-    Set LS_COMMAND=eza  (or exa, ls) to control behavior
-EOF
-)
-#@begin_function
-function ls()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	local cmd
-	case "$LS_COMMAND" in
-	eza)
-		cmd="eza --all --long --header --git --icons --group-directories-first --color=always"
-		;;
-	exa)
-		cmd="exa --all --long --header --git --icons --group-directories-first --color=always"
-		;;
-	ls | "")
-		cmd="command ls -lahg --color=always --group-directories-first"
-		;;
-	*)
-		echo "Unknown LS_COMMAND: $LS_COMMAND, falling back to ls" >&2
-		cmd="command ls -lahg --color=always --group-directories-first"
-		;;
-	esac
-
-	eval "$cmd \"\$@\""
-}
-#@end_function
-
-#@name cdir
-#@description cd into the last files directory
-#@usage cdir
-#@example cdir
-#@define help information
-FUNCTION_HELP[cdir]=$(
-	cat <<'EOF'
-NAME
-    cdir - change directory to the last file's directory
-DESCRIPTION
-    Change the current directory to the directory of the last file used in the command line.
-USAGE
-    cdir
-EXAMPLES
-    cdir
-EOF
-)
-#@begin_function
-function cdir()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	cd "${_%/*}" || return
-}
-
-#@Name: countfields
-#@Description: Count the number of fields in a directory name
-#@Arguments: [directory]
-#@Usage: countfields [directory]
-#@define help information
-FUNCTION_HELP[countfields]=$(
-	cat <<'EOF'
-NAME
-    countfields - Count the number of fields in a directory name
-DESCRIPTION
-    Count the number of fields in a directory name, separated by dots.
-    This is useful for identifying the number of fields in a directory name.
-USAGE
-    countfields [DIRECTORY]
-EXAMPLES
-    countfields /path/to/directory
-    countfields .
-    countfields *
-EOF
-)
-#@begin_function countfields
-function countfields()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	# if $1 is empty, use "*"
-	local target_dir="${1:-*}"
-
-	find -- "$target_dir" -maxdepth 0 -type d | awk -F"." '{print NF, $0}' | sort -nr | uniq -c
-}
-#@end_function
-
-#@Name: dupebyname
-#@Description: This is an example function
-#@Usage: dupebyname [argument]
-#@define help information
-FUNCTION_HELP[dupebyname]=$(
-	cat <<'EOF'
-NAME
-    example - This is an example function
-USAGE
-    dupebyname [DIRECTORY]
-EXAMPLES
-    dupebyname /path/to/directory
-    dupebyname .
-    dupebyname *
-EOF
-)
-#@begin_function dupebyname
-function dupebyname()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
-}
-#@end_function
 
 #@Name: ownroot
 #@Description: Change ownership to root
@@ -538,337 +308,7 @@ function mod775()
 }
 #@end_function
 
-# Name: mv_check
-# Description: Function for checking syntax of mv command
-# Arguments: [source] [destination]
-# Usage: mv_check [source] [destination]
-#@begin_function mv_check
-function mv_check()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-	# check if -t flag is present as this modifies the number of arguments we expect
-	if [ "$1" = "-t" ]; then
-		if [ $# -lt 3 ]; then
-			printf "<<< ERROR: with -t flag, must have at least 3 arguments, but %s given\n" "$#" >&2
-			return 1
-		fi
-
-		target_dir="$2"
-		shift 2
-
-		# check if target directory exists
-		if [ ! -d "$target_dir" ]; then
-			printf "<<< ERROR: target directory %s doesn't exist\n" "$target_dir" >&2
-			return 1
-		fi
-
-		for src in "$@"; do
-			if ! readlink -e "$src" >/dev/null; then
-				printf "<<< ERROR: %s doesn't exist\n" "$src" >&2
-				return 1
-			fi
-			printf "Moving %s into %s directory\n" "$src" "$target_dir"
-		done
-
-		# Execute the move command with -t flag
-		mv -t "$target_dir" "$@"
-		return $?
-
-	else
-		# check number of arguments
-		if [ $# -ne 2 ]; then
-			printf "<<< ERROR: must have 2 arguments, but %d given\n" "$#" >&2
-			return 1
-		fi
-
-		src="$1"
-		dest="$2"
-
-		# check source
-		if ! readlink -e "$src" >/dev/null; then
-			printf "<<< ERROR: %s doesn't exist\n" "$src" >&2
-			return 1
-		fi
-
-		# check destination
-		if [ -d "$dest" ]; then
-			printf "Moving %s into %s directory\n" "$src" "$dest"
-		else
-			printf "Renaming %s to %s\n" "$src" "$dest"
-		fi
-
-		# Execute the move command
-		mv "$src" "$dest"
-		return $?
-	fi
-}
-
-# Name: rclonemove
-# Description: Move files using rclone
-# Arguments: [source] [destination]
-# Usage: rclonemove [source] [destination]
-#@begin_function rclonemove
-function rclonemove()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	# Check number of arguments
-	if [ $# -ne 2 ]; then
-		printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
-		return 1
-	fi
-
-	# Check if source exists
-	local source
-	if ! source=$(readlink -e "$1"); then
-		printf "<<< ERROR: Source \"%s\" doesn't exist or is not accessible.\n" "$1" >&2
-		return 1
-	fi
-
-	local destination="$2"
-	local parent_dir
-	parent_dir=$(dirname "$destination")
-
-	# Check if parent directory of destination exists
-	if [ ! -d "$parent_dir" ]; then
-		printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
-		read -p "Do you want to create it? (y/n): " -n 1 -r
-
-		# Move to a new line
-		echo
-		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			mkdir -p "$parent_dir"
-		else
-			printf "Operation cancelled.\n"
-			return 1
-		fi
-	fi
-
-	printf "Moving \"%s\" to \"%s\".\n" "$source" "$destination"
-	rclone move -P --ignore-existing --checkers 4 --transfers 4 --order-by size,mixed,75 "$source" "$destination"
-}
-#@end_function
-
-# Copy Function
-#@begin_function rclonecopy
-function rclonecopy()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	# Check number of arguments
-	if [ $# -ne 2 ]; then
-		printf "<<< ERROR: Must have 2 arguments, but %d given.\n" "$#" >&2
-		return 1
-	fi
-
-	# Check if source exists
-	local source
-	if ! source=$(readlink -e "$1"); then
-		printf "<<< ERROR: Source \"%s\" doesn't exist or is not accessible.\n" "$1" >&2
-		return 1
-	fi
-
-	local destination="$2"
-	local parent_dir
-	parent_dir=$(dirname "$destination")
-
-	# Check if parent directory of destination exists
-	if [ ! -d "$parent_dir" ]; then
-		printf "Parent directory of destination \"%s\" doesn't exist.\n" "$parent_dir"
-		read -p "Do you want to create it? (y/n): " -n 1 -r
-		echo # Move to a new line
-		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			mkdir -p "$parent_dir"
-		else
-			printf "Operation cancelled.\n"
-			return 1
-		fi
-	fi
-
-	printf "Copying \"%s\" to \"%s\".\n" "$source" "$destination"
-	rclone copy -P --ignore-existing --transfers 4 --order-by size,mixed,75 "$source" "$destination"
-}
-#@end_function
-
-# Function to backup file by appending .bk to the end of the file name
-#@begin_function bk
-function bk()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	cp "$1" "$1_$(date +"%Y-%m-%d_%H-%M-%S")".bk
-}
-#@end_function
-
-# Function to convert hex to Asciic
-#@begin_function hexToAscii
-function hexToAscii()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	printf "\x%s" "$1"
-}
-#@end_function
-
-# idk man
-#@begin_function c2f
-function c2f()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	fc -lrn | head -1 >>"${1?}"
-}
-#@end_function
-
-# Get history
-#@name hist
-#@description Search bash history with colorized output
-#@usage hist [search_term]
-#@example hist ssh
-#@begin_function hist
-function hist()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	local color="true"
-
-	if [ -z "$1" ]; then
-		history
-		return 0
-	fi
-
-	if [ $color == "false" ]; then
-		history | grep "$1"
-		return 0
-	else
-		history | grep "$1" | awk '
-        {
-            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
-        }'
-	fi
-
-}
-#@end_function
-
-# Create a .7z compressed file with maximum compression
-# Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
-#@begin_function 7zip
-function 7zip()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1"
-}
-#@end_function
-
-# Function to extract rar files from incomplete or broken NZB downloads
-#@begin_function packs
-function packs()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	printf "extracting rar volumes with out leading zeros.\n"
-	{
-		unrar e '*part1.rar' >/dev/null
-	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
-	printf "extracting rar volumes with leading zeros.\n"
-	{
-		unrar e '*part01.rar' >/dev/null
-	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
-}
-#@end_function
-
-# Simple function to identify the type of compression used on a file and extract accordingly
-#@begin_function extract
-function extract()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
-		# display usage if no parameters given
-		echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
-		echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
-		return 1
-	else
-		for n in "$@"; do
-			if [ -f "${n}" ]; then #[[ -f FILE ]]	File
-				case "${n%,}" in
-				*.tar.bz2 | *.tar.gz | *.tar.xz | *.tbz2 | *.tgz | *.txz | *.tar)
-					tar xvf "${n}"
-					;;
-				*.lzma) unlzma ./"${n}" ;;
-				*.bz2) bunzip2 ./"${n}" ;;
-				*.rar) unrar x -ad ./"${n}" ;;
-				*.gz) gunzip ./"${n}" ;;
-				*.zip) unzip -d "${n%.zip}"./"${n}" ;;
-				*.z) uncompress ./"${n}" ;;
-				*.7z | *.arj | *.cab | *.chm | *.deb | *.dmg | *.iso | *.lzh | *.msi | *.rpm | *.udf | *.wim | *.xar)
-					7z x ./"${n}"
-					;;
-				*.xz) unxz ./"${n}" ;;
-				*.exe) cabextract ./"${n}" ;;
-				*)
-					echo "extract: '${n}' - unknown archive method"
-					return 1
-					;;
-				esac
-			else
-				echo "'${n}' - file does not exist"
-				return 1
-			fi
-		done
-	fi
-}
-#@end_function
-
-### ARCHIVE EXTRACTION
-# usage: ex <file>
-#@begin_function ex
-function ex()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
-		# display usage if no parameters given
-		echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
-		echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
-		return 1
-	else
-		case $1 in
-		*.tar.bz2) tar xjf "$1" ;;
-		*.tar.gz) tar xzf "$1" ;;
-		*.bz2) bunzip2 "$1" ;;
-		*.rar) unrar x "$1" ;;
-		*.gz) gunzip "$1" ;;
-		*.tar) tar xf "$1" ;;
-		*.tbz2) tar xjf "$1" ;;
-		*.tgz) tar xzf "$1" ;;
-		*.zip) unzip "$1" ;;
-		*.Z) uncompress "$1" ;;
-		*.7z) 7zz x "$1" ;;
-		*.deb) ar x "$1" ;;
-		*.tar.xz) tar xf "$1" ;;
-		*.tar.zst) unzstd "$1" ;;
-		*)
-			echo "extract: '$1' - unknown archive method"
-			return 1
-			;;
-		esac
-	fi
-}
-#@end_function
 
 # navigation
 #@begin_function up

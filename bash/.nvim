@@ -1,6 +1,10 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
+#################################################################################
+#####                               NVIM                                    #####
+#################################################################################
+
 #@Name: nvim
 #@Description: Launch best available Neovim installation
 #@Usage: nvim [options] [files...]

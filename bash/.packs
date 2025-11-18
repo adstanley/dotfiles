@@ -1,0 +1,118 @@
+#################################################################################
+#####                               RAR                                     #####
+#################################################################################
+
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
+# Create a .7z compressed file with maximum compression
+# Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"
+#@begin_function 7zip
+function 7zip()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -mhe=on "$2" "$1"
+}
+#@end_function
+
+# Function to extract rar files from incomplete or broken NZB downloads
+#@begin_function packs
+function packs()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	printf "extracting rar volumes with out leading zeros.\n"
+	{
+		unrar e '*part1.rar' >/dev/null
+	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
+	printf "extracting rar volumes with leading zeros.\n"
+	{
+		unrar e '*part01.rar' >/dev/null
+	} 2>&1 # capture stdout and stderr, redirect stderr to stdout and stdout to /dev/null
+}
+#@end_function
+
+# Simple function to identify the type of compression used on a file and extract accordingly
+#@begin_function extract
+function extract()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	if [ -z "$1" ]; then #[[ -z STRING ]]	Empty string
+		# display usage if no parameters given
+		echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
+		echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
+		return 1
+	else
+		for n in "$@"; do
+			if [ -f "${n}" ]; then #[[ -f FILE ]]	File
+				case "${n%,}" in
+				*.tar.bz2 | *.tar.gz | *.tar.xz | *.tbz2 | *.tgz | *.txz | *.tar)
+					tar xvf "${n}"
+					;;
+				*.lzma) unlzma ./"${n}" ;;
+				*.bz2) bunzip2 ./"${n}" ;;
+				*.rar) unrar x -ad ./"${n}" ;;
+				*.gz) gunzip ./"${n}" ;;
+				*.zip) unzip -d "${n%.zip}"./"${n}" ;;
+				*.z) uncompress ./"${n}" ;;
+				*.7z | *.arj | *.cab | *.chm | *.deb | *.dmg | *.iso | *.lzh | *.msi | *.rpm | *.udf | *.wim | *.xar)
+					7z x ./"${n}"
+					;;
+				*.xz) unxz ./"${n}" ;;
+				*.exe) cabextract ./"${n}" ;;
+				*)
+					echo "extract: '${n}' - unknown archive method"
+					return 1
+					;;
+				esac
+			else
+				echo "'${n}' - file does not exist"
+				return 1
+			fi
+		done
+	fi
+}
+#@end_function
+
+### ARCHIVE EXTRACTION
+# usage: ex <file>
+#@begin_function ex
+function ex()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	if [ -f "$1" ]; then #[[ -z STRING ]]	Empty string
+		# display usage if no parameters given
+		echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
+		echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
+		return 1
+	else
+		case $1 in
+		*.tar.bz2) tar xjf "$1" ;;
+		*.tar.gz) tar xzf "$1" ;;
+		*.bz2) bunzip2 "$1" ;;
+		*.rar) unrar x "$1" ;;
+		*.gz) gunzip "$1" ;;
+		*.tar) tar xf "$1" ;;
+		*.tbz2) tar xjf "$1" ;;
+		*.tgz) tar xzf "$1" ;;
+		*.zip) unzip "$1" ;;
+		*.Z) uncompress "$1" ;;
+		*.7z) 7zz x "$1" ;;
+		*.deb) ar x "$1" ;;
+		*.tar.xz) tar xf "$1" ;;
+		*.tar.zst) unzstd "$1" ;;
+		*)
+			echo "extract: '$1' - unknown archive method"
+			return 1
+			;;
+		esac
+	fi
+}
+#@end_function

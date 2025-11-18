@@ -17,3 +17,13 @@ RESET='\[\033[0m\]'        # Reset
 BOLD='\033[01m'      # Bold ANSI escape code
 UNDERLINE='\033[04m' # Underline ANSI escape code
 ITALIC='\033[03m'    # Italic ANSI escape code
+
+
+# Colored GCC warnings and errors
+# Errors will be displayed in bold red
+# Warnings will be displayed in bold purple
+# Notes will be displayed in bold cyan
+# Carets will be displayed in bold green
+# Locus will be displayed in bold white
+# Quotes will be displayed in bold yellow
+export GCC_COLORS="error=${BOLD};${RED//\\\[/}:warning=${BOLD};${PURPLE//\\\[/}:note=${BOLD};${CYAN//\\\[/}:caret=${BOLD};${GREEN//\\\[/}:locus=${BOLD}:quote=${BOLD};${YELLOW//\\\[/}"
