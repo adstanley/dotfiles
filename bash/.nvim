@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 

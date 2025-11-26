@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ## ANSI Escape Codes
 # Colors
 BLACK='\[\033[01;30m\]'    # Black

@@ -41,7 +41,7 @@ declare -a modular_files=(
 	".bash_completion"
 	".bash_functions"
 	".colors"
-	".find"
+	"10_find.sh"
 	".git"
 	".help"
 	".history"

@@ -4,8 +4,8 @@
 
 ## Bash history
 HISTCONTROL=ignoredups:erasedups                            # don't put duplicate lines in the history.
-HISTSIZE='INFINITE'                                         # set history length, non integer values set history to infinite
-HISTFILESIZE='STONKS'                                       # set file size, non integer values set history to infinite
+HISTSIZE=2147483647                                         # set history length, non integer values set history to infinite
+HISTFILESIZE=2147483647                                     # set file size, non integer values set history to infinite
 HISTTIMEFORMAT="%F %T "                                     # set history time format, %F = full date, %T = time
 HISTFILE="${HOME}/.bash_history"                            # set history file location
 HISTBACKUPDIR="${HOME}/.bash_history_backups"               # set history backup directory
@@ -33,14 +33,15 @@ USAGE
 EOF
 )
 #@begin_function backup_history
-function backup_history()
+backup_history()
 {
-    # Backup history file
-    if [ ! -d "${HISTBACKUPDIR}" ]; then
-        mkdir -p "${HISTBACKUPDIR}"
-    fi
-
-    cp "${HISTFILE}" "${HISTFILEBACKUP}" 2>/dev/null
+    mkdir -p "$HISTBACKUPDIR"
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
+    cp -a "$HISTFILE" "$HISTBACKUPDIR/bash_history.$timestamp"
+    # Optional: keep only last N backups
+    find "$HISTBACKUPDIR" -name 'bash_history.*' -printf '%T+ %p\n' |
+        sort | head -n -20 | cut -d' ' -f2- | xargs -r rm
 }
 #@end_function
 
@@ -49,49 +50,36 @@ function backup_history()
 #@usage hist [search_term]
 #@example hist ssh
 #@begin_function hist
-function hist_old()
+function hist()
 {
     # Indirect help check
     handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-    local color="true"
-
-    if [ -z "$1" ]; then
+    # If no arguments → just show full history
+    (($# == 0)) && {
         history
         return 0
+    }
+
+    # Join ALL arguments with spaces → this becomes our search string
+    local search="$*"
+
+    # Optional: allow -n or --no-color to disable coloring
+    local search color=true
+    if [[ " $1 " == " -n " || " $1 " == " --no-color " ]]; then
+        color=false
+        shift
     fi
 
-    if [ $color == "false" ]; then
-        history | grep "$1"
-        return 0
-    else
-        history | grep "$1" | awk '
-        {
-            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
-        }'
-    fi
-
-}
-#@end_function
-
-function hist()
-{
-    handle_help "${FUNCNAME[0]}" "$@" && return 0
-    local color="true"
-    if [ -z "$1" ]; then
-        history
-        return 0
-    fi
-    if [ $color == "false" ]; then
-        # Use grep with color for simple highlight (as intended)
-        history | grep --color=auto "$1"
-        return 0
+    if ! $color; then
+        history | grep --color=auto "$search"
     else
         # Use grep for simple text filtering ONLY, then let awk apply ALL colors
-        history | grep "$1" | awk '
+        # Apply color codes for: History Number (1;34m), Timestamp (1;36m), Command (1;32m)
+        history | grep "$search" | awk '
         {
-            # Apply color codes for: History Number (1;34m), Timestamp (1;36m), Command (1;32m)
             printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
         }'
     fi
 }
+#@end_function
