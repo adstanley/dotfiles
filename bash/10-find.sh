@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------
-# FILE:        10_find.sh
+# FILE:        10-find.sh
 # AUTHOR:      Sigmachad
 # DATE:        2025-11-20
 # DESCRIPTION: Defines find functions for searching files and directories.
 # USAGE:       Sourced by ~/.bashrc. Do not execute directly.
 # ----------------------------------------------------------------------
 
-# --- FILE CONTENT STARTS HERE ---
-
-# Search all datasets
+# --- FILE CONTENT STARTS HERE --- #
 
 #@Name: find_all
 #@Description: Search for directories matching a pattern across multiple datasets based on hostname.

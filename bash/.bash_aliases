@@ -58,16 +58,21 @@ alias cd_sab='cd /mnt/spool/SABnzbd/Completed'
 alias cd_torrent='cd /mnt/spool/torrent'
 alias cd_pron='cd /mnt/z2pool/Pr0n'
 
-# Drive shortcuts
+# Drive shortcuts TrueNAS
+alias cd_mach2='cd /mnt/mach2'
+alias cd_seagatemirror='cd /mnt/seagatemirror'
+alias cd_spool='cd /mnt/spool'
+alias cd_spool-temp='cd /mnt/spool-temp'
 alias cd_toshiba='cd /mnt/toshiba'
 alias cd_toshiba2='cd /mnt/toshiba2'
 alias cd_toshiba3='cd /mnt/toshiba3'
 alias cd_toshiba4='cd /mnt/toshiba4'
-alias cd_spool='cd /mnt/spool'
-alias cd_spool-temp='cd /mnt/spool-temp'
-alias cd_mach2='cd /mnt/mach2'
-alias cd_seagatemirror='cd /mnt/seagatemirror'
+alias cd_toshiba5='cd /mnt/toshiba5'
+
+# Drive shortcuts TrueNAS2
 alias cd_pron='cd /mnt/z2pool/Pr0n'
+alias cd_zpool2='cd /mnt/z2pool'
+alias cd_zpool='cd /mnt/zpool'
 
 # Alias to edit/reload bashrc
 alias reload='source ~/.bashrc'

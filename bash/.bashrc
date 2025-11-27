@@ -41,7 +41,7 @@ declare -a modular_files=(
 	".bash_completion"
 	".bash_functions"
 	".colors"
-	"10_find.sh"
+	"10-find.sh"
 	".git"
 	".help"
 	".history"
@@ -52,7 +52,7 @@ declare -a modular_files=(
 	".terminal"
 	".xdg"
 	".yt-dlp"
-	".zfs"
+	"20-zfs.sh"
 )
 
 # Source modular files

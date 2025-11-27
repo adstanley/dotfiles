@@ -1,3 +1,14 @@
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        20-zfs.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines ZFS-related aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
