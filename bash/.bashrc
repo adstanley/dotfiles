@@ -37,23 +37,32 @@ fi
 
 # Declare modular array
 declare -a modular_files=(
-	".bash_aliases"
-	".bash_completion"
-	".bash_functions"
-	".colors"
-	"10-find.sh"
-	".git"
-	".help"
-	".history"
-	".nvim"
-	".prompt"
-	".shell_opt"
-	".ssh"
-	".terminal"
-	".xdg"
-	".yt-dlp"
-	"20-zfs.sh"
+	00-shell-opt.sh
+	01-xdg.sh
+	02-colors.sh
+	03-terminal.sh
+	04-history.sh
+	05-bash-completion.sh
+	06-bash-functions.sh
+	07-bash-aliases.sh
+	08-git-aliases.sh
+	09-nvim.sh
+	10-find.sh
+	11-yt-dlp.sh
+	12-zfs.sh
+	13-ssh.sh
+	14-help.sh
+	15-prompt.sh
+	16-fzf.sh
+	17-mv.sh
+	18-packs.sh
+	19-tmux.sh
 )
+
+# Example of sourcing OS specific configurations
+# [[ $(uname) == "Darwin" ]] && source macos-specific.sh
+# [[ $(uname) == "Linux" ]] && modular_files+=("linux-specific.sh")
+# [[ $(uname) == "WSL" ]] && modular_files+=("wsl-specific.sh")
 
 # Source modular files
 for file in "${modular_files[@]}"; do
@@ -63,8 +72,9 @@ for file in "${modular_files[@]}"; do
 		# printf "sourced %s\n" "$file"
 	fi
 done
-unset file
 
+# Cleanup
+unset file
 
 #################################################################################
 #####                             Path                                      #####
@@ -80,7 +90,7 @@ declare -a path_array=(
 	"${HOME}/.local/share/fnm"
 )
 
-# Add to PATH first
+# Add to PATH
 for directory in "${path_array[@]}"; do
 	if [ -d "$directory" ]; then
 		case ":$PATH:" in
@@ -107,6 +117,7 @@ function print_path()
 #################################################################################
 #####                            BATCAT/BAT                                 #####
 #################################################################################
+# Symlink batcat to bat since some distros use batcat instead of bat
 # if ! command -v "bat"; then
 # 	if command -v "batcat"; then
 # 		ln -s /usr/bin/batcat /usr/bin/bat
