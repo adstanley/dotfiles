@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        08-git-aliases.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines git aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
 
 # Setup git aliases
 git config --global alias.co checkout

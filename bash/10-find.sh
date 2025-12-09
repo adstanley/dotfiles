@@ -9,6 +9,9 @@
 
 # --- FILE CONTENT STARTS HERE --- #
 
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
 #@Name: find_all
 #@Description: Search for directories matching a pattern across multiple datasets based on hostname.
 #@Arguments:

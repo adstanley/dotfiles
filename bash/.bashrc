@@ -41,7 +41,10 @@ declare -a modular_files=(
 	01-xdg.sh
 	02-colors.sh
 	03-terminal.sh
+	04-help.sh
 	04-history.sh
+	04-path.sh
+	04-prompt.sh
 	05-bash-completion.sh
 	06-bash-functions.sh
 	07-bash-aliases.sh
@@ -51,8 +54,6 @@ declare -a modular_files=(
 	11-yt-dlp.sh
 	12-zfs.sh
 	13-ssh.sh
-	14-help.sh
-	15-prompt.sh
 	16-fzf.sh
 	17-mv.sh
 	18-packs.sh
@@ -153,14 +154,10 @@ fi
 #####                             LS/EXA                                    #####
 #################################################################################
 
-#######################################
-# Figure out if exa or eza is installed,
-# if not fall back on ls.
-# Globals:
-#   None
-# Arguments:
-#   None
-#######################################
+#@Name: get_ls_command
+#@Description: Get preferred ls command (eza, exa, or ls)
+#@Usage: get_ls_command
+#@define help information
 function get_ls_command()
 {
 	local commands=("eza" "exa")
@@ -178,48 +175,7 @@ function get_ls_command()
 LS_COMMAND=$(get_ls_command)
 export LS_COMMAND
 
-#################################################################################
-#####                           Terminal Title                              #####
-#################################################################################
 
-## Change title of terminals
-case ${TERM} in
-xterm* | rxvt* | Eterm* | aterm | kterm | gnome* | alacritty | st | konsole*)
-	PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\007"'
-	;;
-
-screen*)
-	PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\033\\"'
-	;;
-esac
-
-# IDK man left it in from the default bashrc
-# If using debian, set variable identifying the chroot you work in (used in the prompt below)
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-	debian_chroot=$(cat /etc/debian_chroot)
-fi
-
-# IDK man left it in from the default bashrc
-# Enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
-if ! shopt -oq posix; then
-	if [ -f "/usr/share/bash-completion/bash_completion" ]; then
-		. /usr/share/bash-completion/bash_completion
-	elif [ -f "/etc/bash_completion" ]; then
-		. /etc/bash_completion
-	fi
-fi
-
-# Source custom completion scripts from .bash_completion.d
-# if .bash_completion.d exists
-if [ -d "${HOME}/.bash_completion" ]; then
-	for file in "${HOME}"/.bash_completion/*; do
-		source "$file"
-	done
-fi
-
-[[ "$TERM_PROGRAM" == "vscode" ]] && source "$(code --locate-shell-integration-path bash)"
 
 #################################################################################
 #                                    Functions                                  #

@@ -1,3 +1,14 @@
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        13-ssh.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines ssh aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
 # SSH Agent
 # Check if ssh agent is running, if not start ssh agent and add .ssh keys
 # Only start agent if there is an .ssh folder

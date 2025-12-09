@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-#################################################################################
-#####                           Bash Completion                             #####
-#################################################################################
+# ----------------------------------------------------------------------
+# FILE:        05-bash-completion.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines bash completion settings.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
 
 # Enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -23,3 +29,6 @@ if [ -d "${HOME}/.bash_completion" ]; then
 		fi
 	done
 fi
+
+# Source VSCode shell integration if running inside VSCode terminal
+[[ "$TERM_PROGRAM" == "vscode" ]] && source "$(code --locate-shell-integration-path bash)"

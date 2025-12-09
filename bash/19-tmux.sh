@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        19-tmux.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines tmux-related aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
+# --- FILE CONTENT STARTS HERE --- #
+
 
 reattach_client() {
   if [[ $# -lt 1 ]]; then

@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        18-packs.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines rar aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
+# Declare associative array for function help
+declare -A FUNCTION_HELP
 
 #################################################################################
 #####                               RAR                                     #####
 #################################################################################
-
-# Declare associative array for function help
-declare -A FUNCTION_HELP
 
 # Create a .7z compressed file with maximum compression
 # Example: 7zip "/path/to/folder_or_file" "/path/to/output.7z"

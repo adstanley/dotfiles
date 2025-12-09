@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        09-nvim.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines nvim alias and function.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
 
 # Declare associative array for function help
 declare -A FUNCTION_HELP
@@ -28,7 +37,7 @@ EOF
 )
 
 #@begin_function
-nvim()
+nvim_old()
 {
 	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
@@ -72,6 +81,22 @@ nvim()
 	"$NVIM_PATH" "$@"
 }
 #@end_function
+
+nvim() {
+    # Find nvim once and cache it
+    [[ -z "$NVIM_PATH" ]] && NVIM_PATH=$(which nvim 2>/dev/null || command -v nvim)
+    [[ -z "$NVIM_PATH" ]] && { echo "nvim not found" >&2; return 1; }
+
+    # If you have a huge config, start minimal the first time over ssh
+    if [[ -n "$SSH_CONNECTION" && ! -e "$HOME/.nvim-minimal" ]]; then
+        echo "Starting minimal Neovim over SSH to avoid OOM..."
+        "$NVIM_PATH" -u NORC "$@"
+        touch "$HOME/.nvim-minimal"
+        return
+    fi
+
+    exec "$NVIM_PATH" "$@"
+}
 
 nvim_reset()
 {

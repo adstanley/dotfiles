@@ -1,3 +1,17 @@
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        03-terminal.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines terminal title settings.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
+# Declare associative array for function help
+declare -A FUNCTION_HELP
+
 #################################################################################
 #####                           Terminal Title                              #####
 #################################################################################

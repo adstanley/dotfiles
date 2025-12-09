@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
-###########################################################
-#                                                         #
-#    ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗     #
-#    ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔════╝     #
-#    ██████╔╝███████║███████╗███████║██████╔╝██║          #
-#    ██╔══██╗██╔══██║╚════██║██╔══██║██╔══██╗██║          #
-#    ██████╔╝██║  ██║███████║██║  ██║██║  ██║╚██████╗     #
-#    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     #
-#                            http://github.com/adstanley  #
-#                                    http://sigmachad.io  #
-#                                            Chet Manley  #
-###########################################################
-# Bashrc Functions
-#
+# ----------------------------------------------------------------------
+# FILE:        17-mv.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines mv and rclone move/copy functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
@@ -20,6 +16,25 @@ declare -A FUNCTION_HELP
 # Description: Function for checking syntax of mv command
 # Arguments: [source] [destination]
 # Usage: mv_check [source] [destination]
+#@begin_function mv_check
+FUNCTION_HELP[mv_check]=$(
+	cat <<'EOF'
+NAME
+    mv_check - Function for checking syntax of mv command
+DESCRIPTION
+    Check the syntax and validity of arguments for the mv command. Supports the -t flag for specifying the target directory.
+USAGE
+    mv_check [source] [destination]
+OPTIONS
+	-t [target_directory]
+		Specify the target directory for moving files.
+EXAMPLES
+	mv_check file.txt /path/to/destination/
+		Moves file.txt to the specified destination.
+	mv_check -t /path/to/destination/ file1.txt file2.txt
+		Moves file1.txt and file2.txt to the specified target directory.
+EOF
+)
 #@begin_function mv_check
 function mv_check()
 {

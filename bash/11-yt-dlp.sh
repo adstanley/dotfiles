@@ -1,9 +1,13 @@
-# Shellcheck Directvies
-# shellcheck shell=bash
-# shellcheck source=/dev/null
-# shellcheck disable=SC1090
-# shellcheck disable=SC1091
-# shellcheck disable=SC2034
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        11-yt-dlp.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines yt-dlp aliases and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
 
 # yt-dlp
 alias yta-aac="yt-dlp --extract-audio --audio-format aac"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------
-# FILE:        20-zfs.sh
+# FILE:        12-zfs.sh
 # AUTHOR:      Sigmachad
 # DATE:        2025-11-20
 # DESCRIPTION: Defines ZFS-related aliases and functions.

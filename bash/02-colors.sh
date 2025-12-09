@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        02-colors.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines color-related variables and functions.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
 
 ## ANSI Escape Codes
 # Colors

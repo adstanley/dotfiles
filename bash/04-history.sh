@@ -1,6 +1,16 @@
-#################################################################################
-#####                             HISTORY OPTIONS                           #####
-#################################################################################
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------
+# FILE:        04-history.sh
+# AUTHOR:      Sigmachad
+# DATE:        2025-11-20
+# DESCRIPTION: Defines bash history settings.
+# USAGE:       Sourced by ~/.bashrc. Do not execute directly.
+# ----------------------------------------------------------------------
+
+# --- FILE CONTENT STARTS HERE --- #
+
+# Declare associative array for function help
+declare -A FUNCTION_HELP
 
 ## Bash history
 HISTCONTROL=ignoredups:erasedups                            # don't put duplicate lines in the history.
@@ -15,9 +25,6 @@ HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*"            # ignore these midni
 ## History options
 shopt -s histappend # append to the history file, don't overwrite it
 shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
-
-# Declare associative array for function help
-declare -A FUNCTION_HELP
 
 #@Name: backup_history
 #@Description: Backup bash history file
