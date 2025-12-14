@@ -18,4 +18,9 @@ map("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
 map("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 map("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
 
+-- Save file in Normal, Insert, and Visual modes
 map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
+
+-- comment/uncomment lines in Normal and Visual modes
+map("n", "<C-_>", "<cmd> lua require('Comment.api').toggle.linewise.current() <cr>", { desc = "Toggle comment line" })
+map("v", "<C-_>", "<esc><cmd> lua require('Comment.api').toggle.linewise(vim.fn.visualmode()) <cr>", { desc = "Toggle comment selection" })

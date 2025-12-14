@@ -35,29 +35,29 @@ fi
 #                       Change to Modular Structure                             #
 #################################################################################
 
-# Declare modular array
+# Modular configuration files - loaded in explicit order
 declare -a modular_files=(
-	00-shell-opt.sh
-	01-xdg.sh
-	02-colors.sh
-	03-terminal.sh
-	04-help.sh
-	04-history.sh
-	04-path.sh
-	04-prompt.sh
-	05-bash-completion.sh
-	06-bash-functions.sh
-	07-bash-aliases.sh
-	08-git-aliases.sh
-	09-nvim.sh
-	10-find.sh
-	11-yt-dlp.sh
-	12-zfs.sh
-	13-ssh.sh
-	16-fzf.sh
-	17-mv.sh
-	18-packs.sh
-	19-tmux.sh
+    "00-shell-opt.sh"         # Shell options (must be first)
+    "01-xdg.sh"               # XDG base directories
+    "02-colors.sh"            # Color definitions
+    "03-terminal.sh"          # Terminal capabilities & key bindings
+    "04-help.sh"              # Help functions
+    "05-history.sh"           # History configuration (early because some tools read $HISTFILE)
+    "06-path.sh"              # PATH modifications – critical, before any external tool
+    "07-prompt.sh"            # Prompt (depends on colors + path)
+    "08-bash-completion.sh"   # Bash completion (needs final $PATH)
+    "09-bash-functions.sh"    # Your core custom functions
+    "10-bash-aliases.sh"      # General aliases (often use the functions above)
+    "11-git-aliases.sh"       # Git-specific aliases (depend on functions)
+    "12-nvim.sh"              # Neovim-related settings/wrappers
+    "13-find.sh"              # Enhanced find utilities
+    "14-yt-dlp.sh"            # yt-dlp helpers
+    "15-zfs.sh"               # ZFS tools (if applicable)
+    "16-ssh.sh"               # SSH config / helpers
+    "17-fzf.sh"               # fzf keybindings & completion (depends on PATH + functions)
+    "18-mv.sh"                # Safe mv with backup, etc.
+    "19-packs.sh"             # Package manager shortcuts
+    "20-tmux.sh"              # tmux integration (usually fine at the end)
 )
 
 # Example of sourcing OS specific configurations
@@ -65,17 +65,30 @@ declare -a modular_files=(
 # [[ $(uname) == "Linux" ]] && modular_files+=("linux-specific.sh")
 # [[ $(uname) == "WSL" ]] && modular_files+=("wsl-specific.sh")
 
-# Source modular files
+# Path to your modular config directory
+MODULAR_DIR="${HOME}/.github/dotfiles/bash"
+
+# Source each modular file
 for file in "${modular_files[@]}"; do
-	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
-		source "${HOME}/.github/dotfiles/bash/$file"
-		# DEBUG: Print sourced file
-		# printf "sourced %s\n" "$file"
+    full_path="${MODULAR_DIR}/${file}"
+    [[ -f "$full_path" ]] && source "$full_path" || echo "Warning: $file not found" >&2
+	if [ "$DEBUG" == "true" ]; then
+		printf "sourced %s\n" "$full_path"
 	fi
 done
+unset file full_path
+
+# Source modular files
+# for file in "${modular_files[@]}"; do
+# 	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
+# 		source "${HOME}/.github/dotfiles/bash/$file"
+# 		# DEBUG: Print sourced file
+# 		# printf "sourced %s\n" "$file"
+# 	fi
+# done
 
 # Cleanup
-unset file
+# unset file
 
 #################################################################################
 #####                             Path                                      #####
