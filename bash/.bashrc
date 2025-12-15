@@ -65,6 +65,9 @@ declare -a modular_files=(
 # [[ $(uname) == "Linux" ]] && modular_files+=("linux-specific.sh")
 # [[ $(uname) == "WSL" ]] && modular_files+=("wsl-specific.sh")
 
+# Debug
+DEBUG="false"
+
 # Path to your modular config directory
 MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 
