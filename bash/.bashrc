@@ -71,7 +71,7 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 # Source each modular file
 for file in "${modular_files[@]}"; do
     full_path="${MODULAR_DIR}/${file}"
-    [[ -f "$full_path" ]] && source "$full_path" || echo "Warning: $file not found" >&2
+    [[ -f "$full_path" ]] && source "$full_path" || echo "Warning: $full_path not found" >&2
 	if [ "$DEBUG" == "true" ]; then
 		printf "sourced %s\n" "$full_path"
 	fi

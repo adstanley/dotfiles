@@ -143,8 +143,8 @@ printf "Dotfiles installation complete. Backups stored in %s\n" "$BACKUP_DIR"
 declare -A FOLDERS
 
 FOLDERS=(
-    ["bash_completion"]="{$HOME}/.bash_completion"
-    ["nvim"]="{$HOME}/.config/nvim"
+    ["bash_completion"]="$HOME/.bash_completion"
+    ["nvim"]="$HOME/.config/nvim"
 )
 
 # Process each folder in the array
