@@ -13,7 +13,12 @@ return {
     end,
   },
 
-  -- test new blink
+  {
+    "numToStr/Comment.nvim",
+    opts = {},
+    lazy = false,
+  }
+
   { import = "nvchad.blink.lazyspec" },
 
   {

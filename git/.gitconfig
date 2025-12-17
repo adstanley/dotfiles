@@ -23,10 +23,10 @@
 [merge]
     conflictStyle = zdiff3
 [alias]
-  st = status
-  co = checkout
-  br = branch
-  ci = commit
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
   hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 [color]
   ui = auto
@@ -34,3 +34,5 @@
   defaultBranch = main
 [includeIf "gitdir:~/work/"]
   path = ~/work/.gitconfig_work
+[pull]
+	rebase = true
