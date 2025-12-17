@@ -81,65 +81,15 @@ for file in "${modular_files[@]}"; do
 done
 unset file full_path
 
-# Source modular files
-# for file in "${modular_files[@]}"; do
-# 	if [ -f "${HOME}/.github/dotfiles/bash/$file" ]; then
-# 		source "${HOME}/.github/dotfiles/bash/$file"
-# 		# DEBUG: Print sourced file
-# 		# printf "sourced %s\n" "$file"
-# 	fi
-# done
-
-# Cleanup
-# unset file
-
-#################################################################################
-#####                             Path                                      #####
-#################################################################################
-
-# Custom PATH additions
-declare -a path_array=(
-	"${HOME}/.bin"
-	"${HOME}/.local/bin"
-	"${HOME}/.appimage"
-	"${HOME}/.applications"
-	"${HOME}/.cargo/bin"
-	"${HOME}/.local/share/fnm"
-)
-
-# Add to PATH
-for directory in "${path_array[@]}"; do
-	if [ -d "$directory" ]; then
-		case ":$PATH:" in
-		*":$directory:"*) ;;
-		*) PATH="$directory:$PATH" ;;
-		esac
-	fi
-done
-unset directory
-
-# De-duplicate PATH entries and export
-PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!a[$0]++')
-PATH=${PATH%:}
-export PATH
-
-# DEBUG: Print each path entry on a new line
-function print_path()
-{
-	IFS=':' read -ra paths <<<"$PATH"
-	printf "%s\n" "${paths[@]}"
-	unset paths
-}
-
 #################################################################################
 #####                            BATCAT/BAT                                 #####
 #################################################################################
 # Symlink batcat to bat since some distros use batcat instead of bat
-# if ! command -v "bat"; then
-# 	if command -v "batcat"; then
-# 		ln -s /usr/bin/batcat /usr/bin/bat
-# 	fi
-# fi
+if ! command -v "bat"; then
+	if command -v "batcat"; then
+		ln -s /usr/bin/batcat /usr/bin/bat
+	fi
+fi
 
 # Figure out if bat or batcat is installed, if not fall back on cat
 function get_bat_command()

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------
-# FILE:        05-bash-completion.sh
+# FILE:        08-bash-completion.sh
 # AUTHOR:      Sigmachad
 # DATE:        2025-11-20
 # DESCRIPTION: Defines bash completion settings.
