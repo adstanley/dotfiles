@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------
-# FILE:        14-help.sh
+# FILE:        04-help.sh
 # AUTHOR:      Sigmachad
 # DATE:        2025-11-20
 # DESCRIPTION: Defines help functions.

@@ -61,12 +61,28 @@ DEBUG="true"
 MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 
 # Source each modular file
+# for file in "${modular_files[@]}"; do
+#     full_path="${MODULAR_DIR}/${file}"
+#     [[ -f "$full_path" ]] && source "$full_path" || echo "Warning: $full_path not found" >&2
+# 	if [ "$DEBUG" == "true" ]; then
+# 		printf "sourced %s\n" "$full_path"
+# 	fi
+# done
 for file in "${modular_files[@]}"; do
+    # Trim any accidental leading/trailing whitespace just in case
+    file=$(echo "$file" | xargs)
     full_path="${MODULAR_DIR}/${file}"
-    [[ -f "$full_path" ]] && source "$full_path" || echo "Warning: $full_path not found" >&2
-	if [ "$DEBUG" == "true" ]; then
-		printf "sourced %s\n" "$full_path"
-	fi
+
+    if [[ -r "$full_path" && -f "$full_path" ]]; then
+        source "$full_path"
+        [[ "$DEBUG" == "true" ]] && printf "sourced %s\n" "$full_path"
+    else
+        echo "Error: Cannot read regular file: '$full_path'" >&2
+        # Optional: hex dump the path to see if there are weird characters
+        if [[ "$DEBUG" == "true" ]]; then
+             printf "Path Hex: %s\n" "$full_path" | xxd
+        fi
+    fi
 done
 unset file full_path
 
