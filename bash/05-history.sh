@@ -71,15 +71,19 @@ function hist()
     # Join ALL arguments with spaces → this becomes our search string
     local search="$*"
 
-    # Optional: allow -n or --no-color to disable coloring
-    local search color=true
-    if [[ " $1 " == " -n " || " $1 " == " --no-color " ]]; then
-        color=false
+    # Optional: trim output to 100 lines
+    local trim="false"
+    if [[ " $1 " == " -t " || " $1 " == " --trim " ]]; then
+        trim="true"
         shift
     fi
 
-    if ! $color; then
-        history | grep --color=auto "$search"
+    if [[ "$trim" == "true" ]]; then
+        history | grep "$search" | awk '
+        {
+            printf "\033[1;34m%5d\033[0m \033[1;36m%s %s\033[0m \033[1;32m%s\033[0m\n", $1, $2, $3, substr($0, index($0,$4))
+        }' | tail -n 100
+        
     else
         # Use grep for simple text filtering ONLY, then let awk apply ALL colors
         # Apply color codes for: History Number (1;34m), Timestamp (1;36m), Command (1;32m)

@@ -21,17 +21,6 @@ declare -A FUNCTION_HELP
 [[ $- != *i* ]] && return
 
 #################################################################################
-#####                                ENV                                    #####
-#################################################################################
-## nvim as default editor
-if command -v nvim >/dev/null 2>&1; then
-	export EDITOR="nvim"
-else
-	export EDITOR="nano"
-fi
-
-
-#################################################################################
 #                       Change to Modular Structure                             #
 #################################################################################
 
@@ -66,7 +55,7 @@ declare -a modular_files=(
 # [[ $(uname) == "WSL" ]] && modular_files+=("wsl-specific.sh")
 
 # Debug
-DEBUG="false"
+DEBUG="true"
 
 # Path to your modular config directory
 MODULAR_DIR="${HOME}/.github/dotfiles/bash"
@@ -80,6 +69,16 @@ for file in "${modular_files[@]}"; do
 	fi
 done
 unset file full_path
+
+#################################################################################
+#####                                ENV                                    #####
+#################################################################################
+## nvim as default editor
+if command -v nvim >/dev/null 2>&1; then
+	export EDITOR="nvim"
+else
+	export EDITOR="nano"
+fi
 
 #################################################################################
 #####                            BATCAT/BAT                                 #####
@@ -140,8 +139,6 @@ function get_ls_command()
 
 LS_COMMAND=$(get_ls_command)
 export LS_COMMAND
-
-
 
 #################################################################################
 #                                    Functions                                  #

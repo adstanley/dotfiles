@@ -9,9 +9,6 @@
 
 # --- FILE CONTENT STARTS HERE --- #
 
-# Declare associative array for function help
-declare -A FUNCTION_HELP
-
 #################################################################################
 #####                           Terminal Title                              #####
 #################################################################################
