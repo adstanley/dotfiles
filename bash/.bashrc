@@ -25,29 +25,29 @@ declare -A FUNCTION_HELP
 #################################################################################
 
 # Modular configuration files - loaded in explicit order
-declare -a modular_files=(
-    "00-shell-opt.sh"         # Shell options (must be first)
-    "01-xdg.sh"               # XDG base directories
-    "02-colors.sh"            # Color definitions
-    "03-terminal.sh"          # Terminal capabilities & key bindings
-    "04-help.sh"              # Help functions
-    "05-history.sh"           # History configuration (early because some tools read $HISTFILE)
-    "06-path.sh"              # PATH modifications – critical, before any external tool
-    "07-prompt.sh"            # Prompt (depends on colors + path)
-    "08-bash-completion.sh"   # Bash completion (needs final $PATH)
-    "09-bash-functions.sh"    # Your core custom functions
-    "10-bash-aliases.sh"      # General aliases (often use the functions above)
-    "11-git-aliases.sh"       # Git-specific aliases (depend on functions)
-    "12-nvim.sh"              # Neovim-related settings/wrappers
-    "13-find.sh"              # Enhanced find utilities
-    "14-yt-dlp.sh"            # yt-dlp helpers
-    "15-zfs.sh"               # ZFS tools (if applicable)
-    "16-ssh.sh"               # SSH config / helpers
-    "17-fzf.sh"               # fzf keybindings & completion (depends on PATH + functions)
-    "18-mv.sh"                # Safe mv with backup, etc.
-    "19-packs.sh"             # Package manager shortcuts
-    "20-tmux.sh"              # tmux integration (usually fine at the end)
-)
+# declare -a modular_files=(
+#     "00-shell-opt.sh"         # Shell options (must be first)
+#     "01-xdg.sh"               # XDG base directories
+#     "02-colors.sh"            # Color definitions
+#     "03-terminal.sh"          # Terminal capabilities & key bindings
+#     "04-help.sh"              # Help functions
+#     "05-history.sh"           # History configuration (early because some tools read $HISTFILE)
+#     "06-path.sh"              # PATH modifications – critical, before any external tool
+#     "07-prompt.sh"            # Prompt (depends on colors + path)
+#     "08-bash-completion.sh"   # Bash completion (needs final $PATH)
+#     "09-bash-functions.sh"    # Your core custom functions
+#     "10-bash-aliases.sh"      # General aliases (often use the functions above)
+#     "11-git-aliases.sh"       # Git-specific aliases (depend on functions)
+#     "12-nvim.sh"              # Neovim-related settings/wrappers
+#     "13-find.sh"              # Enhanced find utilities
+#     "14-yt-dlp.sh"            # yt-dlp helpers
+#     "15-zfs.sh"               # ZFS tools (if applicable)
+#     "16-ssh.sh"               # SSH config / helpers
+#     "17-fzf.sh"               # fzf keybindings & completion (depends on PATH + functions)
+#     "18-mv.sh"                # Safe mv with backup, etc.
+#     "19-packs.sh"             # Package manager shortcuts
+#     "20-tmux.sh"              # tmux integration (usually fine at the end)
+# )
 
 # Example of sourcing OS specific configurations
 # [[ $(uname) == "Darwin" ]] && source macos-specific.sh
@@ -79,6 +79,8 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 # done
 # unset file full_path
 
+# Force standard byte-order sorting for this loop
+LC_COLLATE=C
 # Source each modular file
 for full_path in "${MODULAR_DIR}"/*.sh; do
     if [[ -r "$full_path" ]]; then
@@ -94,7 +96,7 @@ unset full_path
 #####                                ENV                                    #####
 #################################################################################
 ## nvim as default editor
-if command -v nvim >/dev/null 2>&1; then
+if command -v nvim > /dev/null 2>&1; then
 	export EDITOR="nvim"
 else
 	export EDITOR="nano"
@@ -104,8 +106,8 @@ fi
 #####                            BATCAT/BAT                                 #####
 #################################################################################
 # Symlink batcat to bat since some distros use batcat instead of bat
-if ! command -v "bat"; then
-	if command -v "batcat"; then
+if ! command -v "bat" > /dev/null 2>&1; then
+	if command -v "batcat" > /dev/null 2>&1; then
 		ln -s /usr/bin/batcat /usr/bin/bat
 	fi
 fi
@@ -115,7 +117,7 @@ function get_bat_command()
 {
 	local commands=("batcat" "bat")
 	for cmd in "${commands[@]}"; do
-		if command -v "$cmd" >/dev/null 2>&1; then
+		if command -v "$cmd" > /dev/null 2>&1; then
 			echo "$cmd"
 			return 0
 		fi
