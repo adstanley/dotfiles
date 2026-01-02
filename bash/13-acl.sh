@@ -106,6 +106,43 @@ function mod775()
 }
 #@end_function
 
+#@Name: mod775
+#@Description: modify permissions to 775, will default to current directory
+#@Arguments: [directory]
+#@Usage: mod775 ./
+#@define help information
+FUNCTION_HELP[mod775]=$(
+	cat <<'EOF'
+NAME
+    example - This is an example function
+USAGE
+    dupebyname [DIRECTORY]
+EXAMPLES
+    dupebyname /path/to/directory
+    dupebyname .
+    dupebyname *
+EOF
+)
+#@begin_function mod775
+function mod777()
+{
+    # Indirect help check
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+    # "${1:-.}" = if $1 is empty, use "."
+    local target_dir="${1:-.}"
+
+    # Check if the target directory exists
+    if [ ! -d "$target_dir" ]; then
+        printf "Error: %s is not a directory.\n" "$target_dir" >&2
+        return 1
+    fi
+
+    # Change ownership recursively
+    chmod -R -v 777 "$target_dir"
+}
+#@end_function
+
 #@Name: copyacl
 #@Description: Copy ACLs from source directory to destination directory
 #@Arguments: [source] [destination]
