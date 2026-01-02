@@ -178,15 +178,8 @@ EOF
 )
 #@begin_function takesnapshot
 function takesnapshot_old() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
     # Check if the input is empty
     if [ -z "$1" ]; then
@@ -210,11 +203,11 @@ function takesnapshot_old() {
 }
 #@end_function
 
-#@ Name: takesnapshot
-#@ Description: Create a ZFS snapshot for a specified dataset
-#@ Arguments: <dataset> [snapshot_suffix]
-#@ Usage: takesnapshot <dataset> [snapshot_suffix] [--dry-run]
-#@ define help information
+#@Name: takesnapshot
+#@Description: Create a ZFS snapshot for a specified dataset
+#@Arguments: <dataset> [snapshot_suffix]
+#@Usage: takesnapshot <dataset> [snapshot_suffix] [--dry-run]
+#@define help information
 FUNCTION_HELP[takesnapshot]=$(cat << 'EOF'
 NAME
     takesnapshot - Create a ZFS snapshot for a specified dataset
@@ -238,16 +231,9 @@ EOF
 )
 #@begin_function takesnapshot
 function takesnapshot() {
-    # Display help message if --help is provided
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
     # Check if zfs command is available
     if ! command -v zfs &> /dev/null; then
@@ -312,146 +298,124 @@ function takesnapshot() {
 #@Arguments: <dataset>
 #@Usage: getsnapshot <dataset>
 #@define help information
-FUNCTION_HELP[getsnapshot]=$(cat << 'EOF'
+FUNCTION_HELP[getsnapshot]=$(
+cat <<'EOF'
 NAME
-    function_name - Short description of the function
+    getsnapshot - Get a list of snapshots for a given dataset
 
 DESCRIPTION
-    A longer description of the function, explaining what it does and how to use it.
+    This function retrieves and displays a list of ZFS snapshots for the specified dataset.
 
 USAGE
-    function_name [OPTIONS]
+    getsnapshot <DATASET>
 
 OPTIONS
     -h, --help
         Show this help message and exit.
 
 EXAMPLES
-
+    getsnapshot poolname/dataset
+        Retrieve and display snapshots for the specified dataset.
 EOF
 )
 #@begin_function getsnapshot
-function getsnapshot() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+function getsnapshot()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-    # Check if the input is empty
-    if [ -z "$1" ]; then
-        printf "Input is empty\n" >&2
-        return 1
-    fi
+	# Check if the input is empty
+	if [ -z "$1" ]; then
+		printf "Input is empty\n" >&2
+		return 1
+	fi
 
-    # Check if the zfs command is available
-    if ! command -v zfs &>/dev/null; then
-        printf "Error: zfs command not found or not installed\n" >&2
-        return 1
-    fi
+	# Check if the zfs command is available
+	if ! command -v zfs &>/dev/null; then
+		printf "Error: zfs command not found or not installed\n" >&2
+		return 1
+	fi
 
-    # Retrieve the list of snapshots for the given dataset
-    if output=$(zfs list -H -o name -t snapshot -r "$1" 2>&1); then
-        printf "%s\n" "$output"
-    else
-        printf "Error: %s\n" "$output" >&2
-        return 3
-    fi
+	# Retrieve the list of snapshots for the given dataset
+	if output=$(zfs list -H -o name -t snapshot -r "$1" 2>&1); then
+		printf "%s\n" "$output"
+	else
+		printf "Error: %s\n" "$output" >&2
+		return 3
+	fi
 }
 #@end_function
 
 # Define the function to show ZFS holds
 #@begin_function holds
-function holds() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+function holds()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-    zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
+	zfs get -Ht snapshot userrefs | grep -v $'\t'0 | cut -d $'\t' -f 1 | tr '\n' '\0' | xargs -0 zfs holds
 }
 #@end_function
 
 
 # Function to create multiple ZFS datasets at once
 #@begin_function create_datasets
-function create_datasets() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+function create_datasets()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-  local pool_name="$1"
-  shift  # Remove the first argument (pool name)
-  
-  # Check if pool name was provided
-  if [ -z "$pool_name" ]; then
-    printf "Error: Pool name is required\n"
-    printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
-    return 1
-  fi
-  
-  # Check if at least one dataset name was provided
-  if [ $# -eq 0 ]; then
-    printf "Error: At least one dataset name is required\n"
-    printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
-    return 1
-  fi
-  
-  # Create each dataset
-  for ds in "$@"; do
-    printf "Creating dataset: %s\n" "$pool_name/$ds"
-    zfs create "$pool_name/$ds" && printf "Success\n" || printf "Failed with exit code %s\n" "$?"
-  done
+	local pool_name="$1"
+	shift # Remove the first argument (pool name)
+
+	# Check if pool name was provided
+	if [ -z "$pool_name" ]; then
+		printf "Error: Pool name is required\n"
+		printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
+		return 1
+	fi
+
+	# Check if at least one dataset name was provided
+	if [ $# -eq 0 ]; then
+		printf "Error: At least one dataset name is required\n"
+		printf "Usage: create_datasets <pool_name> <dataset1> <dataset2> ...\n"
+		return 1
+	fi
+
+	# Create each dataset
+	for ds in "$@"; do
+		printf "Creating dataset: %s\n" "$pool_name/$ds"
+		zfs create "$pool_name/$ds" && printf "Success\n" || printf "Failed with exit code %s\n" "$?"
+	done
 }
 #@end_function
 
 
 #@begin_function deletesnapshot
-function deletesnapshot() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
-    fi
+function deletesnapshot()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
-    # Check if the input is empty
-    if [ -z "$1" ]; then
-        printf "Input is empty\n" >&2
-        return 1
-    fi
+	# Check if the input is empty
+	if [ -z "$1" ]; then
+		printf "Input is empty\n" >&2
+		return 1
+	fi
 
-    # List all snapshots for the given dataset
-    zfs list -H -o name -t snapshot -r "$1"
+	# List all snapshots for the given dataset
+	zfs list -H -o name -t snapshot -r "$1"
 
-    # Prompt the user to confirm the deletion
-    read -pr "Delete all snapshots? (y/n) " answer
+	# Prompt the user to confirm the deletion
+	read -pr "Delete all snapshots? (y/n) " answer
 
-    # Check if the user confirms
-    if [[ $answer =~ ^[Yy] ]]; then
-        # Delete all snapshots for the dataset
-        zfs list -H -o name -t snapshot -r "$1" | xargs -n1 zfs destroy
-    else
-        # Print "Aborting..." and exit the function
-        printf "Aborting...\n"
-    fi
+	# Check if the user confirms
+	if [[ $answer =~ ^[Yy] ]]; then
+		# Delete all snapshots for the dataset
+		zfs list -H -o name -t snapshot -r "$1" | xargs -n1 zfs destroy
+	else
+		# Print "Aborting..." and exit the function
+		printf "Aborting...\n"
+	fi
 }
 #@end_function
