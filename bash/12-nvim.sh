@@ -82,7 +82,7 @@ nvim_old()
 }
 #@end_function
 
-nvim() {
+run_nvim() {
     # Find nvim once and cache it
     [[ -z "$NVIM_PATH" ]] && NVIM_PATH=$(which nvim 2>/dev/null || command -v nvim)
     [[ -z "$NVIM_PATH" ]] && { echo "nvim not found" >&2; return 1; }
@@ -95,7 +95,7 @@ nvim() {
         return
     fi
 
-    exec "$NVIM_PATH" "$@"
+    command "$NVIM_PATH" "$@"
 }
 
 nvim_reset()
