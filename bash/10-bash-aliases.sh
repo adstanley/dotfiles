@@ -62,6 +62,43 @@ cd_drive() {
 }
 #@end_function
 
+#@Name: makeAlias
+#@Description: Create a bash alias from the last command in history
+#@Arguments: <alias_name>
+#@Usage: makeAlias <alias_name>
+#@define help information
+FUNCTION_HELP[makeAlias]=$(
+	cat <<'EOF'
+NAME
+    makeAlias - Create a bash alias from the last command in history
+DESCRIPTION
+    Create a bash alias from the last command in history. The alias will be saved in ~/.bash_aliases.
+USAGE
+    makeAlias <alias_name>
+OPTIONS
+    <alias_name> : The name of the alias to create
+EXAMPLES
+    makeAlias myalias
+        Create an alias named 'myalias' from the last command in history.
+EOF
+)
+#@begin_function makeAlias
+function makeAlias()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	if [ $# -eq 0 ]; then
+		echo "No arguments supplied. You need to pass an alias name"
+	else
+		newAlias=$(history | tail -n 2 | cut -c 8- | sed -e '$ d')
+		escapedNewAlias=${newAlias//\'/\'\\\'\'}
+		echo "alias $1='${escapedNewAlias}'" >>~/.bash_aliases
+		. ~/.bashrc
+	fi
+}
+#@end_function
+
 alias resetcursor='printf \e[5 q'
 
 # Directory shortcuts

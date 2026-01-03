@@ -132,7 +132,10 @@ fi
 #                                    Functions                                  #
 #################################################################################
 
-# navigation
+#@Name: up
+#@Description: Change directory up N levels
+#@Arguments: N (number of levels to go up)
+#@Usage: up 2
 #@begin_function up
 function up()
 {
@@ -161,48 +164,47 @@ function up()
 #@begin_function printargs
 function printargs()
 {
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
+	local i
+	
 	for ((i = 1; i <= $#; i++)); do
 		printf "Arg %d: %s\n" "$i" "${!i}"
 	done
 }
 #@end_function
 
+#@begin_function printargs
+function printarray() {
+    local -n _arr=$1
+    echo "--- Array Contents (Size: ${#_arr[@]}) ---"
+    for i in "${!_arr[@]}"; do
+        printf "[%d]: %s\n" "$i" "${_arr[$i]}"
+    done
+}
+#@end_function
 
-
-
-
-
-
-
-
-
-
-
-
-#@Name: example
-#@Description: example function
+#@Name: getspace
+#@Description: Get space usage of ZFS snapshots for a given dataset
 #@Arguments: None
-#@Usage: example
+#@Usage: getspace <dataset>
 #@define help information
 FUNCTION_HELP[getspace]=$(
 	cat <<'EOF'
 NAME
-    function_name - Short description of the function
+    getspace - Get space usage of ZFS snapshots for a given dataset
 
 DESCRIPTION
-    A longer description of the function, explaining what it does and how to use it.
+    This function retrieves and displays the space usage of ZFS snapshots for the specified dataset.
 
 USAGE
-    function_name [OPTIONS]
+    getspace <DATASET>
 
 OPTIONS
     -h, --help
         Show this help message and exit.
 
 EXAMPLES
+	getspace poolname/dataset
+		Retrieve and display space usage for snapshots of the specified dataset.
 
 EOF
 )
@@ -233,45 +235,6 @@ function getspace()
 		return 3
 	fi
 
-}
-#@end_function
-
-
-
-#@Name: makeAlias
-#@Description: Create a bash alias from the last command in history
-#@Arguments: <alias_name>
-#@Usage: makeAlias <alias_name>
-#@define help information
-FUNCTION_HELP[makeAlias]=$(
-	cat <<'EOF'
-NAME
-    makeAlias - Create a bash alias from the last command in history
-DESCRIPTION
-    Create a bash alias from the last command in history. The alias will be saved in ~/.bash_aliases.
-USAGE
-    makeAlias <alias_name>
-OPTIONS
-    <alias_name> : The name of the alias to create
-EXAMPLES
-    makeAlias myalias
-        Create an alias named 'myalias' from the last command in history.
-EOF
-)
-#@begin_function makeAlias
-function makeAlias()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [ $# -eq 0 ]; then
-		echo "No arguments supplied. You need to pass an alias name"
-	else
-		newAlias=$(history | tail -n 2 | cut -c 8- | sed -e '$ d')
-		escapedNewAlias=${newAlias//\'/\'\\\'\'}
-		echo "alias $1='${escapedNewAlias}'" >>~/.bash_aliases
-		. ~/.bashrc
-	fi
 }
 #@end_function
 
