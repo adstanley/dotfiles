@@ -12,6 +12,36 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
+#@begin_function find_dir
+function find_dir() {
+	# indirect help check
+	handle_help "$@" && return 0
+
+	printf "Searching for *%s*. \n" "$1"
+	find -- * -iname "*$1*" -type d
+}
+#@end_function
+
+#@begin_function find_file
+function find_file() {
+	# indirect help check
+	handle_help "$@" && return 0
+
+	printf "Searching for *%s*. \n" "$1"
+	find -- * -iname "*$1*" -type f
+}
+#@end_function
+
+# Function to find largest files in the current directory
+#@begin_function find_largest_files
+function find_largest_files() {
+	# indirect help check
+	handle_help "$@" && return 0
+
+	du -h -x -s -- * | sort -r -h | head -20
+}
+#@end_function
+
 #@Name: find_all
 #@Description: Search for directories matching a pattern across multiple datasets based on hostname.
 #@Arguments:
@@ -41,9 +71,9 @@ function find_all() {
 	handle_help "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
-		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*"
+		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*" -printf "%f\n" | sort
 	elif [ "$HOSTNAME" == "truenas2" ]; then
-		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*"
+		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*" -printf "%f\n" | sort
 	else
 		echo "This function is only available on ix-truenas and truenas2"
 		return 1
@@ -51,7 +81,7 @@ function find_all() {
 }
 #@end_function
 
-#@Name: find_all
+#@Name: find_shallow
 #@Description: Search for directories matching a pattern across multiple datasets based on hostname.
 #@Arguments:
 #  - <pattern>: The substring to search for in directory names.
@@ -87,36 +117,6 @@ function find_shallow() {
 		echo "This function is only available on ix-truenas and truenas2"
 		return 1
 	fi
-}
-#@end_function
-
-#@begin_function find_dir
-function find_dir() {
-	# indirect help check
-	handle_help "$@" && return 0
-
-	printf "Searching for *%s*. \n" "$1"
-	find -- * -iname "*$1*" -type d
-}
-#@end_function
-
-#@begin_function find_file
-function find_file() {
-	# indirect help check
-	handle_help "$@" && return 0
-
-	printf "Searching for *%s*. \n" "$1"
-	find -- * -iname "*$1*" -type f
-}
-#@end_function
-
-# Function to find largest files in the current directory
-#@begin_function find_largest_files
-function find_largest_files() {
-	# indirect help check
-	handle_help "$@" && return 0
-
-	du -h -x -s -- * | sort -r -h | head -20
 }
 #@end_function
 
@@ -274,7 +274,30 @@ function findext()
 	# Find files with the specified extension
 	find -- * -type f -name "*$1" -print0 | xargs -0 command ls -lh --color=always
 }
+#@end_function
 
+
+#@Name: extensions
+#@Description: List unique file extensions in the current directory
+#@Arguments: None
+#@Usage: extensions
+#@define help information
+FUNCTION_HELP[extensions]=$(
+	cat <<'EOF'
+NAME
+	extensions - List unique file extensions in the current directory
+DESCRIPTION
+	List unique file extensions in the current directory and its subdirectories, along with their counts.
+USAGE
+	extensions
+OPTIONS
+	None
+EXAMPLES
+	extensions
+		List all unique file extensions in the current directory and their counts.
+EOF
+)
+#@begin_function extensions
 function extensions()
 {
 	# Indirect help check
