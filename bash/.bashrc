@@ -118,10 +118,8 @@ function get_ls_command() {
 }
 
 # Capture the stdout of the function
-LS_COMMAND=$(get_ls_command)
-
-# Optional: Check if the function actually succeeded
-if [ $? -eq 0 ]; then
+# Check if the function actually succeeded
+if LS_COMMAND=$(get_ls_command); then
     export LS_COMMAND
     printf "Using: %s\n" "$LS_COMMAND" >&2
 else
