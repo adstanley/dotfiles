@@ -54,27 +54,9 @@ else
 	export MANPAGER="less"
 fi
 
-#################################################################################
-#####                             LS/EXA                                    #####
-#################################################################################
+if [ "$HOSTNAME" == "ix-truenas" ]; then
+	export CDPATH=$HOME:/mnt/mach2/Pr0n:/mnt/toshiba/Pr0n.Datasets:/mnt/toshiba2/Pr0n.Datasets
+elif [ "$HOSTNAME" == "ix-truenas" ]; then
+	export CDPATH=$HOME:/mnt/zpool/Pron:/mnt/z2pool/Pr0n.Datasets
+fi
 
-#@Name: get_ls_command
-#@Description: Get preferred ls command (eza, exa, or ls)
-#@Usage: get_ls_command
-#@define help information
-function get_ls_command()
-{
-	local commands=("eza" "exa")
-	for cmd in "${commands[@]}"; do
-		if command -v "$cmd" >/dev/null 2>&1; then
-			echo "$cmd"
-			return 0
-		fi
-	done
-
-	# fallback on ls
-	echo "ls"
-}
-
-LS_COMMAND=$(get_ls_command)
-export LS_COMMAND

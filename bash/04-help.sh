@@ -12,10 +12,18 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
+#################################################################################
+#                                    Help                                       #
+#################################################################################
+
+alias bathelp='bat --plain --language=help'
+
+function help()
+{
+	"$@" --help 2>&1 | bathelp
+}
+
 #@Name: show_help
-#@Description: Handle help requests for functions
-#@Arguments: [--help|-h]
-#@Usage: show_help [--help|-h]
 #@define help information
 FUNCTION_HELP[show_help]=$(
     cat <<'EOF'
@@ -51,15 +59,9 @@ show_help() {
     fi
     return 1
 }
-
-#################################################################################
-#                                    Help                                       #
-#################################################################################
+#@end_function
 
 #@Name: handle_help
-#@Description: Display help message for a given function using FUNCTION_HELP array
-#@Arguments: [function_name] [--help|-h]
-#@Usage: handle_help <function_name> [--help|-h]
 #@define help information
 FUNCTION_HELP[handle_help]=$(
     cat <<'EOF'
@@ -113,6 +115,27 @@ handle_help() {
 }
 #@end_function
 
+
+#@Name: handle_help
+#@define help information
+FUNCTION_HELP[list_functions]=$(
+    cat <<'EOF'
+NAME
+    list_functions
+
+DESCRIPTION
+    Show all FUNCTION_HELP array entries
+
+USAGE
+    list_functions
+
+OPTIONS
+    none
+
+EXAMPLES
+    list_functions
+EOF
+)
 #@begin_function
 list_functions() {
     printf "Available functions with help:\n"

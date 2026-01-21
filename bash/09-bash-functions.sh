@@ -20,6 +20,69 @@ declare -A FUNCTION_HELP
 #                                    Functions                                  #
 #################################################################################
 
+#@Name: up
+#@Description: Change directory up N levels
+#@Arguments: N (number of levels to go up)
+#@Usage: up 2
+#@begin_function up
+function up()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	local d=""
+	local limit="$1"
+
+	# Default to limit of 1
+	if [ -z "$limit" ] || [ "$limit" -le 0 ]; then
+		limit=1
+	fi
+
+	for ((i = 1; i <= limit; i++)); do
+		d="../$d"
+	done
+
+	# perform cd. Show error if cd fails
+	if ! cd "$d"; then
+		echo "Couldn't go up $limit dirs."
+	fi
+}
+#@end_function
+
+up_nematron() {
+    local n=${1:-1}
+    (( n < 1 )) && return 0
+    local target
+    target=$(printf '%*s' "$n" '' | tr ' ' '../')
+    target=${target%/}          # strip trailing slash
+    if ! cd -- "$target"; then
+        printf 'Could not cd up %s dir(s).\n' "$n" >&2
+        return 1
+    fi
+}
+
+
+#@begin_function printargs
+function printargs()
+{
+	local i
+	
+	for ((i = 1; i <= $#; i++)); do
+		printf "Arg %d: %s\n" "$i" "${!i}"
+	done
+}
+#@end_function
+
+#@begin_function printargs
+function printarray() {
+    local -n _arr=$1
+    echo "--- Array Contents (Size: ${#_arr[@]}) ---"
+    for i in "${!_arr[@]}"; do
+        printf "[%d]: %s\n" "$i" "${_arr[$i]}"
+    done
+}
+#@end_function
+
 #@Name: reset_cursor
 #@Description: Reset cursor to blinking bar
 #@Arguments: None
@@ -40,13 +103,6 @@ function reset_cursor() {
     echo -ne "\e[6 q"
 }
 #@end_function
-
-alias bathelp='bat --plain --language=help'
-
-help()
-{
-	"$@" --help 2>&1 | bathelp
-}
 
 #@Name: example
 #@Description: example function
@@ -104,101 +160,7 @@ function example()
 }
 #@end_function
 
-#@name ls_old
-#@description Determine if eza or ls should be used
-#@usage ls_old
-#@define help information
-FUNCTION_HELP[ls_old]=$(
-	cat <<'EOF'
-NAME
-    ls - list directory contents
 
-DESCRIPTION
-    List information about files and directories, using eza if available.
-
-USAGE
-    ls [OPTIONS] [FILE]...
-
-OPTIONS
-    Same options as eza or ls depending on which is available.
-    Add --help or -h to see this help message.
-
-EXAMPLES
-    ls -la ~/Documents
-EOF
-)
-#@begin_function
-function ls_old()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	if [ "$LS_COMMAND" = "eza" ]; then
-		eza --all --long --header --git --icons --group-directories-first --color=always "$@"
-	elif [ "$LS_COMMAND" = "exa" ]; then
-		exa --all --long --header --git --icons --group-directories-first --color=always "$@"
-	elif [ "$LS_COMMAND" = "ls" ]; then
-		command ls -lahg --color=always --group-directories-first "$@"
-	fi
-}
-#@end_function
-
-FUNCTION_HELP[ls]=$(
-	cat <<'EOF'
-NAME
-    ls - Enhanced directory listing with fallback support
-
-DESCRIPTION
-    A smart wrapper around eza, exa, or native ls. Uses $LS_COMMAND to decide
-    which tool to use. Provides consistent formatting with icons, git status,
-    and color.
-
-USAGE
-    ls [options] [path]
-
-OPTIONS
-    --help, -h
-        Show this help message
-    All other options are passed to the underlying command (eza/exa/ls)
-
-EXAMPLES
-    ls
-        List current directory with enhanced view
-    ls -l
-        Pass -l to underlying tool
-    ls --help
-        Show this message
-
-CONFIGURATION
-    Set LS_COMMAND=eza  (or exa, ls) to control behavior
-EOF
-)
-#@begin_function
-function ls()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	local cmd
-	case "$LS_COMMAND" in
-	eza)
-		cmd="eza --all --long --header --git --icons --group-directories-first --color=always"
-		;;
-	exa)
-		cmd="exa --all --long --header --git --icons --group-directories-first --color=always"
-		;;
-	ls | "")
-		cmd="command ls -lahg --color=always --group-directories-first"
-		;;
-	*)
-		echo "Unknown LS_COMMAND: $LS_COMMAND, falling back to ls" >&2
-		cmd="command ls -lahg --color=always --group-directories-first"
-		;;
-	esac
-
-	eval "$cmd \"\$@\""
-}
-#@end_function
 
 #@Name: countfields
 #@Description: Count the number of fields in a directory name
@@ -296,6 +258,17 @@ function bk()
 }
 #@end_function
 
+bk_nematron() 
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+    [[ -e $1 ]] || { echo "File not found: $1" >&2; return 1; }
+
+    cp -- "$1" "${1}_$(date +%F_%T).bk"
+}
+
+
 # Function to convert hex to Asciic
 #@begin_function hexToAscii
 function hexToAscii()
@@ -315,5 +288,91 @@ function c2f()
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	fc -lrn | head -1 >>"${1?}"
+}
+#@end_function
+
+#@Name: type
+#@Description: Run type command and format output with bat
+#@Arguments: function/alias/command
+#@Usage: type nvim
+#@define help information
+FUNCTION_HELP[type]=$(
+	cat <<'EOF'
+NAME
+    type - Show the type of a command
+DESCRIPTION
+    This function uses the `type` command to display the type of a command (alias, function, built-in, or executable).
+USAGE
+    type [COMMAND]
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+EXAMPLES
+    type ls
+        Shows the type of the `ls` command.
+EOF
+)
+function type()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	command type "$@" | bat -l sh
+}
+#@end_function
+
+#@Name: getspace
+#@Description: Get space usage of ZFS snapshots for a given dataset
+#@Arguments: None
+#@Usage: getspace <dataset>
+#@define help information
+FUNCTION_HELP[getspace]=$(
+	cat <<'EOF'
+NAME
+    getspace - Get space usage of ZFS snapshots for a given dataset
+
+DESCRIPTION
+    This function retrieves and displays the space usage of ZFS snapshots for the specified dataset.
+
+USAGE
+    getspace <DATASET>
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+	getspace poolname/dataset
+		Retrieve and display space usage for snapshots of the specified dataset.
+
+EOF
+)
+#@begin_function getspace
+function getspace()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	# Check if the input is empty
+	if [ -z "$1" ]; then
+		printf "Input is empty\n" >&2
+		return 1
+	fi
+
+	# Check if the zfs command is available
+	if ! command -v zfs &>/dev/null; then
+		printf "Error: zfs command not found or not installed\n" >&2
+		return 1
+	fi
+
+	# Retrieve the list of snapshots for the given dataset
+	# if output=$(zfs list -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
+	if output=$(zfs list -H -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
+		printf "%s\n" "$output"
+	else
+		printf "Error: %s\n" "$output" >&2
+		return 3
+	fi
+
 }
 #@end_function
