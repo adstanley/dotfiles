@@ -122,6 +122,22 @@ function find_shallow() {
 
 # check if folder is empty
 #@begin_function is_folder_empty
+FUNCTION_HELP[is_folder_empty]=$(
+	cat <<'EOF'
+NAME
+  is_folder_empty - Search for directories matching a pattern across multiple datasets based on hostname.
+DESCRIPTION
+  This function checks if a specified folder is empty.
+USAGE
+  is_folder_empty <folder_path>
+OPTIONS
+  <folder_path>   The path to the folder to check.
+EXAMPLES
+  is_folder_empty "/path/to/folder"
+	Checks if the specified folder is empty.
+EOF
+)
+#@begin_function is_folder_empty
 function is_folder_empty() {
 	# indirect help check
 	handle_help "$@" && return 0
@@ -166,6 +182,7 @@ EXAMPLES
 
 EOF
 )
+#@begin_function catalog_dir
 function catalog_dir()
 {
 	local dir="${1:-.}"
@@ -310,5 +327,31 @@ function extensions()
 	fi
 
 	find -- * -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
+}
+#@end_function
+
+#@Name: dupebyname
+#@Description: This is an example function
+#@Usage: dupebyname [argument]
+#@define help information
+FUNCTION_HELP[dupebyname]=$(
+	cat <<'EOF'
+NAME
+    example - This is an example function
+USAGE
+    dupebyname [DIRECTORY]
+EXAMPLES
+    dupebyname /path/to/directory
+    dupebyname .
+    dupebyname *
+EOF
+)
+#@begin_function dupebyname
+function dupebyname()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
 }
 #@end_function

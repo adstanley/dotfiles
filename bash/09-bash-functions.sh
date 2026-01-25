@@ -20,90 +20,6 @@ declare -A FUNCTION_HELP
 #                                    Functions                                  #
 #################################################################################
 
-#@Name: up
-#@Description: Change directory up N levels
-#@Arguments: N (number of levels to go up)
-#@Usage: up 2
-#@begin_function up
-function up()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	local d=""
-	local limit="$1"
-
-	# Default to limit of 1
-	if [ -z "$limit" ] || [ "$limit" -le 0 ]; then
-		limit=1
-	fi
-
-	for ((i = 1; i <= limit; i++)); do
-		d="../$d"
-	done
-
-	# perform cd. Show error if cd fails
-	if ! cd "$d"; then
-		echo "Couldn't go up $limit dirs."
-	fi
-}
-#@end_function
-
-up_nematron() {
-    local n=${1:-1}
-    (( n < 1 )) && return 0
-    local target
-    target=$(printf '%*s' "$n" '' | tr ' ' '../')
-    target=${target%/}          # strip trailing slash
-    if ! cd -- "$target"; then
-        printf 'Could not cd up %s dir(s).\n' "$n" >&2
-        return 1
-    fi
-}
-
-
-#@begin_function printargs
-function printargs()
-{
-	local i
-	
-	for ((i = 1; i <= $#; i++)); do
-		printf "Arg %d: %s\n" "$i" "${!i}"
-	done
-}
-#@end_function
-
-#@begin_function printargs
-function printarray() {
-    local -n _arr=$1
-    echo "--- Array Contents (Size: ${#_arr[@]}) ---"
-    for i in "${!_arr[@]}"; do
-        printf "[%d]: %s\n" "$i" "${_arr[$i]}"
-    done
-}
-#@end_function
-
-#@Name: reset_cursor
-#@Description: Reset cursor to blinking bar
-#@Arguments: None
-#@Usage: reset_cursor
-#@define help information
-FUNCTION_HELP[reset_cursor]=$(
-	cat <<'EOF'
-NAME
-    reset_cursor - Reset cursor to blinking bar
-DESCRIPTION
-    Reset the cursor to a blinking bar.
-USAGE
-    reset_cursor
-EOF
-)
-function reset_cursor() {
-    # Reset cursor position to blinking bar
-    echo -ne "\e[6 q"
-}
-#@end_function
-
 #@Name: example
 #@Description: example function
 #@Arguments: None
@@ -160,7 +76,120 @@ function example()
 }
 #@end_function
 
+#@Name: up
+#@Description: Change directory up N levels
+#@Arguments: N (number of levels to go up)
+#@Usage: up 2
+#@begin_function up
+function up()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
+	local d=""
+	local limit="$1"
+
+	# Default to limit of 1
+	if [ -z "$limit" ] || [ "$limit" -le 0 ]; then
+		limit=1
+	fi
+
+	for ((i = 1; i <= limit; i++)); do
+		d="../$d"
+	done
+
+	# perform cd. Show error if cd fails
+	if ! cd "$d"; then
+		echo "Couldn't go up $limit dirs."
+	fi
+}
+#@end_function
+
+up_nematron() {
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+    local n=${1:-1}
+    local target
+    
+	# 
+	(( n < 1 )) && return 0
+	
+    # build target path
+	target=$(printf '%*s' "$n" '' | tr ' ' '../')
+    
+	# strip trailing slash
+	target=${target%/}
+    
+	# Try to change directory
+	if ! cd -- "$target"; then
+        printf 'Could not cd up %s dir(s).\n' "$n" >&2
+        return 1
+    fi
+}
+
+
+#@begin_function printargs
+function printargs()
+{
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	# Declare local variable
+	local i
+	
+	# Loop through all arguments and print them
+	for ((i = 1; i <= $#; i++)); do
+		printf "Arg %d: %s\n" "$i" "${!i}"
+	done
+
+	# unset local variable
+	unset i
+}
+#@end_function
+
+#@begin_function printargs
+function printarray() {
+	# Indirect help check
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+	# Declare local variable
+    local -n _arr=$1
+
+	# Loop through all elements in the array and print them
+	# Have to inlcude -- before text or printf tries to parse 
+	# "--- Array" as an option
+    printf -- "--- Array Contents (Size: %d) ---\n" "${#_arr[@]}"
+    
+	for i in "${!_arr[@]}"; do
+        printf "Key: %d\t\t Value: %s\n" "$i" "${_arr[$i]}"
+    done
+}
+#@end_function
+
+#@Name: reset_cursor
+#@Description: Reset cursor to blinking bar
+#@Arguments: None
+#@Usage: reset_cursor
+#@define help information
+FUNCTION_HELP[reset_cursor]=$(
+	cat <<'EOF'
+NAME
+    reset_cursor - Reset cursor to blinking bar
+DESCRIPTION
+    Reset the cursor to a blinking bar.
+USAGE
+    reset_cursor
+EOF
+)
+function reset_cursor() {
+
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
+	
+    # Reset cursor position to blinking bar
+    echo -ne "\e[6 q"
+}
+#@end_function
 
 #@Name: countfields
 #@Description: Count the number of fields in a directory name
@@ -258,7 +287,7 @@ function bk()
 }
 #@end_function
 
-bk_nematron() 
+function bk_nematron() 
 {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
@@ -312,6 +341,7 @@ EXAMPLES
         Shows the type of the `ls` command.
 EOF
 )
+#@begin_function type
 function type()
 {
 	# Indirect help check
@@ -366,7 +396,6 @@ function getspace()
 	fi
 
 	# Retrieve the list of snapshots for the given dataset
-	# if output=$(zfs list -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
 	if output=$(zfs list -H -o space -t snapshot -r "$1" | sort -k3 --human-numeric-sort 2>&1); then
 		printf "%s\n" "$output"
 	else

@@ -95,5 +95,26 @@ function git_prompt() {
 	fi
 }
 
-# Set Prompt
-PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
+if [ -f "${HOME}/.bash-git-prompt/gitprompt.sh" ]; then
+
+    GIT_PROMPT_ONLY_IN_REPO=1
+	source "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
+    printf "sourced %s\n" "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
+
+    if source "${HOME}/.github/.bash-git-prompt/gitprompt.sh"; then
+	
+		printf "sourced %s\n" "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
+
+	else
+		echo "Warning: Cannot read ${HOME}/.github/.bash-git-prompt/gitprompt.sh" >&2
+		
+		# Set ghetto Git prompt
+		PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
+	fi
+else
+	echo "Warning: ${HOME}/.bash-git-prompt/gitprompt.sh not found" >&2
+
+fi
+
+# No Git
+PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"

@@ -25,9 +25,12 @@ declare -A FUNCTION_HELP
 #################################################################################
 
 # Example of sourcing OS specific configurations
-# [[ $(uname) == "Darwin" ]] && source macos-specific.sh
+# [[ $HOSTNAME == "truenas2" ]] && source truenas-specific.sh
+# [[ $HOSTNAME == "ix-truenas" ]] && source truenas-specific.sh
 # [[ $(uname) == "Linux" ]] && modular_files+=("linux-specific.sh")
 # [[ $(uname) == "WSL" ]] && modular_files+=("wsl-specific.sh")
+
+#################################################################################
 
 # Debug
 DEBUG="true"
@@ -37,6 +40,7 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 
 # Force standard byte-order sorting for this loop
 LC_COLLATE=C
+
 # Source each modular file
 for full_path in "${MODULAR_DIR}"/*.sh; do
     if [[ -r "$full_path" ]]; then
@@ -46,6 +50,8 @@ for full_path in "${MODULAR_DIR}"/*.sh; do
         echo "Warning: Cannot read $full_path" >&2
     fi
 done
+
+# Unset full_path
 unset full_path
 
 #################################################################################

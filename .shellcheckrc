@@ -16,3 +16,6 @@ disable=SC2162
 
 # Sourcing files that are not specified as input
 disable=SC1090
+
+# Can't follow non-constant source. We often source files via variables.
+disable=SC1091
