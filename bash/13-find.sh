@@ -72,7 +72,7 @@ function find_all() {
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
 		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*" -printf "%f\n" | sort
-	elif [ "$HOSTNAME" == "truenas2" ]; then
+	elif [ "$HOSTNAME" == "ix-truenas2" ]; then
 		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*" -printf "%f\n" | sort
 	else
 		echo "This function is only available on ix-truenas and truenas2"
