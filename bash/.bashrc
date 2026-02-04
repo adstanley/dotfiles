@@ -41,6 +41,7 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 # Force standard byte-order sorting for this loop
 LC_COLLATE=C
 
+SECONDS=0
 # Source each modular file
 for full_path in "${MODULAR_DIR}"/*.sh; do
     if [[ -r "$full_path" ]]; then
@@ -50,6 +51,8 @@ for full_path in "${MODULAR_DIR}"/*.sh; do
         echo "Warning: Cannot read $full_path" >&2
     fi
 done
+
+printf "Bash modular configuration loaded in %d seconds.\n" "$SECONDS"
 
 # Unset full_path
 unset full_path

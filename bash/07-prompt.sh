@@ -28,14 +28,10 @@ declare -A FUNCTION_HELP
 #        execution  trace.  The first character of PS4 is replicated mul‐
 #        tiple times, as necessary, to indicate multiple levels of  indi‐
 #        rection.  The default is ``+ ''.
+#
+# Reference: https://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
 
-# Source bash-git-prompt if it exists
-# if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
-#     GIT_PROMPT_ONLY_IN_REPO=1
-#     source "$HOME/.bash-git-prompt/gitprompt.sh"
-# fi
-
-# Only check once if git is available, then set a flag.
+# Check if git is installed
 if command -v git >/dev/null 2>&1; then
 	__GIT_AVAILABLE=1
 else
@@ -95,26 +91,50 @@ function git_prompt() {
 	fi
 }
 
-if [ -f "${HOME}/.bash-git-prompt/gitprompt.sh" ]; then
+# Path to your modular config directory
+BASH_GIT_PROMPT="${HOME}/.github/dotfiles/bash-git-prompt"
 
+if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
+
+	# Configuration settings for bash-git-prompt
     GIT_PROMPT_ONLY_IN_REPO=1
-	source "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
-    printf "sourced %s\n" "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
+	# GIT_PROMPT_FETCH_REMOTE_STATUS=0   # uncomment to avoid fetching remote status
+	# GIT_PROMPT_IGNORE_SUBMODULES=1 # uncomment to avoid searching for changed files in submodules
+	# GIT_PROMPT_WITH_VIRTUAL_ENV=0 # uncomment to avoid setting virtual environment infos for node/python/conda environments
+	# GIT_PROMPT_VIRTUAL_ENV_AFTER_PROMPT=1 # uncomment to place virtual environment infos between prompt and git status (instead of left to the prompt)
 
-    if source "${HOME}/.github/.bash-git-prompt/gitprompt.sh"; then
-	
-		printf "sourced %s\n" "${HOME}/.github/.bash-git-prompt/gitprompt.sh"
+	# GIT_PROMPT_SHOW_UPSTREAM=1 # uncomment to show upstream tracking branch
+	# GIT_PROMPT_SHOW_UNTRACKED_FILES=normal # can be no, normal or all; determines counting of untracked files
+
+	# GIT_PROMPT_SHOW_CHANGED_FILES_COUNT=0 # uncomment to avoid printing the number of changed files
+
+	# GIT_PROMPT_STATUS_COMMAND=gitstatus_pre-1.7.10.sh # uncomment to support Git older than 1.7.10
+
+	# GIT_PROMPT_START=...    # uncomment for custom prompt start sequence
+	# GIT_PROMPT_END=...      # uncomment for custom prompt end sequence
+
+	# as last entry source the gitprompt script
+	# GIT_PROMPT_THEME=Custom # use custom theme specified in file GIT_PROMPT_THEME_FILE (default ~/.git-prompt-colors.sh)
+	# GIT_PROMPT_THEME_FILE=Single_line_Dark
+	GIT_PROMPT_THEME=Single_line_Ubuntu # use one of the bundled themes
+
+	# source the gitprompt script
+    if source "${BASH_GIT_PROMPT}/gitprompt.sh"; then
+
+		printf "sourced %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
 
 	else
-		echo "Warning: Cannot read ${HOME}/.github/.bash-git-prompt/gitprompt.sh" >&2
+		echo "Warning: Cannot read ${BASH_GIT_PROMPT}/gitprompt.sh" >&2
 		
 		# Set ghetto Git prompt
 		PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
 	fi
+
 else
-	echo "Warning: ${HOME}/.bash-git-prompt/gitprompt.sh not found" >&2
+	echo "Warning: ${BASH_GIT_PROMPT}/gitprompt.sh not found" >&2
+	# No Git
 
 fi
 
-# No Git
+# Stil set basic prompt because we only use git prompt if in a git repo
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"

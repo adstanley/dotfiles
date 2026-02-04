@@ -45,7 +45,6 @@ EXAMPLES
 EOF
 )
 #@begin_function
-
 function example()
 {
 	######################################################################
@@ -80,6 +79,26 @@ function example()
 #@Description: Change directory up N levels
 #@Arguments: N (number of levels to go up)
 #@Usage: up 2
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 #@begin_function up
 function up()
 {
@@ -105,6 +124,26 @@ function up()
 }
 #@end_function
 
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 up_nematron() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
@@ -130,6 +169,26 @@ up_nematron() {
 
 
 #@begin_function printargs
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 function printargs()
 {
 	# Indirect help check
@@ -149,6 +208,26 @@ function printargs()
 #@end_function
 
 #@begin_function printargs
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 function printarray() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
@@ -249,35 +328,30 @@ function cdir()
 
 	cd "${_%/*}" || return
 }
-
-#@Name: dupebyname
-#@Description: This is an example function
-#@Usage: dupebyname [argument]
-#@define help information
-FUNCTION_HELP[dupebyname]=$(
-	cat <<'EOF'
-NAME
-    example - This is an example function
-USAGE
-    dupebyname [DIRECTORY]
-EXAMPLES
-    dupebyname /path/to/directory
-    dupebyname .
-    dupebyname *
-EOF
-)
-#@begin_function dupebyname
-function dupebyname()
-{
-	# Indirect help check
-	handle_help "${FUNCNAME[0]}" "$@" && return 0
-
-	find -- * -maxdepth 0 -type d | cut -d "." -f 1,2,3,4,5 | uniq -c
-}
 #@end_function
 
 # Function to backup file by appending .bk to the end of the file name
 #@begin_function bk
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 function bk()
 {
 	# Indirect help check
@@ -287,6 +361,26 @@ function bk()
 }
 #@end_function
 
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 function bk_nematron() 
 {
 	# Indirect help check
@@ -300,6 +394,26 @@ function bk_nematron()
 
 # Function to convert hex to Asciic
 #@begin_function hexToAscii
+#@define help information
+FUNCTION_HELP[example]=$(
+	cat <<'EOF'
+NAME
+    function_name - Short description of the function
+
+DESCRIPTION
+    A longer description of the function, explaining what it does and how to use it.
+
+USAGE
+    function_name [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+
+EOF
+)
 function hexToAscii()
 {
 	# Indirect help check

@@ -125,7 +125,7 @@ function find_shallow() {
 FUNCTION_HELP[is_folder_empty]=$(
 	cat <<'EOF'
 NAME
-  is_folder_empty - Search for directories matching a pattern across multiple datasets based on hostname.
+  is_folder_empty - Check if a specified folder is empty.
 DESCRIPTION
   This function checks if a specified folder is empty.
 USAGE
@@ -139,9 +139,10 @@ EOF
 )
 #@begin_function is_folder_empty
 function is_folder_empty() {
-	# indirect help check
+	# Help check
 	handle_help "$@" && return 0
 
+	# Locals
 	local folder_path="$1"
 
 	if find "$folder_path" -maxdepth 0 -empty -exec test -d {} \; -quit; then
