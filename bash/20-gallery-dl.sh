@@ -13,11 +13,14 @@
 declare -A FUNCTION_HELP
 
 function gallery_download() {
+
     # indirect help check
     handle_help "$@" && return 0
 
     local URL="$1"
+    local GALLERY_DL_PATH="${HOME}/.python/gallery-dl/bin/gallery-dl"
+    local DEST_DIR="${HOME}/.gallery-dl"
 
-    "${HOME}"/.python/gallery-dl/bin/gallery-dl "${URL}" -d /home/sigmachad/.gallery-dl
+    "${GALLERY_DL_PATH}" "${URL}" -d "${DEST_DIR}"
 
 }

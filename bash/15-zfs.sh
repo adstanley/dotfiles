@@ -34,21 +34,21 @@ alias df='df -h'
 alias du='du -hs'
 alias free='free -m'
 
-#@Name: example
-#@Description: example function
-#@Arguments: None
-#@Usage: example
+#@Name: zfs_list
+#@Description: List ZFS datasets and snapshots for a given dataset
+#@Arguments: [dataset]
+#@Usage: zfs_list [dataset] [--help]
 #@define help information
 FUNCTION_HELP[zfs_list]=$(
 	cat <<'EOF'
 NAME
-    function_name - Short description of the function
+    zfs_list - List ZFS datasets and snapshots for a given dataset
 
 DESCRIPTION
-    A longer description of the function, explaining what it does and how to use it.
+    List ZFS datasets and snapshots for the specified dataset. If no dataset is provided, it lists all datasets and snapshots.
 
 USAGE
-    function_name [OPTIONS]
+    zfs_list [OPTIONS]
 
 OPTIONS
     -h, --help
@@ -61,25 +61,60 @@ EOF
 #@begin_function zfs_list
 function zfs_list()
 {
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-		if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-			echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-		else
-			echo "Help not available for function: ${FUNCNAME[0]}" >&2
-			return 2
-		fi
-		return 0
-	fi
+    # Check if the first argument is --help or -h
+    # If so, print the help message and exit
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ -n "$1" ]; then
 		zfs list "$1"
 		zfs list -t snapshot "$1"
+    else
+        zfs list
 	fi
 
 	# one-liner
 	# { [ -n "$1" ] && zfs list "$1" && zfs list -t snapshot "$1"; }
 }
 #@end_function
+
+#@Name: zfs_search
+#@Description: Search for ZFS datasets and snapshots
+#@Arguments: [dataset]
+#@Usage: zfs_search [dataset] [--help]
+#@define help information
+FUNCTION_HELP[zfs_search]=$(
+	cat <<'EOF'
+NAME
+    zfs_search - Search for ZFS datasets and snapshots
+
+DESCRIPTION
+    Search for ZFS datasets and snapshots that match the specified pattern. If no pattern is provided, it lists all datasets.
+
+USAGE
+    zfs_search [OPTIONS]
+
+OPTIONS
+    -h, --help
+        Show this help message and exit.
+
+EXAMPLES
+    zfs_search poolname
+        Search for datasets and snapshots that match "poolname".
+
+EOF
+)
+#@begin_function zfs_search
+function zfs_search()
+{
+    # Check if the first argument is --help or -h
+    # If so, print the help message and exit
+    handle_help "${FUNCNAME[0]}" "$@" && return 0
+
+    zfs list -t filesystem | grep -i "$1"
+
+}
+#@end_function
+
 
 #@Name: zfs_alias
 #@Description: Create functions to change directory to ZFS mountpoints
@@ -110,21 +145,20 @@ EXAMPLES
 EOF
 )
 #@begin_function
-zfs_alias() {
-    # Check if the first argument is --help or -h
-    # If so, print the help message and exit
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[${FUNCNAME[0]}]}" ]]; then
-            echo "${FUNCTION_HELP[${FUNCNAME[0]}]}"
-        else
-            echo "Help not available for function: ${FUNCNAME[0]}" >&2
-            return 2
-        fi
-        return 0
+_zfs_alias() {
+    # crashout if zfs isnt being used
+    if ! command -v zfs &> /dev/null; then
+        printf "Error: zfs command not found or not installed\n" 1>&2
+        return 1
     fi
 
-    # Create a temporary file using shell builtins
-    local tmp_file="$HOME/tmp/$HOSTNAME.txt" # $$ is the process ID
+    # if the tmp directory doesn't exist, create it
+    if [ ! -d "$HOME/tmp" ]; then
+        mkdir -p "$HOME/tmp"
+    fi
+
+    # Create a temporary file to store the function definitions
+    local tmp_file="$HOME/tmp/$HOSTNAME.pools.txt"
 
     # Get list of pools
     mapfile -t pools < <(zpool list -H -o name)
@@ -138,10 +172,10 @@ zfs_alias() {
     done
 
     # Source the file to define the functions
-    # source "$tmp_file"
+    source "$tmp_file"
 
     # Clean up
-    # rm "$tmp_file"
+    rm "$tmp_file"
 }
 #@end_function
 
