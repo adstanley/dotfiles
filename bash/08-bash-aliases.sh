@@ -69,3 +69,5 @@ alias truetool='bash ~/truetool/truetool.sh'
 
 # get error messages from journalctl
 alias jctl="journalctl -p 3 -xb"
+
+alias gp="git add . && git commit -m 'changes lmao' && git push"
