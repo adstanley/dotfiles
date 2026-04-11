@@ -91,7 +91,7 @@ function git_prompt() {
 	fi
 }
 
-# Path to your modular config directory
+# git_prompt path
 BASH_GIT_PROMPT="${HOME}/.github/dotfiles/bash-git-prompt"
 
 if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
@@ -124,16 +124,14 @@ if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
 		printf "sourced %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
 
 	else
-		echo "Warning: Cannot read ${BASH_GIT_PROMPT}/gitprompt.sh" >&2
+		printf "Warning: Failed to source %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh" >&2
 		
 		# Set ghetto Git prompt
 		PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
 	fi
 
 else
-	echo "Warning: ${BASH_GIT_PROMPT}/gitprompt.sh not found" >&2
-	# No Git
-
+	printf "Bash-Git-Prompt submodule not pulled\n"
 fi
 
 # Stil set basic prompt because we only use git prompt if in a git repo

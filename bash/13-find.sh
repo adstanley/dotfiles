@@ -12,6 +12,10 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
+alias ffind='find . -type f -name'
+alias fdir='find . -type d -name'
+alias fgrep='find . -type f -exec grep -l "" {} +'
+
 #@begin_function find_dir
 function find_dir() {
 	# indirect help check
@@ -31,6 +35,10 @@ function find_file() {
 	find -- * -iname "*$1*" -type f
 }
 #@end_function
+
+function locate_f() {
+    find / -path "*$1*"
+}
 
 # Function to find largest files in the current directory
 #@begin_function find_largest_files
@@ -184,8 +192,7 @@ EXAMPLES
 EOF
 )
 #@begin_function catalog_dir
-function catalog_dir()
-{
+function catalog_dir() {
 	local dir="${1:-.}"
 	local output="${2:-directory_catalog.txt}"
 
@@ -237,8 +244,7 @@ EXAMPLES
 EOF
 )
 #@begin_function
-function nested()
-{
+function nested() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
@@ -278,8 +284,7 @@ EXAMPLES
 EOF
 )
 #@begin_function findext
-function findext()
-{
+function findext() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
@@ -316,8 +321,7 @@ EXAMPLES
 EOF
 )
 #@begin_function extensions
-function extensions()
-{
+function extensions() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
@@ -348,8 +352,7 @@ EXAMPLES
 EOF
 )
 #@begin_function dupebyname
-function dupebyname()
-{
+function dupebyname() {
 	# Indirect help check
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 

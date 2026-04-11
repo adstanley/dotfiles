@@ -41,7 +41,8 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 # Force standard byte-order sorting for this loop
 LC_COLLATE=C
 
-# SECONDS=0
+# Start timer for performance measurement
+SECONDS=0
 
 # cat /run/motd.dynamic
 
@@ -50,6 +51,8 @@ printf "\n"
 
 # Source each modular file
 for full_path in "${MODULAR_DIR}"/*.sh; do
+    # if the path is readable, source it, this is ai slop added probably delete
+    # why wouldn't it be readable
     if [[ -r "$full_path" ]]; then
         source "$full_path"
         [[ "$DEBUG" == "true" ]] && printf "sourced %s\n" "$full_path"
@@ -58,10 +61,14 @@ for full_path in "${MODULAR_DIR}"/*.sh; do
     fi
 done
 
+if [[ "$DEBUG" == "true" ]]; then
+    printf "Debug: Sourced modular files in %d seconds.\n" "$SECONDS"
+fi   
+
 # printf "Bash modular configuration loaded in %d seconds.\n" "$SECONDS"
 
-# Unset full_path
-unset full_path
+# Cleanup variables to avoid polluting the environment
+unset full_path LC_COLLATE SECONDS DEBUG MODULAR_DIR
 
 #################################################################################
 #                               Installer Added                                 #

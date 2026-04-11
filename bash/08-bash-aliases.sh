@@ -14,9 +14,14 @@
 #################################################################################
 
 # Directory shortcuts
-alias cd_sab='cd /mnt/spool/SABnzbd/Completed'
+if [ "$HOSTNAME" == "ix-truenas" ]; then
+    alias cd_pron='cd /mnt/z2pool/Pr0n'
+elif [ "$HOSTNAME" == "ix-truenas2" ]; then
+    alias cd_pron='cd /mnt/z2pool/Pr0n'
+fi
+
 alias cd_torrent='cd /mnt/spool/torrent'
-alias cd_pron='cd /mnt/z2pool/Pr0n'
+alias cd_sab='cd /mnt/spool/SABnzbd/Completed'
 
 # Drive shortcuts TrueNAS
 alias cd_mach2='cd /mnt/mach2'
@@ -71,3 +76,9 @@ alias truetool='bash ~/truetool/truetool.sh'
 alias jctl="journalctl -p 3 -xb"
 
 alias gp="git add . && git commit -m 'changes lmao' && git push"
+
+alias update='cd $HOME/.github/dotfiles && git pull'
+
+function update() {
+    cd "${HOME}"/.github/dotfiles || exit
+}
