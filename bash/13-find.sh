@@ -79,7 +79,7 @@ function find_all() {
 	handle_help "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
-		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba5 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*" -printf "%f\n" | sort
+		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba5 /mnt/toshiba6 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*" -printf "%f\n" | sort
 	elif [ "$HOSTNAME" == "ix-truenas2" ]; then
 		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*" -printf "%f\n" | sort
 	else
