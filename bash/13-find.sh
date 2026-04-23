@@ -16,6 +16,8 @@ alias ffind='find . -type f -name'
 alias fdir='find . -type d -name'
 alias fgrep='find . -type f -exec grep -l "" {} +'
 
+alias dofind='~/.github/dofind/dofind.sh'
+
 #@begin_function find_dir
 function find_dir() {
 	# indirect help check
