@@ -16,8 +16,70 @@ alias ffind='find . -type f -name'
 alias fdir='find . -type d -name'
 alias fgrep='find . -type f -exec grep -l "" {} +'
 
-alias dofind='~/.github/dofind/dofind.sh'
+alias dofind='~/.github/dofind/doFind.sh'
 
+# alias locate='locate --database=$HOME/.updatedb/mydb.db'
+FUNCTION_HELP[search_db]=$(
+	cat <<'EOF'
+NAME
+	NULL
+DESCRIPTION
+	NULL
+USAGE
+	NULL
+OPTIONS
+	NULL
+EXAMPLES
+	NULL
+EOF
+)
+function search_db() {
+	# indirect help check
+	handle_help "$@" && return 0
+
+	command locate --database="$HOME/.updatedb/mydb.db" "$1"
+
+}
+
+FUNCTION_HELP[update_db]=$(
+	cat <<'EOF'
+NAME
+	NULL
+DESCRIPTION
+	NULL
+USAGE
+	NULL
+OPTIONS
+	NULL
+EXAMPLES
+	NULL
+EOF
+)
+function update_db() {
+	# indirect help check
+	handle_help "$@" && return 0
+
+	command updatedb \
+	--output="$HOME/.updatedb/mydb.db" \
+	--localpaths="/mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba6 \
+	/mnt/mach2 /mnt/mpool-ssd /mnt/spool/torrent/Completed /mnt/spool/SABnzbd/Completed /mnt/spool/Impossible /mnt/spool-temp /mnt/seagatemirror /mnt/optane"
+}
+
+
+FUNCTION_HELP[find_dir]=$(
+	cat <<'EOF'
+NAME
+	NULL
+DESCRIPTION
+	NULL
+USAGE
+	NULL
+OPTIONS
+	NULL
+EXAMPLES
+	NULL
+EOF
+)
 #@begin_function find_dir
 function find_dir() {
 	# indirect help check
@@ -28,27 +90,57 @@ function find_dir() {
 }
 #@end_function
 
+FUNCTION_HELP[find_file]=$(
+	cat <<'EOF'
+NAME
+	NULL
+DESCRIPTION
+	NULL
+USAGE
+	NULL
+OPTIONS
+	NULL
+EXAMPLES
+	NULL
+EOF
+)
 #@begin_function find_file
 function find_file() {
 	# indirect help check
 	handle_help "$@" && return 0
 
 	printf "Searching for *%s*. \n" "$1"
-	find -- * -iname "*$1*" -type f
+	find "$PWD" -type f -iname "*$1*"
 }
 #@end_function
 
-function locate_f() {
-    find / -path "*$1*"
-}
-
 # Function to find largest files in the current directory
+#@Name: find_largest_files
+#@Description: Find the largest files in the current directory and its subdirectories.
+#@Arguments: None
+#@Returns: Prints the 20 largest files with their sizes.
+#@Usage: find_largest_files
+#@define help information
+FUNCTION_HELP[find_largest_files]=$(
+	cat <<'EOF'
+NAME
+	find_largest_files - Find the largest files in the current directory and its subdirectories.
+DESCRIPTION
+	This function searches for the largest files in the current directory and its subdirectories, and prints the 20 largest files along with their sizes.
+USAGE
+	find_largest_files
+OPTIONS
+	None
+EXAMPLES
+	find_largest_files 
+EOF
+)
 #@begin_function find_largest_files
 function find_largest_files() {
 	# indirect help check
 	handle_help "$@" && return 0
 
-	du -h -x -s -- * | sort -r -h | head -20
+	du -h -x -s -- "${1:-.}" | sort -r -h | head -20
 }
 #@end_function
 
@@ -81,7 +173,9 @@ function find_all() {
 	handle_help "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
-		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba5 /mnt/toshiba6 /mnt/spool /mnt/spool-temp /mnt/mach2 /mnt/seagatemirror -not -path "*/Incomplete/*" -type d -iname "*$1*" -printf "%f\n"
+		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba6 \
+		/mnt/mach2 /mnt/mpool-ssd /mnt/spool/torrent/Completed /mnt/spool/SABnzbd/Completed \
+		/mnt/spool/Impossible /mnt/spool-temp /mnt/seagatemirror /mnt/optane -type d -iname "*$1*" -printf "%f\n"
 	elif [ "$HOSTNAME" == "ix-truenas2" ]; then
 		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -type d -iname "*$1*" -printf "%f\n"
 	else

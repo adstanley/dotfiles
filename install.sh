@@ -22,6 +22,8 @@
 # TODO: Change entire script to use gnu stow
 set -eou pipefail # Prevents errors in a pipeline from being masked
 
+trap "printf"
+
 # Configuration
 TEMP="$HOME/tmp"
 
@@ -70,13 +72,13 @@ DOTFILES_ARRAY=(
     [".gitconfig"]="git"
     [".nanorc"]="nano"
     [".tmux.conf"]="tmux"
+    ["updatedb.conf"]="updatedb"
     [".vimrc"]="vim"
     [".zshrc"]="zsh"
 )
 
 # Reversion Function
-function restore_backup()
-{
+function restore_backup() {
     local target_file="$1"
     local target="$2"
 
@@ -103,10 +105,11 @@ for target_file in "${!DOTFILES_ARRAY[@]}"; do
     # Construct source path
     source="$DOTFILES_DIR/$source_subdir/$target_file"
 
-    # Backup existing file if it exists and is not a symlink
+    # If file exists and it is not a symlink, back it up
     if [ -f "$target" ] && [ ! -L "$target" ]; then
         printf "Backing up existing %s to %s/\n" "$target_file" "$BACKUP_DIR"
-        mv -v "$target" "$BACKUP_DIR/" || {
+
+        mv -vn "$target" "$BACKUP_DIR/" || {
             printf "Error: Failed to backup %s.\n" "$target_file"
             exit 1
         }
