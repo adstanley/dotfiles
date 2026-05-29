@@ -47,8 +47,7 @@ backup_history()
     timestamp=$(date +"%Y%m%d_%H%M%S")
     cp -a "$HISTFILE" "$HISTBACKUPDIR/bash_history.$timestamp"
     # Optional: keep only last N backups
-    find "$HISTBACKUPDIR" -name 'bash_history.*' -printf '%T+ %p\n' |
-        sort | head -n -20 | cut -d' ' -f2- | xargs -r rm
+    #find "$HISTBACKUPDIR" -name 'bash_history.*' -printf '%T+ %p\n' | sort | head -n -20 | cut -d' ' -f2- | xargs -r rm
 }
 #@end_function
 
