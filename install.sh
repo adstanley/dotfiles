@@ -22,7 +22,7 @@
 # TODO: Change entire script to use gnu stow
 set -eou pipefail # Prevents errors in a pipeline from being masked
 
-trap "printf"
+# trap "printf"
 
 # Configuration
 TEMP="$HOME/tmp"
