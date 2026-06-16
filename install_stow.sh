@@ -106,7 +106,7 @@ done
 
 if [ ${#VALID_PACKAGES[@]} -gt 0 ]; then
     # Stow targets the home directory (~), creating parent dirs like .config automatically
-    stow -t ~ "${VALID_PACKAGES[@]}"
+    stow --adopt -t ~ "${VALID_PACKAGES[@]}"
     printf "Dotfiles installation and stowing complete!\n"
 else
     printf "Warning: No valid Stow directories found in %s. Check your repo structure.\n" "$DOTFILES_DIR"
