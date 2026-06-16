@@ -23,9 +23,9 @@ DOTFILES_DIR="$GITHUB_DIR/dotfiles"
 REPO_URL="https://github.com/adstanley/dotfiles.git"
 BACKUP_DIR="$HOME/.backup/dotfiles_backup-$(date +%Y%m%d_%H%M%S)"
 
-# All git repos are stored in .github for convenience. 
-# if .github does not exist on a new machine, create it. 
-# If something goes sideways exit. 
+# All git repos are stored in .github for convenience.
+# if .github does not exist on a new machine, create it.
+# If something goes sideways exit.
 if [ ! -d "$GITHUB_DIR" ]; then
     printf "Github directory does not exist.\n"
     if mkdir -v "$HOME/.github"; then
@@ -106,7 +106,7 @@ done
 
 if [ ${#VALID_PACKAGES[@]} -gt 0 ]; then
     # Stow targets the home directory (~), creating parent dirs like .config automatically
-    stow --adopt -t ~ "${VALID_PACKAGES[@]}"
+    stow --dotfiles -t ~ "${VALID_PACKAGES[@]}"
     printf "Dotfiles installation and stowing complete!\n"
 else
     printf "Warning: No valid Stow directories found in %s. Check your repo structure.\n" "$DOTFILES_DIR"
