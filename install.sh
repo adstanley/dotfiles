@@ -39,18 +39,24 @@ BACKUP_DIR="$HOME/.backup/dotfiles_backup-$(date +%Y%m%d_%H%M%S)"
 # Dotfiles repo url
 REPO_URL="https://github.com/adstanley/dotfiles.git"
 
-# Check if repo exists locally, if not clone it
-if [ ! -d "$DOTFILES_DIR" ]; then
+# Check if repo exists locally. If the repo does not exist locally clone it.
+# If the repo exists locally, pull the latest changes.
+
+# Check if the .git directory exists inside the target folder
+if [ ! -d "$DOTFILES_DIR/.git" ]; then
     printf "Cloning dotfiles repository...\n"
+    
+    # If the directory exists but isn't a git repo, git clone might complain, 
+    # so we handle the clone cleanly.
     git clone "$REPO_URL" "$DOTFILES_DIR" || {
         echo "Error: Failed to clone repository."
         exit 1
     }
 else
-    # check if repo needs to be updated
-    printf "Repository exists. Pulling repository...\n"
-    cd "$DOTFILES_DIR" || exit 1
-    git pull || {
+    printf "Valid Git repository detected. Pulling latest changes...\n"
+    
+    # git -C executes the command inside that directory without permanently 'cd'ing there
+    git -C "$DOTFILES_DIR" pull || {
         echo "Error: Failed to update repository."
         exit 1
     }
@@ -81,10 +87,11 @@ DOTFILES_ARRAY=(
 function restore_backup() {
     local target_file="$1"
     local target="$2"
+    local backup_name="$(hostname)_$target_file"
 
-    if [ -f "$BACKUP_DIR/$target_file" ] && [ ! -L "$BACKUP_DIR/$target_file" ]; then
+    if [ -f "$BACKUP_DIR/$backup_name" ]; then
         printf "Restoring backup for %s.\n" "$target_file"
-        mv "$BACKUP_DIR/$target_file" "$target" || {
+        mv "$BACKUP_DIR/$backup_name" "$target" || {
             printf "Error: Failed to restore backup for %s.\n" "$target_file"
             exit 1
         }
