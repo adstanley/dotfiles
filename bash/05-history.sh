@@ -12,19 +12,20 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
+## History options
+shopt -s histappend # append to the history file, don't overwrite it
+shopt -s histverify # show command with history expansion to allow editing
+shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
+
 ## Bash history
-HISTCONTROL=ignoredups:erasedups                            # don't put duplicate lines in the history.
+HISTFILE="${HOME}/.bash_history"                            # set history file location
 HISTSIZE=2147483647                                         # set history length, non integer values set history to infinite
 HISTFILESIZE=2147483647                                     # set file size, non integer values set history to infinite
+HISTCONTROL=ignoredups:erasedups                            # don't put duplicate lines in the history.
 HISTTIMEFORMAT="%F %T "                                     # set history time format, %F = full date, %T = time
-HISTFILE="${HOME}/.bash_history"                            # set history file location
 HISTBACKUPDIR="${HOME}/.bash_history_backups"               # set history backup directory
 HISTFILEBACKUP="${HOME}/${HISTBACKUPDIR}/.bash_history.bak" # set history backup file location
 HISTIGNORE="&:ls:[bf]g:exit:cd*\`printf*\\0057*"            # ignore these midnight commander entries
-
-## History options
-shopt -s histappend # append to the history file, don't overwrite it
-shopt -s cmdhist    # try to save all lines of a multiple-line command in the same history entry
 
 #@Name: backup_history
 #@Description: Backup bash history file

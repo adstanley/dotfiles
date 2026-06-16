@@ -9,6 +9,8 @@
 
 # --- FILE CONTENT STARTS HERE --- #
 
+alias sshcheck='ssh -q -o BatchMode=yes -o ConnectTimeout=5'
+
 # ----------------------------------------------------------------------
 # Helper: start a fresh ssh-agent and write its env to $SSH_ENV
 # ----------------------------------------------------------------------

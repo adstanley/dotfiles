@@ -25,5 +25,4 @@ shopt -s expand_aliases # expand aliases
 shopt -s checkwinsize   # checks term size when bash regains control
 shopt -s extglob        # extended pattern matching
 shopt -s globstar       # recursive globbing
-shopt -s histverify     # show command with history expansion to allow editing
 shopt -s nullglob       # null globbing, no match returns null
