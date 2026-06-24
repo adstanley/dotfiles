@@ -61,7 +61,8 @@ function update_db() {
 	command updatedb \
 	--output="$HOME/.updatedb/mydb.db" \
 	--localpaths="/mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba6 \
-	/mnt/mach2 /mnt/mpool-ssd /mnt/spool/torrent/Completed /mnt/spool/SABnzbd/Completed /mnt/spool/Impossible /mnt/spool-temp /mnt/seagatemirror /mnt/optane"
+	/mnt/mach2 /mnt/mpool-ssd /mnt/spool/torrent/Completed /mnt/spool/SABnzbd/Completed /mnt/spool/Impossible \
+  /mnt/spool-temp /mnt/seagatemirror /mnt/seagate2/ /mnt/optane"
 }
 
 
