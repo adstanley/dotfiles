@@ -215,7 +215,7 @@ function find_shallow() {
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
 		find /mnt/toshiba/Pr0n.Datasets /mnt/toshiba2/SORTME /mnt/toshiba3/Pr0n.Datasets /mnt/toshiba4/SORTME /mnt/toshiba5/Pr0n.Datasets /mnt/mach2/Pr0n /mnt/seagatemirror/Pr0n.Datasets -not -path "*/Incomplete/*" -maxdepth 1 -type d -iname "*$1*"
-	elif [ "$HOSTNAME" == "truenas2" ]; then
+	elif [ "$HOSTNAME" == "ix-truenas2" ]; then
 		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -maxdepth 1 -type d -iname "*$1*"
 	else
 		echo "This function is only available on ix-truenas and truenas2"
