@@ -10,7 +10,7 @@
 # --- FILE CONTENT STARTS HERE --- #
 
 #################################################################################
-#####                                ENV                                    #####
+#####                                NVIM                                   #####
 #################################################################################
 ## nvim as default editor
 if command -v nvim > /dev/null 2>&1; then
@@ -35,28 +35,33 @@ function get_bat_command()
 	local commands=("batcat" "bat")
 	for cmd in "${commands[@]}"; do
 		if command -v "$cmd" > /dev/null 2>&1; then
-			echo "$cmd"
+			printf "%s" "$cmd"
+			# echo "$cmd"
 			return 0
 		fi
 	done
 
 	# fallback on cat
-	echo "cat"
+	# echo "cat"
+	printf "cat"
 	# 'set filetype to man, - to read from stdin'
 	# export MANPAGER="nvim -c 'set ft=man' -"
 }
 
-## "bat" as manpager
-if command -v batcat >/dev/null 2>&1; then
-	bat_command=$(get_bat_command)
-	export MANPAGER=
+bat_command=$(get_bat_command)
+
+if [ "$bat_command" != "cat" ]; then
+    # We found bat or batcat! Use it as the manpager.
+    # The '--language man' flag tells bat to use man-page syntax highlighting
+    export MANPAGER="$bat_command --language man"
 else
-	export MANPAGER="less"
+    # Fallback to less if only 'cat' is available
+    export MANPAGER="less"
 fi
 
+# Set CDPATH based on hostname
 if [ "$HOSTNAME" == "ix-truenas" ]; then
 	export CDPATH=$HOME:/mnt/mach2/Pr0n:/mnt/toshiba/Pr0n.Datasets:/mnt/toshiba2/Pr0n.Datasets
 elif [ "$HOSTNAME" == "ix-truenas" ]; then
 	export CDPATH=$HOME:/mnt/zpool/Pron:/mnt/z2pool/Pr0n.Datasets
 fi
-

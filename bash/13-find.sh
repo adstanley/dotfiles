@@ -35,10 +35,9 @@ EOF
 )
 function search_db() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	command locate --database="$HOME/.updatedb/mydb.db" "$1"
-
 }
 
 FUNCTION_HELP[update_db]=$(
@@ -57,7 +56,7 @@ EOF
 )
 function update_db() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	command updatedb \
 	--output="$HOME/.updatedb/mydb.db" \
@@ -83,7 +82,7 @@ EOF
 #@begin_function find_dir
 function find_dir() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	printf "Searching for *%s*. \n" "$1"
 	find -- * -iname "*$1*" -type d
@@ -107,7 +106,7 @@ EOF
 #@begin_function find_file
 function find_file() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	printf "Searching for *%s*. \n" "$1"
 	find "$PWD" -type f -iname "*$1*"
@@ -138,7 +137,7 @@ EOF
 #@begin_function find_largest_files
 function find_largest_files() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	du -h -x -s -- "${1:-.}" | sort -r -h | head -20
 }
@@ -170,7 +169,7 @@ EOF
 #@begin_function find_all
 function find_all() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
 		find /mnt/toshiba /mnt/toshiba2 /mnt/toshiba3 /mnt/toshiba4 /mnt/toshiba5 /mnt/toshiba6 \
@@ -211,7 +210,7 @@ EOF
 #@begin_function find_shallow
 function find_shallow() {
 	# indirect help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
 		find /mnt/toshiba/Pr0n.Datasets /mnt/toshiba2/SORTME /mnt/toshiba3/Pr0n.Datasets /mnt/toshiba4/SORTME /mnt/toshiba5/Pr0n.Datasets /mnt/mach2/Pr0n /mnt/seagatemirror/Pr0n.Datasets -not -path "*/Incomplete/*" -maxdepth 1 -type d -iname "*$1*"
@@ -244,7 +243,7 @@ EOF
 #@begin_function is_folder_empty
 function is_folder_empty() {
 	# Help check
-	handle_help "$@" && return 0
+	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	# Locals
 	local folder_path="$1"

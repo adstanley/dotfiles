@@ -16,51 +16,6 @@ declare -A FUNCTION_HELP
 #                                    Help                                       #
 #################################################################################
 
-alias bathelp='bat --plain --language=help'
-
-function help()
-{
-	"$@" --help 2>&1 | bathelp
-}
-
-#@Name: show_help
-#@define help information
-FUNCTION_HELP[show_help]=$(
-    cat <<'EOF'
-NAME
-    show_help - Handle help requests for functions
-DESCRIPTION
-    This function checks if the first argument is --help or -h and prints the help message for the calling function.
-    If no help message is available, it prints an error message.
-USAGE
-    show_help [--help|-h]
-OPTIONS
-    --help, -h
-        Show this help message and exit.
-EXAMPLES
-    show_help --help
-        Prints the help message for the calling function.
-    show_help -h
-        Prints the help message for the calling function.
-EOF
-)
-#@begin_function
-show_help() {
-    local callback="${FUNCNAME[1]}"
-
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        if [[ -n "${FUNCTION_HELP[$callback]}" ]]; then
-            echo "${FUNCTION_HELP[$callback]}"
-        else
-            echo "Help not available for function: $callback" >&2
-            return 2
-        fi
-        return 0
-    fi
-    return 1
-}
-#@end_function
-
 #@Name: handle_help
 #@define help information
 FUNCTION_HELP[handle_help]=$(
@@ -87,13 +42,19 @@ EOF
 )
 #@begin_function
 handle_help() {
+    if $DEBUG; then
+        printf "Debug: print function name: %s\n" "$@"
+        printf "Debug: handle_help called with function name: %s\n" "$1"
+        printf "Debug: handle_help called with arguments: %s\n" "$*"
+    fi
+
     local func_name="$1"
     shift
     local verbose=false
-    if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
-        verbose=true
-        shift
-    fi
+    # if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
+    #     verbose=true
+    #     shift
+    # fi
     if [[ -z "$func_name" ]]; then
         printf "Error: No function name provided to handle_help\n" >&2
         return 3
@@ -114,7 +75,6 @@ handle_help() {
     return 1
 }
 #@end_function
-
 
 #@Name: handle_help
 #@define help information

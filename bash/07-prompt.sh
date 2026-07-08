@@ -31,66 +31,6 @@ declare -A FUNCTION_HELP
 #
 # Reference: https://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
 
-# Check if git is installed
-if command -v git >/dev/null 2>&1; then
-	__GIT_AVAILABLE=1
-else
-	__GIT_AVAILABLE=0
-fi
-
-function git_prompt() {
-	local COLOR_GIT_CLEAN=$'\033[0;32m'    # Green for clean status
-	local COLOR_GIT_STAGED=$'\033[0;33m'   # Yellow for staged changes
-	local COLOR_GIT_MODIFIED=$'\033[0;31m' # Red for unstaged/untracked changes
-	local COLOR_RESET=$'\033[0m'           # Reset color
-
-	# Check if git is installed
-	if ! command -v git >/dev/null 2>&1; then
-		return
-	fi
-
-	# Check if in a git repository
-	if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-		return
-	fi
-
-	# Try to get tag name first
-	local ref
-	ref=$(git describe --tags --exact-match 2>/dev/null)
-
-	# If no tag, get branch name
-	if [ -z "$ref" ]; then
-		ref=$(git symbolic-ref -q HEAD 2>/dev/null)
-		ref=${ref##refs/heads/}
-		ref=${ref:-HEAD}
-	fi
-
-	# If no branch, get commit hash
-	if [ "$ref" = "HEAD" ]; then
-		ref=$(git rev-parse --short HEAD 2>/dev/null)
-	fi
-
-	# If no commit hash, set ref to "unknown"
-	if [ -z "$ref" ]; then
-		ref="unknown"
-	fi
-
-	# Check git status
-	local status_output
-	status_output=$(git status 2>/dev/null)
-
-	# If status is clean, show green
-	if [[ $status_output = *"nothing to commit"* ]]; then
-		printf " %s[%s]%s" "${COLOR_GIT_CLEAN}" "${ref}" "${COLOR_RESET}"
-	# If there are staged changes, show yellow
-	elif [[ $status_output = *"Changes to be committed"* ]]; then
-		printf " %s[%s*]%s" "${COLOR_GIT_STAGED}" "${ref}" "${COLOR_RESET}"
-	# If there are unstaged changes or untracked files, show red
-	else
-		printf " %s[%s*]%s" "${COLOR_GIT_MODIFIED}" "${ref}" "${COLOR_RESET}"
-	fi
-}
-
 # git_prompt path
 BASH_GIT_PROMPT="${HOME}/.github/dotfiles/bash-git-prompt"
 
@@ -115,13 +55,13 @@ if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
 
 	# as last entry source the gitprompt script
 	# GIT_PROMPT_THEME=Custom # use custom theme specified in file GIT_PROMPT_THEME_FILE (default ~/.git-prompt-colors.sh)
-	# GIT_PROMPT_THEME_FILE=Single_line_Dark
-	GIT_PROMPT_THEME=Single_line_Ubuntu # use one of the bundled themes
+	GIT_PROMPT_THEME_FILE=Single_line_Dark
+	# GIT_PROMPT_THEME=Single_line_Ubuntu # use one of the bundled themes
 
 	# source the gitprompt script
     if source "${BASH_GIT_PROMPT}/gitprompt.sh"; then
 
-		printf "sourced %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
+		printf "{$GREEN}Sourced: %s{$RESET}\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
 
 	else
 		printf "Warning: Failed to source %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh" >&2
@@ -134,5 +74,5 @@ else
 	printf "Bash-Git-Prompt submodule not pulled\n"
 fi
 
-# Stil set basic prompt because we only use git prompt if in a git repo
+# Still set basic prompt because we only use git prompt if in a git repo
 PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET} > ${RESET}"

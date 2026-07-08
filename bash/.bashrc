@@ -33,7 +33,7 @@ declare -A FUNCTION_HELP
 #################################################################################
 
 # Debug
-DEBUG="true"
+BASH_DEBUG="true"
 
 # Path to your modular config directory
 MODULAR_DIR="${HOME}/.github/dotfiles/bash"
@@ -42,8 +42,10 @@ MODULAR_DIR="${HOME}/.github/dotfiles/bash"
 LC_COLLATE=C
 
 # Start timer for performance measurement
-SECONDS=0
+# SECONDS=0
 
+# Print a welcome message
+printf "\e[0;92mWelcome to your modular Bash configuration!\e[0m\n"
 # cat /run/motd.dynamic
 
 # Print a newline for readability
@@ -53,22 +55,27 @@ printf "\n"
 for full_path in "${MODULAR_DIR}"/*.sh; do
     # if the path is readable, source it, this is ai slop added probably delete
     # why wouldn't it be readable
+    if [[ "$full_path" == *ssh* ]]; then
+        printf "\e[0;91mDebug: skip SSH file:\e[0m %s\n" "$full_path"
+        continue
+    fi
+
     if [[ -r "$full_path" ]]; then
         source "$full_path"
-        [[ "$DEBUG" == "true" ]] && printf "sourced %s\n" "$full_path"
+        [[ "$BASH_DEBUG" == "true" ]] && printf "Sourced: %s\n" "$full_path"
     else
         echo "Warning: Cannot read $full_path" >&2
     fi
 done
 
-if [[ "$DEBUG" == "true" ]]; then
-    printf "Debug: Sourced modular files in %d seconds.\n" "$SECONDS"
-fi   
+# if [[ "$BASH_DEBUG" == "true" ]]; then
+#     printf "Debug: Sourced modular files in %d seconds.\n" "$SECONDS"
+# fi   
 
 # printf "Bash modular configuration loaded in %d seconds.\n" "$SECONDS"
 
 # Cleanup variables to avoid polluting the environment
-unset full_path LC_COLLATE SECONDS DEBUG MODULAR_DIR
+unset full_path SECONDS BASH_DEBUG MODULAR_DIR
 
 #################################################################################
 #                               Installer Added                                 #
@@ -76,3 +83,8 @@ unset full_path LC_COLLATE SECONDS DEBUG MODULAR_DIR
 
 # opencode
 export PATH=/home/sigmachad/.opencode/bin:$PATH
+
+# . "$HOME/.atuin/bin/env"
+
+# [[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+# eval "$(atuin init bash)"

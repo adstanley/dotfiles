@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------
-# FILE:        03-terminal.sh
+# FILE:        03-terminal-title.sh
 # AUTHOR:      Sigmachad
 # DATE:        2025-11-20
 # DESCRIPTION: Defines terminal title settings.
