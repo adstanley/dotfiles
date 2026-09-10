@@ -12,9 +12,9 @@
 # Declare associative array for function help
 declare -A FUNCTION_HELP
 
-alias ffind='find . -type f -name'
-alias fdir='find . -type d -name'
-alias fgrep='find . -type f -exec grep -l "" {} +'
+alias ff='find . -type f -name'
+alias fd='find . -type d -name'
+alias fg='find . -type f -exec grep -l "" {} +'
 
 alias dofind='~/.github/dofind/doFind.sh'
 
@@ -214,7 +214,7 @@ function find_shallow() {
 	handle_help "${FUNCNAME[0]}" "$@" && return 0
 
 	if [ "$HOSTNAME" == "ix-truenas" ]; then
-		find /mnt/toshiba/Pr0n.Datasets /mnt/toshiba2/SORTME /mnt/toshiba3/Pr0n.Datasets /mnt/toshiba4/SORTME /mnt/toshiba5/Pr0n.Datasets /mnt/mach2/Pr0n /mnt/seagatemirror/Pr0n.Datasets -not -path "*/Incomplete/*" -maxdepth 1 -type d -iname "*$1*"
+		find /mnt/toshiba/Pr0n.Datasets /mnt/toshiba2/Pr0n.Datasets/ /mnt/toshiba2/SORTME/ /mnt/toshiba2/SORTME/!EXISTING_DATASETS/ /mnt/toshiba3/Pr0n.Datasets /mnt/toshiba4/SORTME /mnt/toshiba5/Pr0n.Datasets /mnt/toshiba5/Pr0n.Packs/ /mnt/toshiba6/Pr0n.Datasets/ /mnt/toshiba6/Pr0n.Packs/ /mnt/mach2/Pr0n /mnt/seagatemirror/Pr0n.Datasets -not -path "*/Incomplete/*" -maxdepth 1 -type d -iname "*$1*"
 	elif [ "$HOSTNAME" == "ix-truenas2" ]; then
 		find /mnt/z2pool/Pr0n /mnt/z2pool/Pr0n.Datasets /mnt/zpool/Pr0n -maxdepth 1 -type d -iname "*$1*"
 	else
