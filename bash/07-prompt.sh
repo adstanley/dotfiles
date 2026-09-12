@@ -61,7 +61,7 @@ if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
 	# source the gitprompt script
     if source "${BASH_GIT_PROMPT}/gitprompt.sh"; then
 
-		printf "{$GREEN}Sourced: %s{$RESET}\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
+		printf "${GREEN}Sourced: %s${RESET}\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
 
 	else
 		printf "Warning: Failed to source %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh" >&2
