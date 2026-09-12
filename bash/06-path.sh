@@ -39,9 +39,8 @@ PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!a[$0]++')
 PATH=${PATH%:}
 export PATH
 
-# DEBUG: Print each path entry on a new line
-function print_path()
-{
+# Print each path entry on a new line
+function print_path() {
 	IFS=':' read -ra paths <<<"$PATH"
 	printf "%s\n" "${paths[@]}"
 	unset paths

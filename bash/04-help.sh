@@ -42,11 +42,11 @@ EOF
 )
 #@begin_function
 handle_help() {
-    if $DEBUG; then
-        printf "Debug: print function name: %s\n" "$@"
-        printf "Debug: handle_help called with function name: %s\n" "$1"
-        printf "Debug: handle_help called with arguments: %s\n" "$*"
-    fi
+    # if $BASH_DEBUG; then
+    #    printf "Debug: print function name: %s\n" "$@"
+    #    printf "Debug: handle_help called with function name: %s\n" "$1"
+    #    printf "Debug: handle_help called with arguments: %s\n" "$*"
+    # fi
 
     local func_name="$1"
     shift

@@ -33,7 +33,8 @@ declare -A FUNCTION_HELP
 #################################################################################
 
 # Debug
-BASH_DEBUG="true"
+# BASH_DEBUG="true"
+BASH_DEBUG="false"
 
 # Path to your modular config directory
 MODULAR_DIR="${HOME}/.github/dotfiles/bash"
@@ -62,7 +63,8 @@ for full_path in "${MODULAR_DIR}"/*.sh; do
 
     if [[ -r "$full_path" ]]; then
         source "$full_path"
-        [[ "$BASH_DEBUG" == "true" ]] && printf "Sourced: %s\n" "$full_path"
+        # [[ "$BASH_DEBUG" == "true" ]] && printf "Sourced: %s\n" "$full_path"
+        printf "Sourced: %s\n" "$full_path"
     else
         echo "Warning: Cannot read $full_path" >&2
     fi
