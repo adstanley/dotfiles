@@ -57,7 +57,7 @@ for full_path in "${MODULAR_DIR}"/*.sh; do
     # if the path is readable, source it, this is ai slop added probably delete
     # why wouldn't it be readable
     if [[ "$full_path" == *ssh* ]]; then
-        printf "\e[0;91mDebug: skip SSH file:\e[0m %s\n" "$full_path"
+        printf "\e[0;91mDebug\e[0m  : skip SSH file:%s\n" "$full_path"
         continue
     fi
 

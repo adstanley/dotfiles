@@ -64,7 +64,7 @@ if [ -f "${BASH_GIT_PROMPT}/gitprompt.sh" ]; then
 		printf "${GREEN}Sourced: %s${RESET}\n" "${BASH_GIT_PROMPT}/gitprompt.sh"
 
 	else
-		printf "Warning: Failed to source %s\n" "${BASH_GIT_PROMPT}/gitprompt.sh" >&2
+		printf "${RED}Warning: Failed to source %s${RESET}\n" "${BASH_GIT_PROMPT}/gitprompt.sh" >&2
 		
 		# Set ghetto Git prompt
 		PS1="${debian_chroot:+(${debian_chroot})}${YELLOW}\u${RESET}@${GREEN}\h${RESET}:${BLUE}[\w]${RESET}\$(git_prompt) > ${RESET}"
